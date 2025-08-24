@@ -17,6 +17,11 @@ import { cn } from "@/lib/utils";
 
 const navigationItems = [
   {
+    name: "Monitoring", // Monitoring
+    href: "/",
+    icon: Monitor,
+  },
+  {
     name: "Foydalanuvchilar", // Users
     href: "/users",
     icon: Users,
@@ -41,25 +46,15 @@ const navigationItems = [
     href: "/structure",
     icon: BarChart3,
   },
-  {
-    name: "Kategoriyalar", // Categories
-    href: "/categories",
-    icon: Archive,
-  },
+  // {
+  //   name: "Kategoriyalar", // Categories
+  //   href: "/categories",
+  //   icon: Archive,
+  // },
   {
     name: "Klassifikatorlar", // Classificators
     href: "/classificators",
     icon: BookOpen,
-  },
-  {
-    name: "Monitoring", // Monitoring
-    href: "/monitoring",
-    icon: Monitor,
-  },
-  {
-    name: "Ofis", // Office
-    href: "/office",
-    icon: Settings,
   },
 ];
 

@@ -8,6 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/ui/dropdown-menu";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface AccountPopoverProps {
   user: {
@@ -25,6 +27,22 @@ export function AccountPopover({
   onSettings,
   onLogout,
 }: AccountPopoverProps) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear any stored authentication data
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+
+    // Call the onLogout callback if provided
+    if (onLogout) {
+      onLogout();
+    }
+
+    // Redirect to login page
+    router.push("/login");
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -60,8 +78,10 @@ export function AccountPopover({
           className="px-4 py-2 flex items-center gap-2 cursor-pointer"
           onClick={onProfile}
         >
-          <User className="h-4 w-4 text-[var(--primary)]" />
-          Profil
+          <Link href="/profile" className="flex w-full items-center gap-2">
+            <User className="h-4 w-4 text-[var(--primary)]" />
+            Profil
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
           className="px-4 py-2 flex items-center gap-2 cursor-pointer"
@@ -73,7 +93,7 @@ export function AccountPopover({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="px-4 py-2 flex items-center gap-2 text-red-600 cursor-pointer"
-          onClick={onLogout}
+          onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
           Chiqish

@@ -135,7 +135,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
         <div
           className={cn(
-            "relative border-2 border-dashed rounded-lg p-6 transition-colors",
+            "relative border-1 border-dashed rounded-lg p-6 transition-colors",
             dragActive && !disabled
               ? "border-[#2354bf] bg-[#2354bf]/5"
               : hasError

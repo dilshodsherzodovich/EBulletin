@@ -63,6 +63,26 @@ export default function LoginPage() {
           <LoginForm />
         </div>
 
+        {/* Mock Credentials Section */}
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 text-center">
+            Test ma'lumotlari:
+          </h3>
+          <div className="space-y-2 text-center">
+            <div className="text-sm">
+              <span className="font-medium text-gray-600">Login:</span>
+              <span className="ml-2 text-gray-800 font-mono">admin</span>
+            </div>
+            <div className="text-sm">
+              <span className="font-medium text-gray-600">Parol:</span>
+              <span className="ml-2 text-gray-800 font-mono">123</span>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-gray-500 text-center">
+            Bu ma'lumotlar faqat test maqsadida ko'rsatilgan
+          </div>
+        </div>
+
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-[#9e9e9e]">
