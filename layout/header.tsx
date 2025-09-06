@@ -1,12 +1,10 @@
 import { User, LogOut, Bell, Settings } from "lucide-react";
 import { Button } from "@/ui/button";
 import { AccountPopover } from "./account-popover";
+import { UserData } from "@/api/types/auth";
 
 interface HeaderProps {
-  user: {
-    name: string;
-    role: string;
-  };
+  user: UserData;
 }
 
 export function Header({ user }: HeaderProps) {
@@ -34,7 +32,7 @@ export function Header({ user }: HeaderProps) {
         </Button> */}
 
         {/* User avatar and name popover */}
-        <AccountPopover user={user} />
+        <AccountPopover user={user!} />
         {/* 
         <Button
           variant="ghost"

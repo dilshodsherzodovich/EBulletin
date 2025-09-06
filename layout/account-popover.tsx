@@ -10,12 +10,10 @@ import {
 } from "@/ui/dropdown-menu";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { UserData } from "@/api/types/auth";
 
 interface AccountPopoverProps {
-  user: {
-    name: string;
-    role: string;
-  };
+  user: UserData;
   onProfile?: () => void;
   onSettings?: () => void;
   onLogout?: () => void;
@@ -31,7 +29,9 @@ export function AccountPopover({
 
   const handleLogout = () => {
     // Clear any stored authentication data
-    localStorage.removeItem("authToken");
+    localStorage.removeItem("auth_expiry");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
 
     // Call the onLogout callback if provided
@@ -43,6 +43,8 @@ export function AccountPopover({
     router.push("/login");
   };
 
+  console.log(user);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -51,10 +53,10 @@ export function AccountPopover({
           className="flex items-center space-x-2 px-2 py-1 rounded-lg hover:bg-[var(--primary)]/10"
         >
           <div className="w-8 h-8 bg-[var(--primary)] rounded-full flex items-center justify-center text-white font-bold">
-            {user.name[0]}
+            {user.first_name[0] || user.username[0].toUpperCase()}
           </div>
           <span className="text-[var(--foreground)] font-medium">
-            {user.name}
+            {user.first_name} {user.last_name}
             <div className="text-xs text-[var(--muted-foreground)]">
               {user.role}
             </div>
@@ -67,10 +69,10 @@ export function AccountPopover({
       >
         <DropdownMenuLabel className="px-4 pt-3 pb-1">
           <div className="font-semibold text-[var(--foreground)]">
-            {user.name}
+            {user.first_name} {user.last_name}
           </div>
           <div className="text-xs text-[var(--muted-foreground)]">
-            {user.role}
+            {user.username}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
