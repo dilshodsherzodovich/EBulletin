@@ -7,8 +7,6 @@ import {
   Building2,
   FileText,
   BarChart3,
-  Settings,
-  Archive,
   Folder,
   Monitor,
   BookOpen,
@@ -41,11 +39,11 @@ const navigationItems = [
     href: "/bulletins",
     icon: FileText,
   },
-  {
-    name: "Tuzilma", // Structure
-    href: "/structure",
-    icon: BarChart3,
-  },
+  // {
+  //   name: "Tuzilma", // Structure
+  //   href: "/structure",
+  //   icon: BarChart3,
+  // },
   // {
   //   name: "Kategoriyalar", // Categories
   //   href: "/categories",

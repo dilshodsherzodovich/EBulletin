@@ -14,14 +14,12 @@ export interface UserData {
   profile: any;
 }
 
-// Login response interface (matching your API response)
 export interface LoginResponse {
   user_data: UserData;
-  access: string; // JWT access token
-  refresh: string; // JWT refresh token
+  access: string;
+  refresh: string;
 }
 
-// API error response interface
 export interface ApiErrorResponse {
   success: false;
   message: string;

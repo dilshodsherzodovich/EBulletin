@@ -26,10 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
-        <QueryProvider>
-          <ClientLayout>{children}</ClientLayout>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

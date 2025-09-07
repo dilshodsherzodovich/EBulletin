@@ -5,7 +5,10 @@ import { Card } from "@/ui/card";
 import { UserTable } from "@/components/users/user-table";
 import { UserModal } from "@/components/users/user-modal";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
+import { useCreateUser } from "@/api/hooks/use-user";
+import { useSnackbar } from "@/providers/snackbar-provider";
 
+// Keep the mock data for now
 interface User {
   id: string;
   name: string;
@@ -58,6 +61,10 @@ export default function UsersPage() {
     isBulk?: boolean;
   }>({ isOpen: false });
 
+  // Use snackbar for notifications
+  const { showSuccess, showError } = useSnackbar();
+  const createUserMutation = useCreateUser();
+
   const handleCreateUser = () => {
     setModalMode("create");
     setEditingUser(undefined);
@@ -70,22 +77,59 @@ export default function UsersPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveUser = (userData: Omit<User, "id" | "createdDate">) => {
+  const handleSaveUser = async (formData: any) => {
     if (modalMode === "create") {
-      const newUser: User = {
-        ...userData,
-        id: Date.now().toString(),
-        createdDate: new Date().toLocaleDateString("en-GB"),
-      };
-      setUsers((prev) => [newUser, ...prev]);
+      try {
+        await createUserMutation.mutateAsync({
+          role: formData.role,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          username: formData.login,
+          is_active: formData.status === "active",
+          profile: {
+            department: formData.department,
+          },
+        });
+
+        // Add to local state for immediate UI update
+        const newUser: User = {
+          id: Date.now().toString(),
+          name: `${formData.lastName} ${formData.firstName}`,
+          role: formData.role,
+          department: formData.department,
+          createdDate: new Date().toLocaleDateString("en-GB"),
+          status: formData.status,
+          login: formData.login,
+        };
+        setUsers((prev) => [newUser, ...prev]);
+        setIsModalOpen(false);
+        setSelectedIds([]);
+
+        // Show success message
+        showSuccess(
+          "Foydalanuvchi yaratildi",
+          `${formData.firstName} ${formData.lastName} muvaffaqiyatli qo'shildi`
+        );
+      } catch (error: any) {
+        console.error("Failed to create user:", error);
+        showError(
+          "Xatolik yuz berdi",
+          error.message || "Foydalanuvchi yaratishda xatolik yuz berdi"
+        );
+      }
     } else if (editingUser) {
+      // Keep existing edit logic for now
       setUsers((prev) =>
         prev.map((user) =>
-          user.id === editingUser.id ? { ...user, ...userData } : user
+          user.id === editingUser.id ? { ...user, ...formData } : user
         )
       );
+      setIsModalOpen(false);
+      showSuccess(
+        "Foydalanuvchi yangilandi",
+        "Ma'lumotlar muvaffaqiyatli yangilandi"
+      );
     }
-    setSelectedIds([]);
   };
 
   const handleDeleteUser = (userId: string) => {
@@ -108,9 +152,17 @@ export default function UsersPage() {
     if (deleteConfirmation.isBulk) {
       setUsers((prev) => prev.filter((user) => !selectedIds.includes(user.id)));
       setSelectedIds([]);
+      showSuccess(
+        "Foydalanuvchilar o'chirildi",
+        `${selectedIds.length} ta foydalanuvchi o'chirildi`
+      );
     } else if (deleteConfirmation.userId) {
       setUsers((prev) =>
         prev.filter((user) => user.id !== deleteConfirmation.userId)
+      );
+      showSuccess(
+        "Foydalanuvchi o'chirildi",
+        "Foydalanuvchi muvaffaqiyatli o'chirildi"
       );
     }
     setDeleteConfirmation({ isOpen: false });
@@ -147,6 +199,7 @@ export default function UsersPage() {
         onSubmit={handleSaveUser}
         user={editingUser}
         mode={modalMode}
+        isLoading={createUserMutation.isPending}
       />
 
       <ConfirmationDialog
