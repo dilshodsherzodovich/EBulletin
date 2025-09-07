@@ -25,15 +25,6 @@ interface DepartmentModalProps {
   isDoingAction: boolean;
 }
 
-const organizations = [
-  {
-    value: "Milliy statistika qo'mitasi",
-    label: "Milliy statistika qo'mitasi",
-  },
-  { value: "Iqtisodiyot vazirligi", label: "Iqtisodiyot vazirligi" },
-  { value: "Moliya vazirligi", label: "Moliya vazirligi" },
-];
-
 export function DepartmentModal({
   isOpen,
   onClose,
@@ -48,8 +39,9 @@ export function DepartmentModal({
     status: "active" as "active" | "inactive",
   });
 
-  const { data: organizations, isPending } = useOrganizations({ page: 1 });
+  const { data: organizationsData, isPending } = useOrganizations({ page: 1 });
 
+  // Initialize form data when modal opens, department changes, or organizations load
   useEffect(() => {
     if (department && mode === "edit") {
       setFormData({
@@ -57,14 +49,14 @@ export function DepartmentModal({
         organization: department.organization_id,
         status: department.is_active ? "active" : "inactive",
       });
-    } else {
+    } else if (mode === "create") {
       setFormData({
         name: "",
         organization: "",
         status: "active",
       });
     }
-  }, [department, mode, isOpen]);
+  }, [department, mode, isOpen, organizationsData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +113,7 @@ export function DepartmentModal({
                   <SelectValue placeholder="Tashkilot tanlang" />
                 </SelectTrigger>
                 <SelectContent>
-                  {organizations?.results?.map((opt) => (
+                  {organizationsData?.results?.map((opt) => (
                     <SelectItem key={opt.id} value={opt.id}>
                       {opt.name}
                     </SelectItem>
