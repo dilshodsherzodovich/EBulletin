@@ -14,10 +14,17 @@ export const queryKeys = {
     edit: "edit-organization",
     delete: "delete-organization",
   },
+
   classificators: {
     list: "classificators-list",
     create: "create-classificator",
     edit: "edit-classificator",
     delete: "delete-classificator",
+  },
+  departments: {
+    list: "departments",
+    create: "create-department",
+    edit: "edit-department",
+    delete: "delete-department",
   },
 } as const;

@@ -13,31 +13,17 @@ import {
 import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
 import { Card } from "@/ui/card";
-
-interface Department {
-  id: string;
-  name: string;
-  organization: string;
-  createdDate: string;
-  status: "active" | "inactive";
-}
+import { Department, DepartmentCreateParams } from "@/api/types/deparments";
+import { useOrganizations } from "@/api/hooks/use-organizations";
 
 interface DepartmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (department: Omit<Department, "id" | "createdDate">) => void;
+  onSave: (department: DepartmentCreateParams) => void;
   department?: Department | null;
   mode: "create" | "edit";
+  isDoingAction: boolean;
 }
-
-const organizations = [
-  {
-    value: "Milliy statistika qo'mitasi",
-    label: "Milliy statistika qo'mitasi",
-  },
-  { value: "Iqtisodiyot vazirligi", label: "Iqtisodiyot vazirligi" },
-  { value: "Moliya vazirligi", label: "Moliya vazirligi" },
-];
 
 export function DepartmentModal({
   isOpen,
@@ -45,39 +31,46 @@ export function DepartmentModal({
   onSave,
   department,
   mode,
+  isDoingAction,
 }: DepartmentModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    organization: "Milliy statistika qo'mitasi",
+    organization: "",
     status: "active" as "active" | "inactive",
   });
 
+  const { data: organizationsData, isPending } = useOrganizations({ page: 1 });
+
+  // Initialize form data when modal opens, department changes, or organizations load
   useEffect(() => {
     if (department && mode === "edit") {
       setFormData({
         name: department.name,
-        organization: department.organization,
-        status: department.status,
+        organization: department.organization_id,
+        status: department.is_active ? "active" : "inactive",
       });
-    } else {
+    } else if (mode === "create") {
       setFormData({
         name: "",
-        organization: "Milliy statistika qo'mitasi",
+        organization: "",
         status: "active",
       });
     }
-  }, [department, mode, isOpen]);
+  }, [department, mode, isOpen, organizationsData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    onClose();
+    onSave({
+      name: formData?.name.trim()!,
+      is_active: formData.status === "active",
+      organization_id: formData.organization,
+    });
   };
 
   const handleClose = () => {
     setFormData({
       name: "",
-      organization: "Milliy statistika qo'mitasi",
+      organization: "",
       status: "active",
     });
     onClose();
@@ -85,6 +78,7 @@ export function DepartmentModal({
 
   const title = mode === "create" ? "Bo'lim yaratish" : "Bo'limni tahrirlash";
   const submitText = mode === "create" ? "Yaratish" : "O'zgarishlarni saqlash";
+  const actionText = mode === "create" ? "Yaratilmmoqda" : "O'zgartirilmoqda";
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} size="md">
@@ -106,7 +100,7 @@ export function DepartmentModal({
             </div>
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
-                Yuqori tashkilot
+                Bo'lim tegishli tashkilot
               </Label>
               <Select
                 value={formData.organization}
@@ -119,9 +113,9 @@ export function DepartmentModal({
                   <SelectValue placeholder="Tashkilot tanlang" />
                 </SelectTrigger>
                 <SelectContent>
-                  {organizations.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {organizationsData?.results?.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -174,8 +168,9 @@ export function DepartmentModal({
             <Button
               type="submit"
               className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-8"
+              disabled={isDoingAction}
             >
-              {submitText}
+              {isDoingAction ? actionText : submitText}
             </Button>
           </div>
         </form>

@@ -23,7 +23,7 @@ interface ConfirmationDialogProps {
   confirmText?: string;
   cancelText?: string;
   variant?: "danger" | "warning" | "info";
-  isDoingAction: boolean;
+  isDoingAction?: boolean;
   isDoingActionText?: string;
 }
 

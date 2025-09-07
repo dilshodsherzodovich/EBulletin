@@ -8,38 +8,35 @@ import {
 } from "@/ui/select";
 import { Button } from "@/ui/button";
 import { Trash2 } from "lucide-react";
+import { useOrganizations } from "@/api/hooks/use-organizations";
+import { useMemo } from "react";
 
 interface DepartmentsFiltersProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
   selectedCount: number;
   onBulkDelete: () => void;
-  orgFilter: string;
-  onOrgChange: (value: string) => void;
-  statusFilter: string;
-  onStatusChange: (value: string) => void;
-  orgOptions: string[];
   onAdd: () => void;
 }
 
 export function DepartmentsFilters({
-  searchTerm,
-  onSearchChange,
   selectedCount,
   onBulkDelete,
-  orgFilter,
-  onOrgChange,
-  statusFilter,
-  onStatusChange,
-  orgOptions,
   onAdd,
 }: DepartmentsFiltersProps) {
+  const { data: organizations } = useOrganizations({ page: 1 });
+
+  const organizationOptions = useMemo(() => {
+    if (organizations?.count) {
+      return organizations.results.map((org) => ({
+        name: org.name,
+        id: org.id,
+      }));
+    }
+  }, [organizations]);
+
   return (
     <div className="flex gap-2 mb-4 items-center justify-between">
       <Input
         placeholder="Bo'lim nomi yoki tashkilot..."
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
         className="max-w-[280px] h-10 mb-0"
       />
 
@@ -61,20 +58,20 @@ export function DepartmentsFilters({
       )}
 
       <div className="flex gap-2 items-center">
-        <Select value={orgFilter} onValueChange={onOrgChange}>
+        <Select>
           <SelectTrigger className="max-w-[160px] h-10 mb-0">
             <SelectValue placeholder="Barcha tashkilotlar" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Barcha tashkilotlar</SelectItem>
-            {orgOptions.slice(1).map((org) => (
-              <SelectItem key={org} value={org}>
-                {org}
+            {organizationOptions?.slice(1).map((org) => (
+              <SelectItem key={org.id} value={org.id}>
+                {org.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={onStatusChange}>
+        <Select>
           <SelectTrigger className="max-w-[140px] h-10 mb-0">
             <SelectValue placeholder="Barcha holatlar" />
           </SelectTrigger>
