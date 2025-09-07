@@ -4,53 +4,31 @@ import { useState } from "react";
 import { ClassificatorTable } from "@/components/classificators/classificator-table";
 import { ClassificatorModal } from "@/components/classificators/classificator-modal";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
-
-interface Classificator {
-  id: string;
-  name: string;
-  createdDate: string;
-  status: "active" | "inactive";
-}
-
-const mockClassificators: Classificator[] = [
-  {
-    id: "1",
-    name: "Shahar rejalashtirish klassifikatoru",
-    createdDate: "01.06.2025",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Iqtisodiy faoliyat klassifikatoru",
-    createdDate: "01.06.2025",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Statistik ma'lumotlar klassifikatoru",
-    createdDate: "01.06.2025",
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Ma'muriy bo'linish klassifikatoru",
-    createdDate: "01.06.2025",
-    status: "active",
-  },
-  {
-    id: "5",
-    name: "Hududiy rivojlanish klassifikatoru",
-    createdDate: "01.06.2025",
-    status: "inactive",
-  },
-];
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { classificatorService } from "@/api/services/classificator.service";
+import {
+  useBulkDeleteClassificators,
+  useCreateClassificator,
+  useDeleteClassificator,
+  useEditClassificator,
+  useGetClassificators,
+} from "@/api/hooks/use-classificator";
+import {
+  ClassificatorCreateParams,
+  Classificator,
+} from "@/api/types/classificator";
+import { queryKeys } from "@/api/querykey";
+import { useSnackbar } from "@/providers/snackbar-provider";
 
 export default function ClassificatorsPage() {
-  const [classificators, setClassificators] =
-    useState<Classificator[]>(mockClassificators);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+
+  const queryClient = useQueryClient();
+
+  const { showSuccess, showError } = useSnackbar();
+
   const [editingClassificator, setEditingClassificator] = useState<
     Classificator | undefined
   >();
@@ -60,35 +38,73 @@ export default function ClassificatorsPage() {
     isBulk?: boolean;
   }>({ isOpen: false });
 
-  const handleCreateClassificator = () => {
+  const {
+    data: classificatorsData,
+    isLoading,
+    isError,
+  } = useGetClassificators({
+    page: 1,
+  });
+
+  const { mutate: createClassificator, isPending: isCreating } =
+    useCreateClassificator();
+  const { mutate: editClassificator, isPending: isEditing } =
+    useEditClassificator();
+  const { mutate: deleteClassificator, isPending: isDeleting } =
+    useDeleteClassificator();
+  const { mutate: bulkDeleteClassificators, isPending: isBulkDeleting } =
+    useBulkDeleteClassificators();
+
+  const handleOpenCreateModal = () => {
     setModalMode("create");
     setEditingClassificator(undefined);
     setIsModalOpen(true);
   };
 
-  const handleEditClassificator = (classificator: Classificator) => {
+  const handleOpenEditModal = (classificator: Classificator) => {
     setModalMode("edit");
     setEditingClassificator(classificator);
     setIsModalOpen(true);
   };
 
   const handleSaveClassificator = (
-    classificatorData: Omit<Classificator, "id" | "createdDate">
+    classificatorData: ClassificatorCreateParams
   ) => {
     if (modalMode === "create") {
-      const newClassificator: Classificator = {
-        ...classificatorData,
-        id: Date.now().toString(),
-        createdDate: new Date().toLocaleDateString("en-GB"),
-      };
-      setClassificators((prev) => [newClassificator, ...prev]);
+      createClassificator(classificatorData, {
+        onSuccess: () => {
+          setIsModalOpen(false);
+          showSuccess("Klassifikator muvaffaqiyatli yaratildi");
+        },
+        onError: () => {
+          showError("Klassifikator yaratishda xatolik yuz berdi");
+        },
+      });
     } else if (editingClassificator) {
-      setClassificators((prev) =>
-        prev.map((cls) =>
-          cls.id === editingClassificator.id
-            ? { ...cls, ...classificatorData }
-            : cls
-        )
+      editClassificator(
+        {
+          id: editingClassificator.id,
+          data: classificatorData,
+        },
+        {
+          onSuccess: (data) => {
+            queryClient.setQueryData(
+              [queryKeys.classificators.list],
+              (oldData: Classificator[]) => {
+                return oldData.map((classificator: Classificator) => {
+                  if (classificator.id === data.id) {
+                    return data;
+                  }
+                  return classificator;
+                });
+              }
+            );
+            showSuccess("Klassifikator muvaffaqiyatli tahrirlandi");
+          },
+          onError: () => {
+            showError("Klassifikator tahrirlashda xatolik yuz berdi");
+          },
+        }
       );
     }
     setSelectedIds([]);
@@ -112,14 +128,17 @@ export default function ClassificatorsPage() {
 
   const confirmDelete = () => {
     if (deleteConfirmation.isBulk) {
-      setClassificators((prev) =>
-        prev.filter((cls) => !selectedIds.includes(cls.id))
-      );
+      bulkDeleteClassificators(selectedIds, {
+        onSuccess: () => {
+          showSuccess("Klassifikatorlar muvaffaqiyatli o'chirildi");
+        },
+        onError: () => {
+          showError("Klassifikatorlar o'chirishda xatolik yuz berdi");
+        },
+      });
       setSelectedIds([]);
     } else if (deleteConfirmation.classificatorId) {
-      setClassificators((prev) =>
-        prev.filter((cls) => cls.id !== deleteConfirmation.classificatorId)
-      );
+      deleteClassificator(deleteConfirmation.classificatorId);
     }
     setDeleteConfirmation({ isOpen: false });
   };
@@ -140,13 +159,14 @@ export default function ClassificatorsPage() {
       </div>
 
       <ClassificatorTable
-        classificators={classificators}
+        classificators={classificatorsData?.results || []}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
-        onEdit={handleEditClassificator}
+        onEdit={handleOpenEditModal}
         onDelete={handleDeleteClassificator}
         onBulkDelete={handleBulkDelete}
-        onCreateNew={handleCreateClassificator}
+        onCreateNew={handleOpenCreateModal}
+        isLoading={isLoading}
       />
 
       <ClassificatorModal
@@ -159,6 +179,7 @@ export default function ClassificatorsPage() {
 
       <ConfirmationDialog
         isOpen={deleteConfirmation.isOpen}
+        isDoingAction={isDeleting || isBulkDeleting}
         onClose={() => setDeleteConfirmation({ isOpen: false })}
         onConfirm={confirmDelete}
         title={

@@ -16,13 +16,8 @@ import {
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
 import { ClassificatorsFilters } from "@/components/classificators/classificators-filters";
-
-interface Classificator {
-  id: string;
-  name: string;
-  createdDate: string;
-  status: "active" | "inactive";
-}
+import { Classificator } from "@/api/types/classificator";
+import { Skeleton } from "@/ui/skeleton";
 
 interface ClassificatorTableProps {
   classificators: Classificator[];
@@ -32,6 +27,7 @@ interface ClassificatorTableProps {
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
   onCreateNew: () => void;
+  isLoading: boolean;
 }
 
 export function ClassificatorTable({
@@ -42,6 +38,7 @@ export function ClassificatorTable({
   onDelete,
   onBulkDelete,
   onCreateNew,
+  isLoading,
 }: ClassificatorTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -51,8 +48,8 @@ export function ClassificatorTable({
     const matchesSearch = classificator.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || classificator.status === statusFilter;
+    // Since the API doesn't have status, we'll show all as active
+    const matchesStatus = statusFilter === "all" || statusFilter === "active";
     return matchesSearch && matchesStatus;
   });
 
@@ -82,6 +79,14 @@ export function ClassificatorTable({
     router.push(`/classificator/${id}`);
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString("uz-UZ");
+    } catch {
+      return dateString;
+    }
+  };
+
   return (
     <Card className="rounded-xl">
       <ClassificatorsFilters
@@ -108,83 +113,87 @@ export function ClassificatorTable({
               </TableHead>
               <TableHead className="w-16 p-3 ">№</TableHead>
               <TableHead className="p-3">Klassifikator nomi</TableHead>
+              <TableHead className="p-3">Elementlar soni</TableHead>
               <TableHead className="p-3">Yaratilgan sana</TableHead>
               <TableHead className="p-3">Holat</TableHead>
               <TableHead className="w-32 p-3">Amallar</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredClassificators.map((classificator, index) => (
-              <TableRow
-                key={classificator.id}
-                className={` transition-colors hover:bg-muted/50 `}
-              >
-                <TableCell className="p-3">
-                  <Checkbox
-                    checked={selectedIds.includes(classificator.id)}
-                    onCheckedChange={(checked) =>
-                      handleSelectOne(classificator.id, !!checked)
-                    }
-                  />
-                </TableCell>
-                <TableCell className="font-semibold text-[var(--primary)] p-3">
-                  {index + 1}
-                </TableCell>
-                <TableCell className="font-medium p-3">
-                  {classificator.name}
-                </TableCell>
-                <TableCell className="p-3 text-[var(--muted-foreground)]">
-                  {classificator.createdDate}
-                </TableCell>
-                <TableCell className="p-3">
-                  <Badge
-                    variant={
-                      classificator.status === "active"
-                        ? "default"
-                        : "secondary"
-                    }
-                    className={
-                      classificator.status === "active"
-                        ? "bg-green-100 text-green-800 border-none"
-                        : "bg-gray-100 text-gray-800 border-none"
-                    }
+            {isLoading
+              ? Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell colSpan={7} className="p-3">
+                      <Skeleton className="h-10 w-full" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              : filteredClassificators.map((classificator, index) => (
+                  <TableRow
+                    key={classificator.id}
+                    className={` transition-colors hover:bg-muted/50 `}
                   >
-                    {classificator.status === "active" ? "Faol" : "Nofaol"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="p-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onEdit(classificator)}
-                      className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                      aria-label="Tahrirlash"
-                    >
-                      <Edit className="h-4 w-4 text-[var(--primary)]" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onDelete(classificator.id)}
-                      className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                      aria-label="O'chirish"
-                    >
-                      <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleViewDetail(classificator.id)}
-                      className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-gray-100"
-                      aria-label="Ko'rish"
-                    >
-                      <Eye className="h-4 w-4 text-[var(--muted-foreground)]" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                    <TableCell className="p-3">
+                      <Checkbox
+                        checked={selectedIds.includes(classificator.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectOne(classificator.id, !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="font-semibold text-[var(--primary)] p-3">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="font-medium p-3">
+                      {classificator.name}
+                    </TableCell>
+                    <TableCell className="p-3 text-[var(--muted-foreground)]">
+                      {classificator.elements.length}
+                    </TableCell>
+                    <TableCell className="p-3 text-[var(--muted-foreground)]">
+                      {formatDate(classificator.created)}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <Badge
+                        variant="default"
+                        className="bg-green-100 text-green-800 border-none"
+                      >
+                        Faol
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onEdit(classificator)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                          aria-label="Tahrirlash"
+                        >
+                          <Edit className="h-4 w-4 text-[var(--primary)]" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onDelete(classificator.id)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                          aria-label="O'chirish"
+                        >
+                          <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleViewDetail(classificator.id)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-gray-100"
+                          aria-label="Ko'rish"
+                        >
+                          <Eye className="h-4 w-4 text-[var(--muted-foreground)]" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
           </TableBody>
         </Table>
       </div>
