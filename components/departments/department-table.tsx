@@ -15,17 +15,11 @@ import { Badge } from "@/ui/badge";
 import { Edit, Trash2 } from "lucide-react";
 import { DepartmentsFilters } from "@/components/departments/department-filters";
 import { Card } from "@/ui/card";
-
-interface Department {
-  id: string;
-  name: string;
-  organization: string;
-  createdDate: string;
-  status: "active" | "inactive";
-}
+import { PaginatedData } from "@/api/types/general";
+import { Department } from "@/api/types/deparments";
 
 interface DepartmentTableProps {
-  departments: Department[];
+  departments: PaginatedData<Department>;
   onEdit: (department: Department) => void;
   onDelete: (department: Department) => void;
   onBulkDelete: (departmentIds: string[]) => void;
@@ -51,21 +45,10 @@ export function DepartmentTable({
     "Iqtisodiyot vazirligi",
     "Moliya vazirligi",
   ];
-  const statusOptions = ["", "active", "inactive"];
-
-  const filteredDepartments = departments.filter((dept) => {
-    const matchesSearch =
-      dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dept.organization.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesOrg = orgFilter === "all" || dept.organization === orgFilter;
-    const matchesStatus =
-      statusFilter === "all" || dept.status === statusFilter;
-    return matchesSearch && matchesOrg && matchesStatus;
-  });
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(filteredDepartments.map((dept) => dept.id));
+      setSelectedIds(departments?.results?.map((dept) => dept.id));
     } else {
       setSelectedIds([]);
     }
@@ -90,15 +73,8 @@ export function DepartmentTable({
     <div className="space-y-4">
       <Card>
         <DepartmentsFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
           selectedCount={selectedIds.length}
           onBulkDelete={handleBulkDelete}
-          orgFilter={orgFilter}
-          onOrgChange={setOrgFilter}
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-          orgOptions={orgOptions}
           onAdd={onCreateNew}
         />
         <div className="overflow-hidden">
@@ -108,8 +84,8 @@ export function DepartmentTable({
                 <TableHead className="w-12 p-3 ">
                   <Checkbox
                     checked={
-                      selectedIds.length === filteredDepartments.length &&
-                      filteredDepartments.length > 0
+                      selectedIds.length === departments?.results?.length &&
+                      departments?.results?.length > 0
                     }
                     onCheckedChange={handleSelectAll}
                   />
@@ -123,7 +99,7 @@ export function DepartmentTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDepartments.map((department, index) => (
+              {departments?.results?.map((department, index) => (
                 <TableRow
                   key={department.id}
                   className={" transition-colors hover:bg-muted/50 "}
@@ -146,20 +122,18 @@ export function DepartmentTable({
                     {department.organization}
                   </TableCell>
                   <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {department.createdDate}
+                    {department.created}
                   </TableCell>
                   <TableCell className="p-3">
                     <Badge
-                      variant={
-                        department.status === "active" ? "default" : "secondary"
-                      }
+                      variant={department.is_active ? "default" : "secondary"}
                       className={
-                        department.status === "active"
+                        department.is_active
                           ? "bg-green-100 text-green-800 border-none"
                           : "bg-gray-100 text-gray-800 border-none"
                       }
                     >
-                      {department.status === "active" ? "Faol" : "Nofaol"}
+                      {department.is_active ? "Faol" : "Nofaol"}
                     </Badge>
                   </TableCell>
                   <TableCell className="p-3">

@@ -6,41 +6,20 @@ import { DepartmentTable } from "@/components/departments/department-table";
 import { DepartmentModal } from "@/components/departments/department-modal";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
 import { Card } from "@/ui/card";
-
-interface Department {
-  id: string;
-  name: string;
-  organization: string;
-  createdDate: string;
-  status: "active" | "inactive";
-}
-
-const mockDepartments: Department[] = [
-  {
-    id: "1",
-    name: "Makroiqtisodiy ko'rsatkichlar va milliy hisoblar bo'limi",
-    organization: "Milliy statistika qo'mitasi",
-    createdDate: "12.05.2025",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Aholi va ijtimoiy statistika bo'limi",
-    organization: "Milliy statistika qo'mitasi",
-    createdDate: "12.05.2025",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Hududiy statistika bo'limi",
-    organization: "Milliy statistika qo'mitasi",
-    createdDate: "12.05.2025",
-    status: "inactive",
-  },
-];
+import {
+  useCreateDepartment,
+  useDeleteDepartment,
+  useDepartments,
+  useEditDepartment,
+} from "@/api/hooks/use-departmants";
+import { Department, DepartmentCreateParams } from "@/api/types/deparments";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/api/querykey";
 
 export default function DepartmentsPage() {
-  const [departments, setDepartments] = useState<Department[]>(mockDepartments);
+  const queryClient = useQueryClient();
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
@@ -53,41 +32,70 @@ export default function DepartmentsPage() {
     isBulk?: boolean;
   }>({ isOpen: false });
 
-  const handleCreateDepartment = () => {
+  const {
+    data: departmentsList,
+    isPending,
+    isFetching,
+  } = useDepartments({ page: 1 });
+  const { mutate: createDepartment, isPending: isCreatingDep } =
+    useCreateDepartment();
+  const { mutate: editDepartment, isPending: isEditingDep } =
+    useEditDepartment();
+  const { mutate: deleteDepartment, isPending: isDeletingDep } =
+    useDeleteDepartment();
+
+  const handleOpenCreateModal = () => {
     setModalMode("create");
     setEditingDepartment(undefined);
     setIsModalOpen(true);
   };
 
-  const handleEditDepartment = (department: Department) => {
+  const handleOpenEditModal = (department: Department) => {
     setModalMode("edit");
     setEditingDepartment(department);
     setIsModalOpen(true);
   };
 
-  const handleSaveDepartment = (
-    departmentData: Omit<Department, "id" | "createdDate">
-  ) => {
+  const handleSaveDepartment = (departmentData: DepartmentCreateParams) => {
     if (modalMode === "create") {
-      const newDepartment: Department = {
-        ...departmentData,
-        id: Date.now().toString(),
-        createdDate: new Date().toLocaleDateString("en-GB"),
-      };
-      setDepartments((prev) => [newDepartment, ...prev]);
+      createDepartment(departmentData, {
+        onSuccess: () => {
+          toast.success("Bo'lim muvaffaqiyatli qo'shildi!");
+        },
+        onError: (error) => {
+          toast.error(`Xatolik yuz berdi: ${error.message}`);
+        },
+        onSettled: () => {
+          setIsModalOpen(false);
+          queryClient.invalidateQueries({
+            queryKey: [queryKeys.departments.list],
+          });
+        },
+      });
     } else if (editingDepartment) {
-      setDepartments((prev) =>
-        prev.map((dept) =>
-          dept.id === editingDepartment.id
-            ? { ...dept, ...departmentData }
-            : dept
-        )
+      editDepartment(
+        { id: editingDepartment.id, ...departmentData },
+        {
+          onSuccess: () => {
+            toast.success("Bo'lim ma'lumotlari muvaffaqiyatli tahrirlandi!");
+          },
+          onError: (error) => {
+            toast.error(`Xatolik yuz berdi: ${error.message}`);
+          },
+          onSettled: () => {
+            setIsModalOpen(false);
+            setEditingDepartment(undefined);
+            queryClient.invalidateQueries({
+              queryKey: [queryKeys.departments.list],
+            });
+          },
+        }
       );
     }
     setSelectedIds([]);
   };
 
-  const handleDeleteDepartment = (department: Department) => {
+  const handleOpenDeleteModal = (department: Department) => {
     setDeleteConfirmation({
       isOpen: true,
       departmentId: department.id,
@@ -103,18 +111,25 @@ export default function DepartmentsPage() {
     });
   };
 
-  const confirmDelete = () => {
+  const handleDelete = () => {
     if (deleteConfirmation.isBulk) {
-      setDepartments((prev) =>
-        prev.filter((dept) => !selectedIds.includes(dept.id))
-      );
-      setSelectedIds([]);
+      toast.info("Ushbu funksiya tez orada qo'shiladi!");
     } else if (deleteConfirmation.departmentId) {
-      setDepartments((prev) =>
-        prev.filter((dept) => dept.id !== deleteConfirmation.departmentId)
-      );
+      deleteDepartment(deleteConfirmation.departmentId, {
+        onSuccess: () => {
+          toast.success("Bo'lim muvaffaqiyatli o'chirildi!");
+        },
+        onError: (error) => {
+          toast.error(`Xatolik yuz berdi: ${error.message}`);
+        },
+        onSettled: () => {
+          setDeleteConfirmation({ isOpen: false });
+          queryClient.invalidateQueries({
+            queryKey: [queryKeys.departments.list],
+          });
+        },
+      });
     }
-    setDeleteConfirmation({ isOpen: false });
   };
 
   return (
@@ -124,19 +139,21 @@ export default function DepartmentsPage() {
           <nav className="flex items-center space-x-2 text-sm text-[#6b7280] mb-2">
             <span>Asosiy</span>
             <span>›</span>
-            <span className="text-[#1f2937]">Bo'limlar</span>
+            <span className="text-[#1f2937]">Bo'lim va quyi tashkilotlar</span>
           </nav>
-          <h1 className="text-2xl font-bold text-[#1f2937]">Bo'limlar</h1>
+          <h1 className="text-2xl font-bold text-[#1f2937]">
+            Bo'lim va quyi tashkilotlar
+          </h1>
         </div>
       </div>
 
       <Card className="border-none p-0">
         <DepartmentTable
-          departments={departments}
-          onEdit={handleEditDepartment}
-          onDelete={handleDeleteDepartment}
+          departments={departmentsList!}
+          onEdit={handleOpenEditModal}
+          onDelete={handleOpenDeleteModal}
           onBulkDelete={handleBulkDelete}
-          onCreateNew={handleCreateDepartment}
+          onCreateNew={handleOpenCreateModal}
         />
       </Card>
 
@@ -146,12 +163,13 @@ export default function DepartmentsPage() {
         onSave={handleSaveDepartment}
         department={editingDepartment}
         mode={modalMode}
+        isDoingAction={isCreatingDep || isEditingDep}
       />
 
       <ConfirmationDialog
         isOpen={deleteConfirmation.isOpen}
         onClose={() => setDeleteConfirmation({ isOpen: false })}
-        onConfirm={confirmDelete}
+        onConfirm={handleDelete}
         title={
           deleteConfirmation.isBulk
             ? "Bo'limlarni o'chirish"
@@ -162,6 +180,8 @@ export default function DepartmentsPage() {
             ? `Haqiqatan ham ${selectedIds.length} ta tanlangan bo'limni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.`
             : "Haqiqatan ham bu bo'limni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
         }
+        isDoingAction={isDeletingDep}
+        isDoingActionText="O'chirilmoqda"
       />
     </div>
   );

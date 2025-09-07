@@ -1,6 +1,6 @@
 import api from "../axios";
 import {
-  Deparment,
+  Department,
   DepartmentCreateParams,
   DepartmentGetParams,
   DepartmentUpdateParams,
@@ -10,9 +10,9 @@ import { PaginatedData } from "../types/general";
 export const departmentsService = {
   getDepartments: async (
     params?: DepartmentGetParams
-  ): Promise<PaginatedData<Deparment>> => {
+  ): Promise<PaginatedData<Department>> => {
     try {
-      const response = await api.get<PaginatedData<Deparment>>(
+      const response = await api.get<PaginatedData<Department>>(
         "/secondary-organizations/all/",
         { params }
       );
@@ -25,9 +25,9 @@ export const departmentsService = {
 
   createDepartment: async (
     params: DepartmentCreateParams
-  ): Promise<Deparment> => {
+  ): Promise<Department> => {
     try {
-      const response = await api.post<Deparment>(
+      const response = await api.post<Department>(
         "/secondary-organizations/create/",
         params
       );
@@ -40,9 +40,9 @@ export const departmentsService = {
 
   updateDepartment: async (
     params: DepartmentUpdateParams
-  ): Promise<Deparment> => {
+  ): Promise<Department> => {
     try {
-      const response = await api.put<Deparment>(
+      const response = await api.put<Department>(
         `/secondary-organizations/${params.id}/`,
         params
       );

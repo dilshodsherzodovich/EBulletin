@@ -1,10 +1,11 @@
-export interface Deparment {
+export interface Department {
   id: string;
   name: string;
   organization_id: string;
   organization: string;
   created: string;
-  uodated: string;
+  updated: string;
+  is_active: boolean;
 }
 
 export interface DepartmentGetParams {
@@ -14,6 +15,7 @@ export interface DepartmentGetParams {
 export interface DepartmentCreateParams {
   name: string;
   organization_id: string;
+  is_active?: boolean;
 }
 
 export interface DepartmentUpdateParams {
