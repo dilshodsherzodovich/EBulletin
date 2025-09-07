@@ -1,8 +1,9 @@
 import api from "../axios";
+import { PaginatedData } from "../types/general";
 import {
   CreateUserRequest,
   CreateUserResponse,
-  UsersListResponse,
+  UserData,
   UserDetailResponse,
 } from "../types/user";
 
@@ -22,9 +23,9 @@ export const userService = {
     }
   },
 
-  getUsers: async (): Promise<UsersListResponse> => {
+  getUsers: async (): Promise<PaginatedData<UserData>> => {
     try {
-      const response = await api.get<UsersListResponse>("/user/list/");
+      const response = await api.get<PaginatedData<UserData>>("/user/all/");
       return response.data;
     } catch (error) {
       console.error("Get users error:", error);

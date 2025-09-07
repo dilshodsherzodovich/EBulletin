@@ -9,6 +9,9 @@ import {
 } from "@/ui/select";
 import { Button } from "@/ui/button";
 import { Trash2 } from "lucide-react";
+import { userRoles } from "@/lib/users";
+import { useOrganizations } from "@/api/hooks/use-organizations";
+import { useDepartments } from "@/api/hooks/use-departmants";
 
 interface UserFiltersProps {
   searchTerm: string;
@@ -47,54 +50,59 @@ export function UserFilters({
   deptOptions,
   onAdd,
 }: UserFiltersProps) {
+  const { data: organizations, isPending: isOrgsPending } = useOrganizations({
+    page: 1,
+  });
+  const { data: departments, isPending: isDepsPending } = useDepartments({
+    page: 1,
+  });
+
   return (
     <div className="flex gap-2 mb-4 items-center justify-between">
       <Input
         placeholder="Foydalanuvchi nomi yoki login..."
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
         className="min-w-[180px] h-10 mb-0"
       />
-      <Select value={roleFilter} onValueChange={onRoleChange}>
+      <Select>
         <SelectTrigger className="min-w-[160px] h-10 mb-0">
           <SelectValue placeholder="Barcha rollar" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Barcha rollar</SelectItem>
-          {roleOptions.slice(1).map((role) => (
+          {userRoles.slice(1).map((role) => (
             <SelectItem key={role} value={role}>
               {role}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Select value={orgFilter} onValueChange={onOrgChange}>
+      <Select>
         <SelectTrigger className="min-w-[160px] h-10 mb-0">
           <SelectValue placeholder="Barcha tashkilotlar" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Barcha tashkilotlar</SelectItem>
-          {orgOptions.slice(1).map((org) => (
-            <SelectItem key={org} value={org}>
-              {org}
+          {organizations?.results?.map((org) => (
+            <SelectItem key={org.id} value={org.id}>
+              {org.name}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Select value={deptFilter} onValueChange={onDeptChange}>
+      <Select>
         <SelectTrigger className="min-w-[160px] h-10 mb-0">
           <SelectValue placeholder="Barcha bo'limlar" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Barcha bo'limlar</SelectItem>
-          {deptOptions.slice(1).map((dept) => (
-            <SelectItem key={dept} value={dept}>
-              {dept}
+          {departments?.results?.map((dept) => (
+            <SelectItem key={dept.id} value={dept.id}>
+              {dept.name}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Select value={statusFilter} onValueChange={onStatusChange}>
+      <Select>
         <SelectTrigger className="min-w-[140px] h-10 mb-0">
           <SelectValue placeholder="Barcha holatlar" />
         </SelectTrigger>

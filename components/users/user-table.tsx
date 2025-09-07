@@ -17,9 +17,12 @@ import { Edit, Trash2, User, Shield, Building } from "lucide-react";
 
 import { UserFilters } from "@/components/users/user-filters";
 import { Card } from "@/ui/card";
+import { PaginatedData } from "@/api/types/general";
+import { UserData, UserRole } from "@/api/types/user";
+import { getRoleName } from "@/lib/utils";
 
 interface UserTableProps {
-  users: any[];
+  users: PaginatedData<UserData>;
   selectedIds: string[];
   onSelectionChange: (selected: string[]) => void;
   onEdit: (user: any) => void;
@@ -48,25 +51,9 @@ export function UserTable({
   const orgOptions = ["", "Statistika", "Analitika", "Rejalashtirish"];
   const deptOptions = ["", "Statistika", "Analitika", "Rejalashtirish"];
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.login.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesOrg = orgFilter === "all" || user.department === orgFilter;
-    const matchesDept = deptFilter === "all" || user.department === deptFilter;
-    const matchesStatus =
-      statusFilter === "all" || user.status === statusFilter;
-    return (
-      matchesSearch && matchesRole && matchesOrg && matchesDept && matchesStatus
-    );
-  });
-
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(filteredUsers.map((user) => user.id));
+      onSelectionChange(users?.results?.map((user) => user.id));
     } else {
       onSelectionChange([]);
     }
@@ -85,14 +72,6 @@ export function UserTable({
       onBulkDelete(selectedIds);
     }
   };
-
-  if (!users || users.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        Foydalanuvchilar topilmadi
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -123,8 +102,8 @@ export function UserTable({
                 <TableHead className="w-12 p-3 ">
                   <Checkbox
                     checked={
-                      selectedIds.length === filteredUsers.length &&
-                      filteredUsers.length > 0
+                      selectedIds.length === users?.results?.length &&
+                      users?.results?.length > 0
                     }
                     onCheckedChange={handleSelectAll}
                   />
@@ -139,7 +118,7 @@ export function UserTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user, index) => (
+              {users?.results?.map((user, index) => (
                 <TableRow
                   key={user.id}
                   className={` transition-colors hover:bg-muted/50 `}
@@ -162,10 +141,10 @@ export function UserTable({
                       </div>
                       <div>
                         <p className="font-medium text-[var(--foreground)]">
-                          {user.name}
+                          {user.first_name + " " + user.last_name}
                         </p>
                         <p className="text-xs text-[var(--muted-foreground)]">
-                          {user.login}
+                          {user.username}
                         </p>
                       </div>
                     </div>
@@ -177,7 +156,7 @@ export function UserTable({
                         variant="secondary"
                         className="bg-[var(--muted)] text-[var(--foreground)] border-none"
                       >
-                        {user.role}
+                        {getRoleName(user.role as UserRole).toUpperCase()}
                       </Badge>
                     </div>
                   </TableCell>
@@ -185,35 +164,23 @@ export function UserTable({
                     <div className="flex items-center gap-2">
                       <Building className="w-4 h-4 text-[var(--primary)]" />
                       <span className="text-[var(--muted-foreground)]">
-                        {user.department}
+                        {user?.profile?.secondary_organization}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="text-[var(--muted-foreground)] p-3">
-                    {user.createdDate}
+                    {user.createdAt}
                   </TableCell>
                   <TableCell className="p-3">
                     <Badge
-                      variant={
-                        user.status === "active" ? "default" : "secondary"
-                      }
+                      variant={user.is_active ? "default" : "secondary"}
                       className={
-                        user.status === "active"
+                        user.is_active
                           ? "bg-green-100 text-green-800 border-none"
-                          : user.status === "reserve"
-                          ? "bg-blue-100 text-blue-800 border-none"
-                          : user.status === "repair"
-                          ? "bg-red-100 text-red-800 border-none"
                           : "bg-gray-100 text-gray-800 border-none"
                       }
                     >
-                      {user.status === "active"
-                        ? "Faol"
-                        : user.status === "reserve"
-                        ? "Zaxirada"
-                        : user.status === "repair"
-                        ? "Ta'mirda"
-                        : "Nofaol"}
+                      {user.is_active ? "Faol" : "Nofaol"}
                     </Badge>
                   </TableCell>
                   <TableCell className="p-3">

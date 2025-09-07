@@ -13,12 +13,17 @@ import {
 import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
 import { Card } from "@/ui/card";
+import { UserData } from "@/api/types/user";
+import { useOrganizations } from "@/api/hooks/use-organizations";
+import { useDepartments } from "@/api/hooks/use-departmants";
+import { userRoles } from "@/lib/users";
+import { getRoleName } from "@/lib/utils";
 
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
   mode: "create" | "edit";
-  user?: any;
+  user?: UserData;
   onSubmit: (formData: any) => void;
   isLoading?: boolean;
 }
@@ -45,12 +50,20 @@ export function UserModal({
   onSubmit,
   isLoading = false,
 }: UserModalProps) {
+  const { data: organizations, isPending: isLoadingOrganizations } =
+    useOrganizations({
+      page: 1,
+    });
+  const { data: deparments, isPending: isLoadingDepartments } = useDepartments({
+    page: 1,
+  });
+
   const [formData, setFormData] = useState({
     lastName: "",
     firstName: "",
-    department: "",
+    secondary_organization_id: "",
     organization: "Milliy statistika qo'mitasi",
-    login: "",
+    username: "",
     password: "",
     role: "",
     status: "active",
@@ -61,22 +74,22 @@ export function UserModal({
   useEffect(() => {
     if (mode === "edit" && user) {
       setFormData({
-        lastName: user.name.split(" ")[0] || "",
-        firstName: user.name.split(" ")[1] || "",
-        department: user.department,
+        lastName: user?.last_name || "",
+        firstName: user?.first_name || "",
+        secondary_organization_id: user?.profile?.secondary_organization!,
         organization: "Milliy statistika qo'mitasi",
-        login: user.login,
+        username: user.username,
         password: "",
         role: user.role,
-        status: user.status,
+        status: user.is_active ? "active" : "inactive",
       });
     } else {
       setFormData({
         lastName: "",
         firstName: "",
-        department: "",
+        secondary_organization_id: "",
         organization: "Milliy statistika qo'mitasi",
-        login: "",
+        username: "",
         password: "",
         role: "",
         status: "active",
@@ -94,8 +107,8 @@ export function UserModal({
     if (!formData.firstName.trim()) {
       newErrors.firstName = "Ism kiritilishi shart";
     }
-    if (!formData.login.trim()) {
-      newErrors.login = "Login kiritilishi shart";
+    if (!formData.username.trim()) {
+      newErrors.login = "Foydalanuvchi nomi kiritilishi shart";
     }
     if (mode === "create" && !formData.password.trim()) {
       newErrors.password = "Parol kiritilishi shart";
@@ -103,8 +116,8 @@ export function UserModal({
     if (!formData.role) {
       newErrors.role = "Rol tanlanishi shart";
     }
-    if (!formData.department) {
-      newErrors.department = "Bo'lim tanlanishi shart";
+    if (!formData.secondary_organization_id) {
+      newErrors.department = "Quyi tashkilot tanlanishi shart";
     }
 
     setErrors(newErrors);
@@ -126,6 +139,7 @@ export function UserModal({
       ? "Yangi foydalanuvchi yaratish"
       : "Foydalanuvchi ma'lumotlarini tahrirlash";
   const submitText = mode === "create" ? "Saqlash" : "Yangilash";
+  const loadingText = mode === "create" ? "Yaratilmoqda" : "Yangilanmoqda";
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
@@ -167,12 +181,19 @@ export function UserModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
-                Boshqarma/bo'lim *
+                Tashkilot
+              </Label>
+              <Input value={formData.organization} readOnly />
+            </div>
+
+            <div>
+              <Label className="text-sm text-[var(--muted-foreground)]">
+                Quyi tashkilot *
               </Label>
               <Select
-                value={formData.department}
+                value={formData.secondary_organization_id}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, department: value })
+                  setFormData({ ...formData, secondary_organization_id: value })
                 }
               >
                 <SelectTrigger
@@ -192,12 +213,6 @@ export function UserModal({
                 <p className="text-red-500 text-xs mt-1">{errors.department}</p>
               )}
             </div>
-            <div>
-              <Label className="text-sm text-[var(--muted-foreground)]">
-                Tashkilot
-              </Label>
-              <Input value={formData.organization} readOnly />
-            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -206,9 +221,9 @@ export function UserModal({
                 Login *
               </Label>
               <Input
-                value={formData.login}
+                value={formData.username}
                 onChange={(e) =>
-                  setFormData({ ...formData, login: e.target.value })
+                  setFormData({ ...formData, username: e.target.value })
                 }
                 className={errors.login ? "border-red-500" : ""}
               />
@@ -251,9 +266,9 @@ export function UserModal({
                   <SelectValue placeholder="Rol tanlang" />
                 </SelectTrigger>
                 <SelectContent>
-                  {roles.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {userRoles?.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {getRoleName(opt)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -312,7 +327,7 @@ export function UserModal({
               className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-8"
               disabled={isLoading}
             >
-              {isLoading ? "Saqlanmoqda..." : submitText}
+              {isLoading ? loadingText : submitText}
             </Button>
           </div>
         </form>
