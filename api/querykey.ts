@@ -9,4 +9,10 @@ export const queryKeys = {
     edit: "edit-organization",
     delete: "delete-organization",
   },
+  departments: {
+    list: "departments",
+    create: "create-department",
+    edit: "edit-department",
+    delete: "delete-department",
+  },
 } as const;
