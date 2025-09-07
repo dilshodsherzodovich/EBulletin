@@ -31,10 +31,16 @@ export const useCreateClassificator = () => {
 };
 
 export const useEditClassificator = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: [queryKeys.classificators.edit],
     mutationFn: (params: ClassificatorUpdateParams) =>
       classificatorService.editClassificator(params),
+    onSuccess: (_, params) => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.classificators.list],
+      });
+    },
   });
 };
 

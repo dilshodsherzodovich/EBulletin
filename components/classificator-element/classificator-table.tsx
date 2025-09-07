@@ -11,18 +11,11 @@ import {
 } from "@/ui/table";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
-import { Edit, Icon, Plus, Trash2 } from "lucide-react";
+import { Edit, Plus, Trash2 } from "lucide-react";
 import { Card } from "@/ui/card";
 import { Input } from "@/ui/input";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
-
-interface ClassificatorElement {
-  id: string;
-  name: string;
-  type: string;
-  information: string;
-  createdDate: string;
-}
+import { ClassificatorElement } from "@/api/types/classificator";
 
 interface ClassificatorTableProps {
   elements: ClassificatorElement[];
@@ -133,57 +126,66 @@ export function ClassificatorTable({
                 </TableHead>
                 <TableHead className="w-16 p-3">#</TableHead>
                 <TableHead className="p-3">Element nomi</TableHead>
-                <TableHead className="p-3">Yaratilgan sana</TableHead>
                 <TableHead className="w-32 p-3">Amallar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredElements.map((element, index) => (
-                <TableRow
-                  key={element.id}
-                  className="transition-colors hover:bg-muted/50"
-                >
-                  <TableCell className="p-3">
-                    <Checkbox
-                      checked={selectedIds.includes(element.id)}
-                      onCheckedChange={(checked) =>
-                        handleSelectElement(element.id, !!checked)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="font-semibold text-[var(--primary)] p-3">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <span className="font-medium">{element.name}</span>
-                  </TableCell>
-                  <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {element.createdDate}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onEdit(element)}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                        aria-label="Tahrirlash"
-                      >
-                        <Edit className="h-4 w-4 text-[var(--primary)]" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onDelete(element)}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                        aria-label="O'chirish"
-                      >
-                        <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                      </Button>
-                    </div>
+              {filteredElements.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    {searchTerm
+                      ? "Qidiruv natijasi topilmadi"
+                      : "Elementlar mavjud emas"}
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredElements.map((element, index) => (
+                  <TableRow
+                    key={element.id}
+                    className="transition-colors hover:bg-muted/50"
+                  >
+                    <TableCell className="p-3">
+                      <Checkbox
+                        checked={selectedIds.includes(element.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectElement(element.id, !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="font-semibold text-[var(--primary)] p-3">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <span className="font-medium">{element.name}</span>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onEdit(element)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                          aria-label="Tahrirlash"
+                        >
+                          <Edit className="h-4 w-4 text-[var(--primary)]" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onDelete(element)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                          aria-label="O'chirish"
+                        >
+                          <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

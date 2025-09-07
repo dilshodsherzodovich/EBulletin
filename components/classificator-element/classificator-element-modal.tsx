@@ -9,13 +9,7 @@ import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import { Upload, FileSpreadsheet, Plus, X, AlertCircle } from "lucide-react";
-
-interface ClassificatorElement {
-  id: string;
-  name: string;
-  type: string;
-  createdDate: string;
-}
+import { ClassificatorElement } from "@/api/types/classificator";
 
 interface ClassificatorElementModalProps {
   isOpen: boolean;
@@ -49,7 +43,7 @@ export function ClassificatorElementModal({
   useEffect(() => {
     if (mode === "edit" && element) {
       setElementName(element.name);
-      setActiveTab(element.type);
+      setActiveTab("individual");
     } else {
       setElementName("");
       setActiveTab("individual");
@@ -66,8 +60,6 @@ export function ClassificatorElementModal({
       if (elementName.trim()) {
         elementsToSave.push({
           name: elementName.trim(),
-          type: activeTab,
-          createdDate: new Date().toISOString().split("T")[0],
         });
       }
 
@@ -75,8 +67,6 @@ export function ClassificatorElementModal({
       bulkElements.forEach((elementName) => {
         elementsToSave.push({
           name: elementName,
-          type: activeTab,
-          createdDate: new Date().toISOString().split("T")[0],
         });
       });
     } else if (activeTab === "template" && uploadedElements.length > 0) {
@@ -84,8 +74,6 @@ export function ClassificatorElementModal({
       uploadedElements.forEach((elementName) => {
         elementsToSave.push({
           name: elementName,
-          type: activeTab,
-          createdDate: new Date().toISOString().split("T")[0],
         });
       });
     }
@@ -130,8 +118,6 @@ export function ClassificatorElementModal({
     if (elementName.trim()) {
       elementsToSave.push({
         name: elementName.trim(),
-        type: activeTab,
-        createdDate: new Date().toISOString().split("T")[0],
       });
     }
 
@@ -139,8 +125,6 @@ export function ClassificatorElementModal({
     bulkElements.forEach((elementName) => {
       elementsToSave.push({
         name: elementName,
-        type: activeTab,
-        createdDate: new Date().toISOString().split("T")[0],
       });
     });
 

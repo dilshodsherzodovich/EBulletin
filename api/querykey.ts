@@ -20,6 +20,7 @@ export const queryKeys = {
     create: "create-classificator",
     edit: "edit-classificator",
     delete: "delete-classificator",
+    detail: (id: string) => `classificator-detail-${id}`,
   },
   departments: {
     list: "departments",
