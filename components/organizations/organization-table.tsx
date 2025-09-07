@@ -15,18 +15,18 @@ import { Badge } from "@/ui/badge";
 import { Edit, Trash2, Building2 } from "lucide-react";
 import { OrganizationsFilters } from "@/components/organizations/organization-filters";
 import { Card } from "@/ui/card";
-
-interface Organization {
-  id: string;
-  name: string;
-  type: string;
-  parentOrganization?: string;
-  createdDate: string;
-  status: "active" | "inactive";
-}
+import { PaginatedData } from "@/api/types/general";
+import {
+  Organization,
+  OrganizationCreateParams,
+} from "@/api/types/organizations";
+import {
+  useCreateOrganization,
+  useEditOrganization,
+} from "@/api/hooks/use-organizations";
 
 interface OrganizationTableProps {
-  organizations: Organization[];
+  organizations: PaginatedData<Organization>;
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   onEdit: (organization: Organization) => void;
@@ -44,37 +44,9 @@ export function OrganizationTable({
   onBulkDelete,
   onCreateNew,
 }: OrganizationTableProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-
-  // Example options (replace with real data as needed)
-  const typeOptions = [
-    "",
-    "hukumat",
-    "vazirlik",
-    "qo'mita",
-    "bo'lim",
-    "agentlik",
-    "byuro",
-  ];
-
-  const filteredOrganizations = organizations.filter((org) => {
-    const matchesSearch =
-      org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      org.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (org.parentOrganization &&
-        org.parentOrganization
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()));
-    const matchesType = typeFilter === "all" || org.type === typeFilter;
-    const matchesStatus = statusFilter === "all" || org.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
-  });
-
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(filteredOrganizations.map((org) => org.id));
+      onSelectionChange(organizations?.results?.map((org) => org.id));
     } else {
       onSelectionChange([]);
     }
@@ -97,15 +69,8 @@ export function OrganizationTable({
   return (
     <Card className="rounded-xl">
       <OrganizationsFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
         selectedCount={selectedIds.length}
         onBulkDelete={handleBulkDelete}
-        typeFilter={typeFilter}
-        onTypeChange={setTypeFilter}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        typeOptions={typeOptions}
         onAdd={onCreateNew}
       />
       <div className="overflow-hidden">
@@ -115,8 +80,8 @@ export function OrganizationTable({
               <TableHead className="w-12 p-3 ">
                 <Checkbox
                   checked={
-                    selectedIds.length === filteredOrganizations.length &&
-                    filteredOrganizations.length > 0
+                    selectedIds.length === organizations?.results?.length &&
+                    organizations?.results.length > 0
                   }
                   onCheckedChange={handleSelectAll}
                 />
@@ -131,7 +96,7 @@ export function OrganizationTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOrganizations.map((organization, index) => (
+            {organizations?.results?.map((organization, index) => (
               <TableRow
                 key={organization.id}
                 className={` transition-colors hover:bg-muted/50 `}
@@ -162,23 +127,21 @@ export function OrganizationTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="p-3 text-[var(--muted-foreground)]">
-                  {organization.parentOrganization || "—"}
+                  {organization.parent?.name || "—"}
                 </TableCell>
                 <TableCell className="p-3 text-[var(--muted-foreground)]">
-                  {organization.createdDate}
+                  {new Date().toDateString()}
                 </TableCell>
                 <TableCell className="p-3">
                   <Badge
-                    variant={
-                      organization.status === "active" ? "default" : "secondary"
-                    }
+                    variant={organization.is_active ? "default" : "secondary"}
                     className={
-                      organization.status === "active"
+                      organization.is_active
                         ? "bg-green-100 text-green-800 border-none"
                         : "bg-gray-100 text-gray-800 border-none"
                     }
                   >
-                    {organization.status === "active" ? "Faol" : "Nofaol"}
+                    {organization.is_active ? "Faol" : "Nofaol"}
                   </Badge>
                 </TableCell>
                 <TableCell className="p-3">

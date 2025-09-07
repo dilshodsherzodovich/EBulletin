@@ -23,6 +23,8 @@ interface ConfirmationDialogProps {
   confirmText?: string;
   cancelText?: string;
   variant?: "danger" | "warning" | "info";
+  isDoingAction: boolean;
+  isDoingActionText?: string;
 }
 
 export function ConfirmationDialog({
@@ -33,11 +35,12 @@ export function ConfirmationDialog({
   message,
   confirmText = "Tasdiqlash",
   cancelText = "Bekor qilish",
+  isDoingActionText = "O'chirilmoqda",
   variant = "danger",
+  isDoingAction,
 }: ConfirmationDialogProps) {
   const handleConfirm = () => {
     onConfirm();
-    onClose();
   };
 
   const variantStyles = {
@@ -72,11 +75,20 @@ export function ConfirmationDialog({
           </div>
         </DialogHeader>
         <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-          <Button variant="outline" onClick={onClose} className="mt-2 sm:mt-0">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="mt-2 sm:mt-0"
+            disabled={isDoingAction}
+          >
             {cancelText}
           </Button>
-          <Button onClick={handleConfirm} className={buttonStyles[variant]}>
-            {confirmText}
+          <Button
+            onClick={handleConfirm}
+            className={buttonStyles[variant]}
+            disabled={isDoingAction}
+          >
+            {isDoingAction ? isDoingActionText : confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>

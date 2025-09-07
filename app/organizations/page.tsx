@@ -4,61 +4,23 @@ import { useState } from "react";
 import { OrganizationTable } from "@/components/organizations/organization-table";
 import { OrganizationModal } from "@/components/organizations/organization-modal";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
-
-interface Organization {
-  id: string;
-  name: string;
-  type: string;
-  parentOrganization?: string;
-  createdDate: string;
-  status: "active" | "inactive";
-}
-
-const mockOrganizations: Organization[] = [
-  {
-    id: "1",
-    name: "Milliy statistika qo'mitasi",
-    type: "qo'mita",
-    createdDate: "12.05.2025",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Iqtisodiyot va moliya vazirligi",
-    type: "vazirlik",
-    parentOrganization: "Vazirlar mahkamasi",
-    createdDate: "12.05.2025",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Davlat soliq qo'mitasi",
-    type: "qo'mita",
-    parentOrganization: "Iqtisodiyot va moliya vazirligi",
-    createdDate: "12.05.2025",
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Toshkent shahar statistika bo'limi",
-    type: "bo'lim",
-    parentOrganization: "Milliy statistika qo'mitasi",
-    createdDate: "12.05.2025",
-    status: "active",
-  },
-  {
-    id: "5",
-    name: "Hududlarni rivojlantirish agentligi",
-    type: "agentlik",
-    parentOrganization: "Iqtisodiyot va moliya vazirligi",
-    createdDate: "12.05.2025",
-    status: "inactive",
-  },
-];
+import {
+  useCreateOrganization,
+  useDeleteOrganization,
+  useEditOrganization,
+  useOrganizations,
+} from "@/api/hooks/use-organizations";
+import {
+  Organization,
+  OrganizationCreateParams,
+} from "@/api/types/organizations";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/api/querykey";
 
 export default function OrganizationsPage() {
-  const [organizations, setOrganizations] =
-    useState<Organization[]>(mockOrganizations);
+  const queryClient = useQueryClient();
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
@@ -71,41 +33,73 @@ export default function OrganizationsPage() {
     isBulk?: boolean;
   }>({ isOpen: false });
 
-  const handleCreateOrganization = () => {
+  const {
+    data: organizationsList,
+    isPending,
+    isFetching,
+  } = useOrganizations({ page: 1 });
+
+  const { mutate: createOrganization, isPending: isCreatingOrg } =
+    useCreateOrganization();
+  const { mutate: editOrganization, isPending: isEditingOrg } =
+    useEditOrganization();
+  const { mutate: deleteOrganization, isPending: isDeletingOrg } =
+    useDeleteOrganization();
+
+  const handleOpenCreateModal = () => {
     setModalMode("create");
     setEditingOrganization(undefined);
     setIsModalOpen(true);
   };
 
-  const handleEditOrganization = (organization: Organization) => {
+  const handleOpenEditModal = (organization: Organization) => {
     setModalMode("edit");
     setEditingOrganization(organization);
     setIsModalOpen(true);
   };
 
   const handleSaveOrganization = (
-    organizationData: Omit<Organization, "id" | "createdDate">
+    organizationData: OrganizationCreateParams
   ) => {
     if (modalMode === "create") {
-      const newOrganization: Organization = {
-        ...organizationData,
-        id: Date.now().toString(),
-        createdDate: new Date().toLocaleDateString("en-GB"),
-      };
-      setOrganizations((prev) => [newOrganization, ...prev]);
+      createOrganization(organizationData, {
+        onSuccess: () => {
+          toast.success("Tashkilot muvaffaqiyatli qo'shildi!");
+        },
+        onError: (error) => {
+          toast.error(`Xatolik yuz berdi: ${error.message}`);
+        },
+        onSettled: () => {
+          setIsModalOpen(false);
+          queryClient.invalidateQueries({
+            queryKey: [queryKeys.organizations.list],
+          });
+        },
+      });
     } else if (editingOrganization) {
-      setOrganizations((prev) =>
-        prev.map((org) =>
-          org.id === editingOrganization.id
-            ? { ...org, ...organizationData }
-            : org
-        )
+      editOrganization(
+        { id: editingOrganization.id, ...organizationData },
+        {
+          onSuccess: () => {
+            toast.success("Tashkilot ma'lumotlari muvaffaqiyatli tahrirlandi!");
+          },
+          onError: (error) => {
+            toast.error(`Xatolik yuz berdi: ${error.message}`);
+          },
+          onSettled: () => {
+            setIsModalOpen(false);
+            setEditingOrganization(undefined);
+            queryClient.invalidateQueries({
+              queryKey: [queryKeys.organizations.list],
+            });
+          },
+        }
       );
     }
     setSelectedIds([]);
   };
 
-  const handleDeleteOrganization = (organizationId: string) => {
+  const handelOpenDeleteModal = (organizationId: string) => {
     setDeleteConfirmation({
       isOpen: true,
       organizationId,
@@ -121,18 +115,25 @@ export default function OrganizationsPage() {
     });
   };
 
-  const confirmDelete = () => {
+  const handleDelete = () => {
     if (deleteConfirmation.isBulk) {
-      setOrganizations((prev) =>
-        prev.filter((org) => !selectedIds.includes(org.id))
-      );
-      setSelectedIds([]);
+      toast.info("Ushbu funksiya tez orada qo'shiladi!");
     } else if (deleteConfirmation.organizationId) {
-      setOrganizations((prev) =>
-        prev.filter((org) => org.id !== deleteConfirmation.organizationId)
-      );
+      deleteOrganization(deleteConfirmation.organizationId, {
+        onSuccess: () => {
+          toast.success("Tashkilot muvaffaqiyatli o'chirildi!");
+        },
+        onError: (error) => {
+          toast.error(`Xatolik yuz berdi: ${error.message}`);
+        },
+        onSettled: () => {
+          setDeleteConfirmation({ isOpen: false });
+          queryClient.invalidateQueries({
+            queryKey: [queryKeys.organizations.list],
+          });
+        },
+      });
     }
-    setDeleteConfirmation({ isOpen: false });
   };
 
   return (
@@ -149,13 +150,13 @@ export default function OrganizationsPage() {
       </div>
 
       <OrganizationTable
-        organizations={organizations}
+        organizations={organizationsList!}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
-        onEdit={handleEditOrganization}
-        onDelete={handleDeleteOrganization}
+        onEdit={handleOpenEditModal}
+        onDelete={handelOpenDeleteModal}
         onBulkDelete={handleBulkDelete}
-        onCreateNew={handleCreateOrganization}
+        onCreateNew={handleOpenCreateModal}
       />
 
       <OrganizationModal
@@ -164,12 +165,13 @@ export default function OrganizationsPage() {
         onSave={handleSaveOrganization}
         organization={editingOrganization}
         mode={modalMode}
+        isDoingAction={isCreatingOrg || isEditingOrg}
       />
 
       <ConfirmationDialog
         isOpen={deleteConfirmation.isOpen}
         onClose={() => setDeleteConfirmation({ isOpen: false })}
-        onConfirm={confirmDelete}
+        onConfirm={handleDelete}
         title={
           deleteConfirmation.isBulk
             ? "Tashkilotlarni o'chirish"
@@ -180,6 +182,7 @@ export default function OrganizationsPage() {
             ? `Haqiqatan ham ${selectedIds.length} ta tanlangan tashkilotni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.`
             : "Haqiqatan ham bu tashkilotni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
         }
+        isDoingAction={isDeletingOrg}
       />
     </div>
   );
