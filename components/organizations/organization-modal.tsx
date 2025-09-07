@@ -107,7 +107,11 @@ export function OrganizationModal({
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <Label className="text-sm text-[var(--muted-foreground)]">
+              <Label
+                className="text-sm text-[var(--muted-foreground)]"
+                aria-required
+                htmlFor="name"
+              >
                 Tashkilot nomi
               </Label>
               <Input
@@ -116,6 +120,7 @@ export function OrganizationModal({
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
                 placeholder="Tashkilot nomini kiriting"
+                id="name"
                 required
               />
             </div>
