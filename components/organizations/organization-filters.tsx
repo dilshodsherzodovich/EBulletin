@@ -10,36 +10,30 @@ import { Button } from "@/ui/button";
 import { Trash2 } from "lucide-react";
 
 interface OrganizationsFiltersProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
   selectedCount: number;
   onBulkDelete: () => void;
-  typeFilter: string;
-  onTypeChange: (value: string) => void;
-  statusFilter: string;
-  onStatusChange: (value: string) => void;
-  typeOptions: string[];
   onAdd: () => void;
 }
 
+const typeOptions = [
+  "",
+  "hukumat",
+  "vazirlik",
+  "qo'mita",
+  "bo'lim",
+  "agentlik",
+  "byuro",
+];
+
 export function OrganizationsFilters({
-  searchTerm,
-  onSearchChange,
   selectedCount,
   onBulkDelete,
-  typeFilter,
-  onTypeChange,
-  statusFilter,
-  onStatusChange,
-  typeOptions,
   onAdd,
 }: OrganizationsFiltersProps) {
   return (
     <div className="flex gap-2 mb-4 items-center justify-between">
       <Input
         placeholder="Tashkilot nomi yoki turi..."
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
         className="max-w-[280px] h-10 mb-0"
       />
       {selectedCount > 0 && (
@@ -59,7 +53,7 @@ export function OrganizationsFilters({
         </div>
       )}
       <div className="flex gap-2 items-center">
-        <Select value={typeFilter} onValueChange={onTypeChange}>
+        <Select>
           <SelectTrigger className="max-w-[160px] h-10 mb-0">
             <SelectValue placeholder="Barcha turlar" />
           </SelectTrigger>
@@ -72,7 +66,7 @@ export function OrganizationsFilters({
             ))}
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={onStatusChange}>
+        <Select>
           <SelectTrigger className="max-w-[140px] h-10 mb-0">
             <SelectValue placeholder="Barcha holatlar" />
           </SelectTrigger>

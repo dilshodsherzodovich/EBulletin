@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Modal } from "@/ui/modal";
 import { Input } from "@/ui/input";
 import {
@@ -13,22 +13,20 @@ import {
 import { Button } from "@/ui/button";
 import { Label } from "@/ui/label";
 import { Card } from "@/ui/card";
-
-interface Organization {
-  id: string;
-  name: string;
-  type: string;
-  parentOrganization?: string;
-  createdDate: string;
-  status: "active" | "inactive";
-}
+import {
+  Organization,
+  OrganizationCreateParams,
+  OrganizationType,
+} from "@/api/types/organizations";
+import { useOrganizations } from "@/api/hooks/use-organizations";
 
 interface OrganizationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (organization: Omit<Organization, "id" | "createdDate">) => void;
+  onSave: (organization: OrganizationCreateParams) => void;
   organization?: Organization;
   mode: "create" | "edit";
+  isDoingAction: boolean;
 }
 
 const organizationTypes = [
@@ -40,22 +38,13 @@ const organizationTypes = [
   { value: "byuro", label: "Byuro" },
 ];
 
-const parentOrganizations = [
-  { value: "none", label: "Yo'q" },
-  {
-    value: "Milliy statistika qo'mitasi",
-    label: "Milliy statistika qo'mitasi",
-  },
-  { value: "Iqtisodiyot vazirligi", label: "Iqtisodiyot vazirligi" },
-  { value: "Vazirlar mahkamasi", label: "Vazirlar mahkamasi" },
-];
-
 export function OrganizationModal({
   isOpen,
   onClose,
   onSave,
   organization,
   mode,
+  isDoingAction,
 }: OrganizationModalProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -63,14 +52,25 @@ export function OrganizationModal({
     parentOrganization: "none",
     status: "active" as "active" | "inactive",
   });
+  const { data: organizationsList, isPending: isLoadingOrganizations } =
+    useOrganizations({ page: 1 });
+
+  const parentOrganizations = useMemo(() => {
+    if (organizationsList?.results?.length) {
+      return organizationsList.results.map((org) => ({
+        value: org.id,
+        label: org.name,
+      }));
+    } else return [];
+  }, [organizationsList]);
 
   useEffect(() => {
     if (organization && mode === "edit") {
       setFormData({
         name: organization.name,
-        type: organization.type,
-        parentOrganization: organization.parentOrganization || "none",
-        status: organization.status,
+        type: organization.type!,
+        parentOrganization: organization.parent?.id || "none",
+        status: organization.is_active ? "active" : "inactive",
       });
     } else {
       setFormData({
@@ -86,20 +86,20 @@ export function OrganizationModal({
     e.preventDefault();
     onSave({
       name: formData.name.trim(),
-      type: formData.type,
-      parentOrganization:
+      type: formData.type as OrganizationType,
+      parent_id:
         formData.parentOrganization === "none"
           ? undefined
           : formData.parentOrganization,
-      status: formData.status,
+      is_active: formData.status === "active",
     });
-    onClose();
   };
 
   const title =
     mode === "create" ? "Tashkilot yaratish" : "Tashkilotni tahrirlash";
   const submitText =
     mode === "create" ? "Tashkilot yaratish" : "Tashkilotni yangilash";
+  const doingActionText = mode === "create" ? "Yaratilmoqda" : "Yangilanmoqda";
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
@@ -161,6 +161,7 @@ export function OrganizationModal({
                   <SelectValue placeholder="Yuqori tashkilot tanlang" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Yo'q</SelectItem>
                   {parentOrganizations.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -218,8 +219,9 @@ export function OrganizationModal({
             <Button
               type="submit"
               className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-8"
+              disabled={isDoingAction}
             >
-              {submitText}
+              {isDoingAction ? doingActionText : submitText}
             </Button>
           </div>
         </form>
