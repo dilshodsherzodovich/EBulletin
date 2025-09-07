@@ -57,7 +57,7 @@ export const classificatorService = {
 
   deleteClassificator: async (id: string): Promise<void> => {
     try {
-      await api.delete(`/classificator/delete/${id}/`);
+      await api.delete(`/classificator/${id}/`);
     } catch (error) {
       console.error("Error deleting classificator:", error);
       throw error;
@@ -66,7 +66,7 @@ export const classificatorService = {
 
   bulkDeleteClassificators: async (ids: string[]): Promise<void> => {
     try {
-      await api.delete(`/classificator/delete/bulk/`, {
+      await api.delete(`/classificator/bulk/`, {
         data: ids,
       });
     } catch (error) {

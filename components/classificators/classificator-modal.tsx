@@ -10,6 +10,7 @@ import {
   Classificator,
   ClassificatorCreateParams,
 } from "@/api/types/classificator";
+import { LoadingButton } from "@/ui/loading-button";
 
 interface ClassificatorModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface ClassificatorModalProps {
   onSave: (data: ClassificatorCreateParams) => void;
   classificator?: Classificator;
   mode: "create" | "edit";
+  isPending: boolean;
 }
 
 export function ClassificatorModal({
@@ -24,6 +26,7 @@ export function ClassificatorModal({
   onClose,
   onSave,
   classificator,
+  isPending,
   mode,
 }: ClassificatorModalProps) {
   const [formData, setFormData] = useState<ClassificatorCreateParams>({
@@ -69,7 +72,6 @@ export function ClassificatorModal({
     e.preventDefault();
     if (formData.name.trim()) {
       onSave(formData);
-      onClose();
     }
   };
 
@@ -161,13 +163,14 @@ export function ClassificatorModal({
             <Button type="button" variant="outline" onClick={handleClose}>
               Bekor qilish
             </Button>
-            <Button
+            <LoadingButton
+              isPending={isPending}
               type="submit"
               disabled={!formData.name.trim()}
               className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-8"
             >
               {submitText}
-            </Button>
+            </LoadingButton>
           </div>
         </form>
       </Card>

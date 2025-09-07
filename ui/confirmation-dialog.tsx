@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -85,10 +85,17 @@ export function ConfirmationDialog({
           </Button>
           <Button
             onClick={handleConfirm}
-            className={buttonStyles[variant]}
+            className={cn(
+              buttonStyles[variant],
+              "flex items-center gap-2 min-w-32"
+            )}
             disabled={isDoingAction}
           >
-            {isDoingAction ? isDoingActionText : confirmText}
+            {isDoingAction ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              confirmText
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

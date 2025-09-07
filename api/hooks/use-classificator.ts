@@ -46,6 +46,7 @@ export const useDeleteClassificator = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.classificators.list],
+        exact: false,
       });
     },
   });

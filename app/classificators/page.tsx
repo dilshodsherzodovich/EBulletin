@@ -24,6 +24,7 @@ export default function ClassificatorsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [activePage, setActivePage] = useState(1);
 
   const queryClient = useQueryClient();
 
@@ -38,12 +39,8 @@ export default function ClassificatorsPage() {
     isBulk?: boolean;
   }>({ isOpen: false });
 
-  const {
-    data: classificatorsData,
-    isLoading,
-    isError,
-  } = useGetClassificators({
-    page: 1,
+  const { data: classificatorsData, isFetching } = useGetClassificators({
+    page: activePage,
   });
 
   const { mutate: createClassificator, isPending: isCreating } =
@@ -75,6 +72,8 @@ export default function ClassificatorsPage() {
         onSuccess: () => {
           setIsModalOpen(false);
           showSuccess("Klassifikator muvaffaqiyatli yaratildi");
+          setActivePage(1);
+          setIsModalOpen(false);
         },
         onError: () => {
           showError("Klassifikator yaratishda xatolik yuz berdi");
@@ -88,18 +87,12 @@ export default function ClassificatorsPage() {
         },
         {
           onSuccess: (data) => {
-            queryClient.setQueryData(
-              [queryKeys.classificators.list],
-              (oldData: Classificator[]) => {
-                return oldData.map((classificator: Classificator) => {
-                  if (classificator.id === data.id) {
-                    return data;
-                  }
-                  return classificator;
-                });
-              }
-            );
+            queryClient.invalidateQueries({
+              queryKey: [queryKeys.classificators.list],
+            });
             showSuccess("Klassifikator muvaffaqiyatli tahrirlandi");
+            setActivePage(1);
+            setIsModalOpen(false);
           },
           onError: () => {
             showError("Klassifikator tahrirlashda xatolik yuz berdi");
@@ -131,16 +124,26 @@ export default function ClassificatorsPage() {
       bulkDeleteClassificators(selectedIds, {
         onSuccess: () => {
           showSuccess("Klassifikatorlar muvaffaqiyatli o'chirildi");
+          setDeleteConfirmation({ isOpen: false });
+          setSelectedIds([]);
         },
         onError: () => {
           showError("Klassifikatorlar o'chirishda xatolik yuz berdi");
         },
       });
-      setSelectedIds([]);
     } else if (deleteConfirmation.classificatorId) {
-      deleteClassificator(deleteConfirmation.classificatorId);
+      deleteClassificator(deleteConfirmation.classificatorId, {
+        onSuccess: () => {
+          showSuccess("Klassifikator muvaffaqiyatli o'chirildi");
+          setDeleteConfirmation({ isOpen: false });
+          setSelectedIds([]);
+        },
+        onError: () => {
+          showError("Klassifikator o'chirishda xatolik yuz berdi");
+        },
+      });
+      setSelectedIds([]);
     }
-    setDeleteConfirmation({ isOpen: false });
   };
 
   return (
@@ -166,7 +169,10 @@ export default function ClassificatorsPage() {
         onDelete={handleDeleteClassificator}
         onBulkDelete={handleBulkDelete}
         onCreateNew={handleOpenCreateModal}
-        isLoading={isLoading}
+        isLoading={isFetching}
+        activePage={activePage}
+        setActivePage={setActivePage}
+        totalItems={classificatorsData?.count || 0}
       />
 
       <ClassificatorModal
@@ -175,6 +181,7 @@ export default function ClassificatorsPage() {
         onSave={handleSaveClassificator}
         classificator={editingClassificator}
         mode={modalMode}
+        isPending={isCreating || isEditing}
       />
 
       <ConfirmationDialog
