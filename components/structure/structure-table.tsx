@@ -124,7 +124,7 @@ export function StructureTable({ bulletins }: StructureTableProps) {
               </TableHead>
               <TableHead className="w-16 p-3">№</TableHead>
               <TableHead className="p-3">Byulleten nomi</TableHead>
-              <TableHead className="p-3">Mas'ul bo'lim</TableHead>
+              <TableHead className="p-3">Mas'ul Quyi tashkilot</TableHead>
               <TableHead className="p-3">Qabul qiluvchi tashkilotlar</TableHead>
               <TableHead className="p-3">Mas'ul shaxslar</TableHead>
               <TableHead className="p-3">Muddat turi</TableHead>

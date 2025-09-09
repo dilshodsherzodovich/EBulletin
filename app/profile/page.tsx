@@ -346,7 +346,7 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-sm font-medium text-[var(--muted-foreground)] mb-2">
-                  Bo'lim
+                  Quyi tashkilot
                 </label>
                 <div className="flex items-center gap-2 p-3 bg-[var(--muted)]/20 rounded-lg">
                   <Building2 className="w-4 h-4 text-[var(--muted-foreground)]" />
@@ -378,7 +378,7 @@ export default function ProfilePage() {
           {/* Organizations & Departments */}
           <Card className="p-6 border-[var(--border)] rounded-xl">
             <h3 className="text-xl font-semibold text-[var(--foreground)] mb-4">
-              Tashkilotlar va bo'limlar
+              Tashkilotlar va Quyi tashkilotlar
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Organizations */}
@@ -407,7 +407,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 mb-3">
                   <Briefcase className="w-5 h-5 text-[var(--primary)]" />
                   <h4 className="font-semibold text-[var(--foreground)]">
-                    Bo'limlar
+                    Quyi tashkilotlar
                   </h4>
                 </div>
                 <div className="space-y-2">

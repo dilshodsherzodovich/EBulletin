@@ -36,7 +36,7 @@ export function DepartmentsFilters({
   return (
     <div className="flex gap-2 mb-4 items-center justify-between">
       <Input
-        placeholder="Bo'lim nomi yoki tashkilot..."
+        placeholder="Quyi tashkilot nomi yoki tashkilot..."
         className="max-w-[280px] h-10 mb-0"
       />
 
@@ -99,7 +99,7 @@ export function DepartmentsFilters({
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Yangi bo'lim
+            Yangi Quyi tashkilot
           </span>
         </Button>
       </div>

@@ -114,7 +114,7 @@ export function UserTable({
                 <TableHead className="w-16 p-3 ">#</TableHead>
                 <TableHead className="p-3">Foydalanuvchi</TableHead>
                 <TableHead className="p-3">Rol</TableHead>
-                <TableHead className="p-3">Bo'lim</TableHead>
+                <TableHead className="p-3">Quyi tashkilot</TableHead>
                 <TableHead className="p-3">Yaratilgan sana</TableHead>
                 <TableHead className="p-3">Holat</TableHead>
                 <TableHead className="w-32 p-3">Amallar</TableHead>

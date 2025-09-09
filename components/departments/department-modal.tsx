@@ -76,7 +76,10 @@ export function DepartmentModal({
     onClose();
   };
 
-  const title = mode === "create" ? "Bo'lim yaratish" : "Bo'limni tahrirlash";
+  const title =
+    mode === "create"
+      ? "Quyi tashkilot yaratish"
+      : "Quyi tashkilotni tahrirlash";
   const submitText = mode === "create" ? "Yaratish" : "O'zgarishlarni saqlash";
   const actionText = mode === "create" ? "Yaratilmmoqda" : "O'zgartirilmoqda";
 
@@ -87,20 +90,20 @@ export function DepartmentModal({
           <div className="grid grid-cols-1 gap-2">
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
-                Bo'lim nomi
+                Quyi tashkilot nomi
               </Label>
               <Input
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                placeholder="Bo'lim nomini kiriting"
+                placeholder="Quyi tashkilot nomini kiriting"
                 required
               />
             </div>
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
-                Bo'lim tegishli tashkilot
+                Quyi tashkilot tegishli tashkilot
               </Label>
               <Select
                 value={formData.organization}

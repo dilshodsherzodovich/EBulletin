@@ -20,7 +20,7 @@ const typeOptions = [
   "hukumat",
   "vazirlik",
   "qo'mita",
-  "bo'lim",
+  "Quyi tashkilot",
   "agentlik",
   "byuro",
 ];

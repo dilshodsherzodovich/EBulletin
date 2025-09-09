@@ -91,7 +91,7 @@ export function DepartmentTable({
                   />
                 </TableHead>
                 <TableHead className="w-16 p-3 ">#</TableHead>
-                <TableHead className="p-3">Bo'lim</TableHead>
+                <TableHead className="p-3">Quyi tashkilot</TableHead>
                 <TableHead className="p-3">Tashkilot</TableHead>
                 <TableHead className="p-3">Yaratilgan sana</TableHead>
                 <TableHead className="p-3">Holat</TableHead>

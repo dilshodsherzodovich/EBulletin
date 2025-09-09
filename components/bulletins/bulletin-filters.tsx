@@ -83,18 +83,24 @@ export function BulletinFilters({
 
           <Select value={departmentFilter} onValueChange={onDepartmentChange}>
             <SelectTrigger className="w-40 border-[var(--border)]">
-              <SelectValue placeholder="Bo'lim" />
+              <SelectValue placeholder="Quyi tashkilot" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Barcha bo'limlar</SelectItem>
-              <SelectItem value="Qishloq xo'jaligi bo'limi">
-                Qishloq xo'jaligi bo'limi
+              <SelectItem value="all">Barcha Quyi tashkilotlar</SelectItem>
+              <SelectItem value="Qishloq xo'jaligi Quyi tashkiloti">
+                Qishloq xo'jaligi Quyi tashkiloti
               </SelectItem>
-              <SelectItem value="San'at bo'limi">San'at bo'limi</SelectItem>
-              <SelectItem value="Tibbiyot bo'limi">Tibbiyot bo'limi</SelectItem>
-              <SelectItem value="Ta'lim bo'limi">Ta'lim bo'limi</SelectItem>
-              <SelectItem value="Iqtisodiyot bo'limi">
-                Iqtisodiyot bo'limi
+              <SelectItem value="San'at Quyi tashkiloti">
+                San'at Quyi tashkiloti
+              </SelectItem>
+              <SelectItem value="Tibbiyot Quyi tashkiloti">
+                Tibbiyot Quyi tashkiloti
+              </SelectItem>
+              <SelectItem value="Ta'lim Quyi tashkiloti">
+                Ta'lim Quyi tashkiloti
+              </SelectItem>
+              <SelectItem value="Iqtisodiyot Quyi tashkiloti">
+                Iqtisodiyot Quyi tashkiloti
               </SelectItem>
             </SelectContent>
           </Select>

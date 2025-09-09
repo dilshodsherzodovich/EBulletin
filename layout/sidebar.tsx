@@ -25,7 +25,7 @@ const navigationItems = [
     icon: Users,
   },
   {
-    name: "Bo'limlar", // Departments
+    name: "Quyi tashkilotlar", // Departments
     href: "/departments",
     icon: Building2,
   },

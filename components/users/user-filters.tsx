@@ -91,10 +91,10 @@ export function UserFilters({
       </Select>
       <Select>
         <SelectTrigger className="min-w-[160px] h-10 mb-0">
-          <SelectValue placeholder="Barcha bo'limlar" />
+          <SelectValue placeholder="Barcha Quyi tashkilotlar" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Barcha bo'limlar</SelectItem>
+          <SelectItem value="all">Barcha Quyi tashkilotlar</SelectItem>
           {departments?.results?.map((dept) => (
             <SelectItem key={dept.id} value={dept.id}>
               {dept.name}

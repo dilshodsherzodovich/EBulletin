@@ -119,7 +119,7 @@ export default function DepartmentsPage() {
     } else if (deleteConfirmation.departmentId) {
       deleteDepartment(deleteConfirmation.departmentId, {
         onSuccess: () => {
-          toast.success("Bo'lim muvaffaqiyatli o'chirildi!");
+          toast.success("Quyi tashkilot muvaffaqiyatli o'chirildi!");
         },
         onError: (error) => {
           toast.error(`Xatolik yuz berdi: ${error.message}`);
@@ -141,10 +141,10 @@ export default function DepartmentsPage() {
           <nav className="flex items-center space-x-2 text-sm text-[#6b7280] mb-2">
             <span>Asosiy</span>
             <span>›</span>
-            <span className="text-[#1f2937]">Bo'lim va quyi tashkilotlar</span>
+            <span className="text-[#1f2937]">Quyi tashkilotlar</span>
           </nav>
           <h1 className="text-2xl font-bold text-[#1f2937]">
-            Bo'lim va quyi tashkilotlar
+            Quyi tashkilotlar
           </h1>
         </div>
       </div>
@@ -174,13 +174,13 @@ export default function DepartmentsPage() {
         onConfirm={handleDelete}
         title={
           deleteConfirmation.isBulk
-            ? "Bo'limlarni o'chirish"
-            : "Bo'limni o'chirish"
+            ? "Quyi tashkilotlarni o'chirish"
+            : "Quyi tashkilotni o'chirish"
         }
         message={
           deleteConfirmation.isBulk
-            ? `Haqiqatan ham ${selectedIds.length} ta tanlangan bo'limni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.`
-            : "Haqiqatan ham bu bo'limni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
+            ? `Haqiqatan ham ${selectedIds.length} ta tanlangan quyi tashkilotni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.`
+            : "Haqiqatan ham bu quyi tashkilotni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
         }
         isDoingAction={isDeletingDep}
         isDoingActionText="O'chirilmoqda"

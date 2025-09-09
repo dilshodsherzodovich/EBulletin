@@ -4,7 +4,7 @@ export type OrganizationType =
   | "hukumat"
   | "vazirlik"
   | "qo'mita"
-  | "bo'lim"
+  | "Quyi tashkilot"
   | "agentlik"
   | "byuro";
 

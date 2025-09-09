@@ -251,7 +251,7 @@ export function UserModal({
                 <SelectTrigger
                   className={errors.department ? "border-red-500" : ""}
                 >
-                  <SelectValue placeholder="Bo'lim tanlang" />
+                  <SelectValue placeholder="Quyi tashkilot tanlang" />
                 </SelectTrigger>
                 <SelectContent>
                   {departments?.results?.map((opt) => (
