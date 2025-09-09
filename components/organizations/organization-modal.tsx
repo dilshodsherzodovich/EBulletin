@@ -19,6 +19,7 @@ import {
   OrganizationType,
 } from "@/api/types/organizations";
 import { useOrganizations } from "@/api/hooks/use-organizations";
+import { LoadingButton } from "@/ui/loading-button";
 
 interface OrganizationModalProps {
   isOpen: boolean;
@@ -99,7 +100,6 @@ export function OrganizationModal({
     mode === "create" ? "Tashkilot yaratish" : "Tashkilotni tahrirlash";
   const submitText =
     mode === "create" ? "Tashkilot yaratish" : "Tashkilotni yangilash";
-  const doingActionText = mode === "create" ? "Yaratilmoqda" : "Yangilanmoqda";
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
@@ -221,13 +221,9 @@ export function OrganizationModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Bekor qilish
             </Button>
-            <Button
-              type="submit"
-              className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-8"
-              disabled={isDoingAction}
-            >
-              {isDoingAction ? doingActionText : submitText}
-            </Button>
+            <LoadingButton type="submit" isPending={isDoingAction}>
+              {submitText}
+            </LoadingButton>
           </div>
         </form>
       </Card>

@@ -1,3 +1,4 @@
+import { UserRole } from "@/api/types/user";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -17,5 +18,25 @@ export const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("uz-UZ");
   } catch {
     return dateString;
+  }
+};
+
+export const getRoleName = (roleName: UserRole): string => {
+  switch (roleName) {
+    case "ADMIN": {
+      return "Administrator";
+    }
+    case "MODERATOR": {
+      return "Moderator";
+    }
+    case "OBSERVER": {
+      return "Kuzatuvchi";
+    }
+    case "OPERATOR": {
+      return "Operator";
+    }
+    default: {
+      return "";
+    }
   }
 };

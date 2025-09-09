@@ -1,7 +1,7 @@
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userService } from "../services/user.service";
-import { CreateUserRequest, CreateUserResponse } from "../types/user";
+import { CreateUserRequest, CreateUserResponse } from "@/api/types/user";
 import { queryKeys } from "../querykey";
 
 export function useCreateUser() {
@@ -60,12 +60,11 @@ export function useUpdateUser() {
       id: string;
       userData: Partial<CreateUserRequest>;
     }) => userService.updateUser(id, userData),
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.users.all] });
       queryClient.invalidateQueries({
         queryKey: [queryKeys.users.detail(variables.id)],
       });
-      console.log("User updated successfully:", data);
     },
     onError: (error) => {
       console.error("Error updating user:", error.message);
@@ -78,10 +77,9 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: (id: string) => userService.deleteUser(id),
-    onSuccess: (data, id) => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.users.all] });
       queryClient.removeQueries({ queryKey: [queryKeys.users.detail(id)] });
-      console.log("User deleted successfully:", data);
     },
     onError: (error) => {
       console.error("Error deleting user:", error.message);

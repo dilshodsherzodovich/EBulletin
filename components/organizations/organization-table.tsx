@@ -16,14 +16,9 @@ import { Edit, Trash2, Building2 } from "lucide-react";
 import { OrganizationsFilters } from "@/components/organizations/organization-filters";
 import { Card } from "@/ui/card";
 import { PaginatedData } from "@/api/types/general";
-import {
-  Organization,
-  OrganizationCreateParams,
-} from "@/api/types/organizations";
-import {
-  useCreateOrganization,
-  useEditOrganization,
-} from "@/api/hooks/use-organizations";
+import { Organization } from "@/api/types/organizations";
+
+import { TableSkeleton } from "@/ui/table-skeleton";
 
 interface OrganizationTableProps {
   organizations: PaginatedData<Organization>;
@@ -33,6 +28,7 @@ interface OrganizationTableProps {
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
   onCreateNew: () => void;
+  isLoading: boolean;
 }
 
 export function OrganizationTable({
@@ -43,6 +39,7 @@ export function OrganizationTable({
   onDelete,
   onBulkDelete,
   onCreateNew,
+  isLoading,
 }: OrganizationTableProps) {
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -96,78 +93,90 @@ export function OrganizationTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {organizations?.results?.map((organization, index) => (
-              <TableRow
-                key={organization.id}
-                className={` transition-colors hover:bg-muted/50 `}
-              >
-                <TableCell className="p-3">
-                  <Checkbox
-                    checked={selectedIds.includes(organization.id)}
-                    onCheckedChange={(checked) =>
-                      handleSelectOne(organization.id, !!checked)
-                    }
-                  />
-                </TableCell>
-                <TableCell className="font-semibold text-[var(--primary)] p-3">
-                  {index + 1}
-                </TableCell>
-                <TableCell className="p-3">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-[var(--primary)]" />
-                    <span className="font-medium">{organization.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="p-3">
-                  <Badge
-                    variant="secondary"
-                    className="bg-[var(--muted)] text-[var(--foreground)] border-none"
-                  >
-                    {organization.type}
-                  </Badge>
-                </TableCell>
-                <TableCell className="p-3 text-[var(--muted-foreground)]">
-                  {organization.parent?.name || "—"}
-                </TableCell>
-                <TableCell className="p-3 text-[var(--muted-foreground)]">
-                  {new Date().toDateString()}
-                </TableCell>
-                <TableCell className="p-3">
-                  <Badge
-                    variant={organization.is_active ? "default" : "secondary"}
-                    className={
-                      organization.is_active
-                        ? "bg-green-100 text-green-800 border-none"
-                        : "bg-gray-100 text-gray-800 border-none"
-                    }
-                  >
-                    {organization.is_active ? "Faol" : "Nofaol"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="p-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onEdit(organization)}
-                      className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                      aria-label="Tahrirlash"
-                    >
-                      <Edit className="h-4 w-4 text-[var(--primary)]" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onDelete(organization.id)}
-                      className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                      aria-label="O'chirish"
-                    >
-                      <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                    </Button>
+            {isLoading ? (
+              <TableSkeleton rows={5} columns={8} />
+            ) : organizations?.results.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center">
+                  <div className="text-center py-8 text-[var(--muted-foreground)]">
+                    Tashkilotlar topilmadi.
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              organizations?.results?.map((organization, index) => (
+                <TableRow
+                  key={organization.id}
+                  className={` transition-colors hover:bg-muted/50 `}
+                >
+                  <TableCell className="p-3">
+                    <Checkbox
+                      checked={selectedIds.includes(organization.id)}
+                      onCheckedChange={(checked) =>
+                        handleSelectOne(organization.id, !!checked)
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="font-semibold text-[var(--primary)] p-3">
+                    {index + 1}
+                  </TableCell>
+                  <TableCell className="p-3">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-[var(--primary)]" />
+                      <span className="font-medium">{organization.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="p-3">
+                    <Badge
+                      variant="secondary"
+                      className="bg-[var(--muted)] text-[var(--foreground)] border-none"
+                    >
+                      {organization.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="p-3 text-[var(--muted-foreground)]">
+                    {organization.parent?.name || "—"}
+                  </TableCell>
+                  <TableCell className="p-3 text-[var(--muted-foreground)]">
+                    {new Date().toDateString()}
+                  </TableCell>
+                  <TableCell className="p-3">
+                    <Badge
+                      variant={organization.is_active ? "default" : "secondary"}
+                      className={
+                        organization.is_active
+                          ? "bg-green-100 text-green-800 border-none"
+                          : "bg-gray-100 text-gray-800 border-none"
+                      }
+                    >
+                      {organization.is_active ? "Faol" : "Nofaol"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="p-3">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => onEdit(organization)}
+                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                        aria-label="Tahrirlash"
+                      >
+                        <Edit className="h-4 w-4 text-[var(--primary)]" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => onDelete(organization.id)}
+                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                        aria-label="O'chirish"
+                      >
+                        <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

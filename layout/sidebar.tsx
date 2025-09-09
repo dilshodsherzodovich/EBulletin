@@ -68,7 +68,7 @@ export function Sidebar() {
           </div>
           <div>
             <div className="font-semibold text-[var(--foreground)] text-sm">
-              Milliy Statistika
+              {/* Milliy Statistika */}
             </div>
             <div className="text-xs text-[var(--muted-foreground)]">
               Qo'mitasi

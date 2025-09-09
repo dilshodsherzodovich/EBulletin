@@ -17,15 +17,20 @@ import { Edit, Trash2, User, Shield, Building } from "lucide-react";
 
 import { UserFilters } from "@/components/users/user-filters";
 import { Card } from "@/ui/card";
+import { PaginatedData } from "@/api/types/general";
+import { UserData, UserRole } from "@/api/types/user";
+import { getRoleName } from "@/lib/utils";
+import { TableSkeleton } from "@/ui/table-skeleton";
 
 interface UserTableProps {
-  users: any[];
+  users: PaginatedData<UserData>;
   selectedIds: string[];
   onSelectionChange: (selected: string[]) => void;
   onEdit: (user: any) => void;
   onDelete: (user: any) => void;
   onBulkDelete: (ids: string[]) => void;
   onCreateNew: () => void;
+  isLoading: boolean;
 }
 
 export function UserTable({
@@ -36,6 +41,7 @@ export function UserTable({
   onDelete,
   onBulkDelete,
   onCreateNew,
+  isLoading,
 }: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState(""); // Added search state
   const [roleFilter, setRoleFilter] = useState("all");
@@ -48,25 +54,9 @@ export function UserTable({
   const orgOptions = ["", "Statistika", "Analitika", "Rejalashtirish"];
   const deptOptions = ["", "Statistika", "Analitika", "Rejalashtirish"];
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.login.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesOrg = orgFilter === "all" || user.department === orgFilter;
-    const matchesDept = deptFilter === "all" || user.department === deptFilter;
-    const matchesStatus =
-      statusFilter === "all" || user.status === statusFilter;
-    return (
-      matchesSearch && matchesRole && matchesOrg && matchesDept && matchesStatus
-    );
-  });
-
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(filteredUsers.map((user) => user.id));
+      onSelectionChange(users?.results?.map((user) => user.id));
     } else {
       onSelectionChange([]);
     }
@@ -85,14 +75,6 @@ export function UserTable({
       onBulkDelete(selectedIds);
     }
   };
-
-  if (!users || users.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        Foydalanuvchilar topilmadi
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -123,8 +105,8 @@ export function UserTable({
                 <TableHead className="w-12 p-3 ">
                   <Checkbox
                     checked={
-                      selectedIds.length === filteredUsers.length &&
-                      filteredUsers.length > 0
+                      selectedIds.length === users?.results?.length &&
+                      users?.results?.length > 0
                     }
                     onCheckedChange={handleSelectAll}
                   />
@@ -139,107 +121,107 @@ export function UserTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user, index) => (
-                <TableRow
-                  key={user.id}
-                  className={` transition-colors hover:bg-muted/50 `}
-                >
-                  <TableCell className="p-3">
-                    <Checkbox
-                      checked={selectedIds.includes(user.id)}
-                      onCheckedChange={(checked) =>
-                        handleSelectUser(user.id, !!checked)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="font-semibold text-[var(--primary)] p-3">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-[var(--primary)]/10 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-[var(--primary)]" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-[var(--foreground)]">
-                          {user.name}
-                        </p>
-                        <p className="text-xs text-[var(--muted-foreground)]">
-                          {user.login}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-[var(--primary)]" />
-                      <Badge
-                        variant="secondary"
-                        className="bg-[var(--muted)] text-[var(--foreground)] border-none"
-                      >
-                        {user.role}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-[var(--primary)]" />
-                      <span className="text-[var(--muted-foreground)]">
-                        {user.department}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-[var(--muted-foreground)] p-3">
-                    {user.createdDate}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant={
-                        user.status === "active" ? "default" : "secondary"
-                      }
-                      className={
-                        user.status === "active"
-                          ? "bg-green-100 text-green-800 border-none"
-                          : user.status === "reserve"
-                          ? "bg-blue-100 text-blue-800 border-none"
-                          : user.status === "repair"
-                          ? "bg-red-100 text-red-800 border-none"
-                          : "bg-gray-100 text-gray-800 border-none"
-                      }
-                    >
-                      {user.status === "active"
-                        ? "Faol"
-                        : user.status === "reserve"
-                        ? "Zaxirada"
-                        : user.status === "repair"
-                        ? "Ta'mirda"
-                        : "Nofaol"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onEdit(user)}
-                        className="h-8 w-8 p-0 border-1 border-[var(--border)] hover:bg-[var(--primary)]/10 shadow-none"
-                        aria-label="Tahrirlash"
-                      >
-                        <Edit className="h-4 w-4 text-[var(--primary)]" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onDelete(user)}
-                        className="h-8 w-8 p-0 border-1 border-[var(--border)] hover:bg-[var(--destructive)]/10 shadow-none"
-                        aria-label="O'chirish"
-                      >
-                        <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                      </Button>
+              {isLoading ? (
+                <TableSkeleton rows={10} columns={8} />
+              ) : users?.results?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="p-3">
+                    <div className="text-center py-8 text-[var(--muted-foreground)]">
+                      Foydalanuvchilar topilmadi.
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                users?.results?.map((user, index) => (
+                  <TableRow
+                    key={user.id}
+                    className={` transition-colors hover:bg-muted/50 `}
+                  >
+                    <TableCell className="p-3">
+                      <Checkbox
+                        checked={selectedIds.includes(user.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectUser(user.id, !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="font-semibold text-[var(--primary)] p-3">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-[var(--primary)]/10 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-[var(--primary)]" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-[var(--foreground)]">
+                            {user.first_name + " " + user.last_name}
+                          </p>
+                          <p className="text-xs text-[var(--muted-foreground)]">
+                            {user.username}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-[var(--primary)]" />
+                        <Badge
+                          variant="secondary"
+                          className="bg-[var(--muted)] text-[var(--foreground)] border-none"
+                        >
+                          {getRoleName(user.role as UserRole).toUpperCase()}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-[var(--primary)]" />
+                        <span className="text-[var(--muted-foreground)]">
+                          {user?.profile?.secondary_organization}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-[var(--muted-foreground)] p-3">
+                      {user.createdAt}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <Badge
+                        variant={user.is_active ? "default" : "secondary"}
+                        className={
+                          user.is_active
+                            ? "bg-green-100 text-green-800 border-none"
+                            : "bg-gray-100 text-gray-800 border-none"
+                        }
+                      >
+                        {user.is_active ? "Faol" : "Nofaol"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onEdit(user)}
+                          className="h-8 w-8 p-0 border-1 border-[var(--border)] hover:bg-[var(--primary)]/10 shadow-none"
+                          aria-label="Tahrirlash"
+                        >
+                          <Edit className="h-4 w-4 text-[var(--primary)]" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onDelete(user.id)}
+                          className="h-8 w-8 p-0 border-1 border-[var(--border)] hover:bg-[var(--destructive)]/10 shadow-none"
+                          aria-label="O'chirish"
+                        >
+                          <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

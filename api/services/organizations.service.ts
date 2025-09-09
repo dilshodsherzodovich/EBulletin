@@ -42,7 +42,7 @@ export const organizationsService = {
     params: OrganizationUpdateParams
   ): Promise<Organization> => {
     try {
-      const response = await api.put<Organization>(
+      const response = await api.patch<Organization>(
         `/organizations/${params.id}/`,
         params
       );

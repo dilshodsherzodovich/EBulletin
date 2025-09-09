@@ -14,9 +14,10 @@ import {
   Organization,
   OrganizationCreateParams,
 } from "@/api/types/organizations";
-import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
+import { useSnackbar } from "@/providers/snackbar-provider";
+import { ErrorCard } from "@/ui/error-card";
 
 export default function OrganizationsPage() {
   const queryClient = useQueryClient();
@@ -37,6 +38,7 @@ export default function OrganizationsPage() {
     data: organizationsList,
     isPending,
     isFetching,
+    error,
   } = useOrganizations({ page: 1 });
 
   const { mutate: createOrganization, isPending: isCreatingOrg } =
@@ -45,6 +47,8 @@ export default function OrganizationsPage() {
     useEditOrganization();
   const { mutate: deleteOrganization, isPending: isDeletingOrg } =
     useDeleteOrganization();
+
+  const { showSuccess, showError } = useSnackbar();
 
   const handleOpenCreateModal = () => {
     setModalMode("create");
@@ -64,10 +68,10 @@ export default function OrganizationsPage() {
     if (modalMode === "create") {
       createOrganization(organizationData, {
         onSuccess: () => {
-          toast.success("Tashkilot muvaffaqiyatli qo'shildi!");
+          showSuccess("Tashkilot muvaffaqiyatli qo'shildi!");
         },
         onError: (error) => {
-          toast.error(`Xatolik yuz berdi: ${error.message}`);
+          showError(`Xatolik yuz berdi: ${error.message}`);
         },
         onSettled: () => {
           setIsModalOpen(false);
@@ -81,10 +85,10 @@ export default function OrganizationsPage() {
         { id: editingOrganization.id, ...organizationData },
         {
           onSuccess: () => {
-            toast.success("Tashkilot ma'lumotlari muvaffaqiyatli tahrirlandi!");
+            showSuccess("Tashkilot ma'lumotlari muvaffaqiyatli tahrirlandi!");
           },
           onError: (error) => {
-            toast.error(`Xatolik yuz berdi: ${error.message}`);
+            showError(`Xatolik yuz berdi: ${error.message}`);
           },
           onSettled: () => {
             setIsModalOpen(false);
@@ -117,14 +121,14 @@ export default function OrganizationsPage() {
 
   const handleDelete = () => {
     if (deleteConfirmation.isBulk) {
-      toast.info("Ushbu funksiya tez orada qo'shiladi!");
+      showError("Ushbu funksiya tez orada qo'shiladi!");
     } else if (deleteConfirmation.organizationId) {
       deleteOrganization(deleteConfirmation.organizationId, {
         onSuccess: () => {
-          toast.success("Tashkilot muvaffaqiyatli o'chirildi!");
+          showSuccess("Tashkilot muvaffaqiyatli o'chirildi!");
         },
         onError: (error) => {
-          toast.error(`Xatolik yuz berdi: ${error.message}`);
+          showError(`Xatolik yuz berdi: ${error.message}`);
         },
         onSettled: () => {
           setDeleteConfirmation({ isOpen: false });
@@ -135,6 +139,25 @@ export default function OrganizationsPage() {
       });
     }
   };
+
+  if (error) {
+    return (
+      <ErrorCard
+        variant="error"
+        title="Xatolik yuz berdi"
+        message={
+          (error as any)?.response?.data?.detail ||
+          (error as any)?.message ||
+          "Tashkilotlar ma'lumotlarini yuklashda xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring."
+        }
+        showRetry={false}
+        backHref="/"
+        backLabel="Bosh sahifaga qaytish"
+        retryLabel="Qayta yuklash"
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -157,6 +180,7 @@ export default function OrganizationsPage() {
         onDelete={handelOpenDeleteModal}
         onBulkDelete={handleBulkDelete}
         onCreateNew={handleOpenCreateModal}
+        isLoading={isPending}
       />
 
       <OrganizationModal
