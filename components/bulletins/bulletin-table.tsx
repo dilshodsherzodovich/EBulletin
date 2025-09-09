@@ -17,20 +17,8 @@ import { Card } from "@/ui/card";
 import { BulletinFilters } from "./bulletin-filters";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
 import Link from "next/link";
-
-interface Bulletin {
-  id: string;
-  name: string;
-  category: string;
-  createdDate: string;
-  responsibleAssigned: boolean;
-  responsible: string;
-  status: "active" | "inactive" | "completed";
-  responsibleDepartment: string;
-  receivingOrganizations: string[];
-  responsiblePersons: string[];
-  periodType: string;
-}
+import { Bulletin } from "@/api/types/bulleten";
+import { TableSkeleton } from "@/ui/table-skeleton";
 
 interface BulletinTableProps {
   bulletins: Bulletin[];
@@ -41,7 +29,24 @@ interface BulletinTableProps {
   onBulkDelete: (ids: string[]) => void;
   onCreateNew: () => void;
   onAssignResponsible: (bulletin: Bulletin) => void;
+  isLoading: boolean;
+  isDeleting: boolean;
 }
+
+// Deadline type mapping to Uzbek labels
+const deadlineLabels: { [key: string]: string } = {
+  weekly: "Haftalik",
+  monthly: "Oylik",
+  quarterly: "Choraklik",
+  every_n_months: "Har N oyda",
+  daily: "Kunlik",
+  yearly: "Yillik",
+};
+
+const getDeadlineLabel = (periodType: string | undefined): string => {
+  if (!periodType) return "N/A";
+  return deadlineLabels[periodType] || periodType;
+};
 
 export function BulletinTable({
   bulletins,
@@ -51,7 +56,8 @@ export function BulletinTable({
   onDelete,
   onBulkDelete,
   onCreateNew,
-  onAssignResponsible,
+  isLoading,
+  isDeleting,
 }: BulletinTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -67,12 +73,18 @@ export function BulletinTable({
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesCategory =
-      categoryFilter === "all" || bulletin.category === categoryFilter;
-    const matchesStatus =
-      statusFilter === "all" || bulletin.status === statusFilter;
+      categoryFilter === "all" ||
+      (bulletin.main_organizations_list &&
+        bulletin.main_organizations_list.some(
+          (org) => org.name === categoryFilter
+        ));
+    const matchesStatus = statusFilter === "all"; // API doesn't have status field
     const matchesDepartment =
       departmentFilter === "all" ||
-      bulletin.responsibleDepartment === departmentFilter;
+      (bulletin.main_organizations_list &&
+        bulletin.main_organizations_list.some(
+          (org) => org.name === departmentFilter
+        ));
     return (
       matchesSearch && matchesCategory && matchesStatus && matchesDepartment
     );
@@ -96,7 +108,6 @@ export function BulletinTable({
 
   const handleBulkDelete = () => {
     if (selectedIds.length > 0) {
-      // This will trigger the confirmation dialog in the parent component
       onBulkDelete(selectedIds);
     }
   };
@@ -110,36 +121,12 @@ export function BulletinTable({
     if (bulletinToDelete) {
       onDelete(bulletinToDelete);
       setBulletinToDelete(null);
-      setShowDeleteConfirmation(false);
     }
   };
 
   const cancelDelete = () => {
     setBulletinToDelete(null);
     setShowDeleteConfirmation(false);
-  };
-
-  // Mock data for display purposes
-  const organizationLabels: { [key: string]: string } = {
-    org1: "Byulletenni qabul qiluvchi davlat idorasi 1",
-    org2: "Byulletenni qabul qiluvchi davlat idorasi 2",
-    org3: "Byulletenni qabul qiluvchi davlat idorasi 3",
-    org4: "Byulletenni qabul qiluvchi davlat idorasi 4",
-    org5: "Byulletenni qabul qiluvchi davlat idorasi 5",
-    org6: "Byulletenni qabul qiluvchi davlat idorasi 6",
-    org7: "Byulletenni qabul qiluvchi davlat idorasi 7",
-    org8: "Byulletenni qabul qiluvchi davlat idorasi 8",
-  };
-
-  const personLabels: { [key: string]: string } = {
-    person1: "Umarov A.P.",
-    person2: "Siddiqov M.R.",
-    person3: "Karimov Sh.T.",
-    person4: "Axmedov N.K.",
-    person5: "Yusupov D.A.",
-    person6: "Rahimov T.S.",
-    person7: "Mirzaev K.X.",
-    person8: "Safarov A.M.",
   };
 
   return (
@@ -173,10 +160,7 @@ export function BulletinTable({
                 </TableHead>
                 <TableHead className="w-16 p-3 ">№</TableHead>
                 <TableHead className="p-3">Byulleten nomi</TableHead>
-                <TableHead className="p-3">Mas'ul bo'lim</TableHead>
-                <TableHead className="p-3">
-                  Qabul qiluvchi tashkilotlar
-                </TableHead>
+                <TableHead className="p-3">Tashkilotlar</TableHead>
                 <TableHead className="p-3">Mas'ul shaxslar</TableHead>
                 <TableHead className="p-3">Muddat turi</TableHead>
                 <TableHead className="p-3">Yaratilgan sana</TableHead>
@@ -185,139 +169,163 @@ export function BulletinTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBulletins.map((bulletin, index) => (
-                <TableRow
-                  key={bulletin.id}
-                  className={` transition-colors hover:bg-muted/50 `}
-                >
-                  <TableCell className="p-3">
-                    <Checkbox
-                      checked={selectedIds.includes(bulletin.id)}
-                      onCheckedChange={(checked) =>
-                        handleSelectOne(bulletin.id, !!checked)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="font-semibold text-[var(--primary)] p-3">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="font-medium p-3 max-w-xs">
-                    <div className="truncate" title={bulletin.name}>
-                      {bulletin.name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant="secondary"
-                      className="bg-[var(--muted)] text-[var(--foreground)] border-none"
-                    >
-                      {bulletin.responsibleDepartment}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="p-3 max-w-xs">
-                    <div className="flex flex-wrap gap-1">
-                      {bulletin.receivingOrganizations.map((orgId) => (
-                        <Badge
-                          key={orgId}
-                          variant="outline"
-                          className="text-xs px-2 py-1 border-[var(--border)]"
-                        >
-                          {organizationLabels[orgId] || orgId}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="p-3 max-w-xs">
-                    <div className="flex flex-wrap gap-1">
-                      {bulletin.responsiblePersons.map((personId) => (
-                        <Badge
-                          key={personId}
-                          variant="outline"
-                          className="text-xs px-2 py-1 border-[var(--border)] bg-[var(--primary)]/10 text-[var(--primary)]"
-                        >
-                          {personLabels[personId] || personId}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant="secondary"
-                      className="bg-[var(--muted)]/50 text-[var(--foreground)] border-none"
-                    >
-                      {bulletin.periodType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {bulletin.createdDate}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant={
-                        bulletin.status === "active" ? "default" : "secondary"
-                      }
-                      className={
-                        bulletin.status === "active"
-                          ? "bg-green-100 text-green-800 border-none"
-                          : bulletin.status === "completed"
-                          ? "bg-blue-100 text-blue-800 border-none"
-                          : "bg-gray-100 text-gray-800 border-none"
-                      }
-                    >
-                      {bulletin.status === "active"
-                        ? "Faol"
-                        : bulletin.status === "completed"
-                        ? "Bajarilgan"
-                        : "Nofaol"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onEdit(bulletin)}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                        aria-label="Tahrirlash"
-                      >
-                        <Edit className="h-4 w-4 text-[var(--primary)]" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleDeleteClick(bulletin)}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                        aria-label="O'chirish"
-                      >
-                        <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-gray-100"
-                        aria-label="Ko'rish"
-                      >
-                        <Eye className="h-4 w-4 text-[var(--muted-foreground)]" />
-                      </Button>
-                      <Link
-                        href={`/bulletins/${bulletin.id}/structure`}
-                        className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
-                        aria-label="Struktura"
-                      >
-                        <BarChart3 className="h-4 w-4 text-[var(--primary)]" />
-                      </Link>
+              {isLoading ? (
+                <TableSkeleton rows={10} columns={10} />
+              ) : filteredBulletins.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center py-8">
+                    <div className="text-lg text-[var(--muted-foreground)]">
+                      Byulletenlar topilmadi.
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredBulletins.map((bulletin, index) => (
+                  <TableRow
+                    key={bulletin.id}
+                    className={` transition-colors hover:bg-muted/50 `}
+                  >
+                    <TableCell className="p-3">
+                      <Checkbox
+                        checked={selectedIds.includes(bulletin.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectOne(bulletin.id, !!checked)
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="font-semibold text-[var(--primary)] p-3">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="font-medium p-3 max-w-xs">
+                      <div className="truncate" title={bulletin.name}>
+                        {bulletin.name}
+                      </div>
+                    </TableCell>
+                    <TableCell className="p-3 max-w-md">
+                      <div className="space-y-2">
+                        {(bulletin.main_organizations_list || []).map(
+                          (mainOrg) => (
+                            <div
+                              key={mainOrg.id}
+                              className="border border-[var(--border)] rounded-lg p-2 bg-[var(--muted)]/10"
+                            >
+                              <div className="text-xs font-medium text-[var(--foreground)] mb-1 flex flex-wrap items-center gap-1">
+                                {mainOrg.name}:
+                                {mainOrg.secondary_organizations &&
+                                mainOrg.secondary_organizations.length > 0 ? (
+                                  <div className="flex flex-wrap gap-1">
+                                    {mainOrg.secondary_organizations.map(
+                                      (secOrg) => (
+                                        <Badge
+                                          key={secOrg.id}
+                                          variant="outline"
+                                          className="text-xs px-2 py-1 border-[var(--border)] bg-white"
+                                        >
+                                          {secOrg.name}
+                                        </Badge>
+                                      )
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-[var(--muted-foreground)] italic">
+                                    Ikkinchi darajali tashkilotlar yo'q
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        )}
+                        {(!bulletin.main_organizations_list ||
+                          bulletin.main_organizations_list.length === 0) && (
+                          <div className="text-sm text-[var(--muted-foreground)] italic">
+                            Tashkilotlar tanlanmagan
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="p-3 max-w-xs">
+                      <div className="flex flex-wrap gap-1">
+                        {(bulletin.employees_list || []).map((emp) => (
+                          <Badge
+                            key={emp.id}
+                            variant="outline"
+                            className="text-xs px-2 py-1 border-[var(--border)] bg-[var(--primary)]/10 text-[var(--primary)]"
+                          >
+                            {emp.first_name} {emp.last_name}
+                          </Badge>
+                        ))}
+                        {(!bulletin.employees_list ||
+                          bulletin.employees_list.length === 0) && (
+                          <div className="text-sm text-[var(--muted-foreground)] italic">
+                            Mas'ul shaxslar tanlanmagan
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <Badge
+                        variant="secondary"
+                        className="bg-[var(--muted)]/50 text-[var(--foreground)] border-none"
+                      >
+                        {getDeadlineLabel(bulletin.deadline?.period_type)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="p-3 text-[var(--muted-foreground)]">
+                      {bulletin.created
+                        ? new Date(bulletin.created).toLocaleDateString("uz-UZ")
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <Badge
+                        variant="default"
+                        className="bg-green-100 text-green-800 border-none"
+                      >
+                        Faol
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onEdit(bulletin)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                          aria-label="Tahrirlash"
+                        >
+                          <Edit className="h-4 w-4 text-[var(--primary)]" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDeleteClick(bulletin)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                          aria-label="O'chirish"
+                        >
+                          <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-gray-100"
+                          aria-label="Ko'rish"
+                        >
+                          <Eye className="h-4 w-4 text-[var(--muted-foreground)]" />
+                        </Button>
+                        <Link
+                          href={`/bulletins/${bulletin.id}/structure`}
+                          className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
+                          aria-label="Struktura"
+                        >
+                          <BarChart3 className="h-4 w-4 text-[var(--primary)]" />
+                        </Link>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
-        {filteredBulletins.length === 0 && (
-          <div className="text-center py-8 text-[var(--muted-foreground)]">
-            Byulletenlar topilmadi.
-          </div>
-        )}
       </Card>
 
       <ConfirmationDialog
@@ -325,10 +333,11 @@ export function BulletinTable({
         onClose={cancelDelete}
         onConfirm={confirmDelete}
         title="Byulletenni o'chirish"
-        message={`"${bulletinToDelete?.name}" byulletenni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.`}
+        message={`"${bulletinToDelete?.name}" byulletenni o'chirishni xohlaysizma? Bu amalni qaytarib bo'lmaydi.`}
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="danger"
+        isDoingAction={isDeleting}
       />
     </>
   );

@@ -10,6 +10,7 @@ import { Label } from "@/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
 import { Upload, FileSpreadsheet, Plus, X, AlertCircle } from "lucide-react";
 import { ClassificatorElement } from "@/api/types/classificator";
+import { LoadingButton } from "@/ui/loading-button";
 
 interface ClassificatorElementModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface ClassificatorElementModalProps {
   ) => void;
   element?: ClassificatorElement;
   mode: "create" | "edit";
+  isPending: boolean;
 }
 
 export function ClassificatorElementModal({
@@ -27,6 +29,7 @@ export function ClassificatorElementModal({
   onSave,
   element,
   mode,
+  isPending,
 }: ClassificatorElementModalProps) {
   const [activeTab, setActiveTab] = useState("individual");
   const [elementName, setElementName] = useState("");
@@ -86,8 +89,6 @@ export function ClassificatorElementModal({
         onSave(elementsToSave);
       }
     }
-
-    onClose();
   };
 
   const handleClose = () => {
@@ -136,8 +137,6 @@ export function ClassificatorElementModal({
         onSave(elementsToSave);
       }
     }
-
-    onClose();
   };
 
   // File upload handlers with real Excel parsing
@@ -466,33 +465,34 @@ export function ClassificatorElementModal({
           </Button>
 
           {mode === "edit" ? (
-            // Edit mode - simple save button
-            <Button
+            <LoadingButton
               type="submit"
               onClick={handleSubmit}
               className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-6"
               disabled={!elementName.trim()}
+              isPending={isPending}
             >
               O'zgarishlarni saqlash
-            </Button>
-          ) : // Create mode - complex button logic
-          activeTab === "individual" &&
+            </LoadingButton>
+          ) : activeTab === "individual" &&
             (bulkElements.length > 0 || elementName.trim()) ? (
-            <Button
+            <LoadingButton
               type="button"
               onClick={handleBulkSubmit}
               className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-6"
+              isPending={isPending}
             >
               {(() => {
                 const totalElements =
                   bulkElements.length + (elementName.trim() ? 1 : 0);
                 return `${totalElements} ta elementni qo'shish`;
               })()}
-            </Button>
+            </LoadingButton>
           ) : (
-            <Button
+            <LoadingButton
               type="submit"
               onClick={handleSubmit}
+              isPending={isPending}
               className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-6"
               disabled={
                 (activeTab === "individual" &&
@@ -502,7 +502,7 @@ export function ClassificatorElementModal({
               }
             >
               Saqlash
-            </Button>
+            </LoadingButton>
           )}
         </div>
       </DialogContent>

@@ -1,3 +1,5 @@
+import { Department } from "./deparments";
+
 export type OrganizationType =
   | "hukumat"
   | "vazirlik"
@@ -14,6 +16,7 @@ export interface Organization {
   children: string[];
   created: string;
   is_active?: boolean;
+  secondary_organizations: Department[];
 }
 
 export interface OrganizationsGetParams {

@@ -1,7 +1,12 @@
 import { Card } from "@/ui/card";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface LoadingCardProps {
+  breadCrumbs?: {
+    label: string;
+    href: string;
+  }[];
   title?: string;
   showHeader?: boolean;
   showTable?: boolean;
@@ -11,6 +16,10 @@ interface LoadingCardProps {
 }
 
 export function LoadingCard({
+  breadCrumbs = [
+    { label: "Asosiy", href: "/" },
+    { label: "Klassifikator", href: "/classificators" },
+  ],
   title = "Yuklanmoqda...",
   showHeader = true,
   showTable = true,
@@ -63,9 +72,12 @@ export function LoadingCard({
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <div className="flex items-center space-x-2 text-sm text-[#6b7280] mb-2">
-              <span>Asosiy</span>
-              <span>›</span>
-              <span>Klassifikator</span>
+              {breadCrumbs.map((breadcrumb, index) => (
+                <span key={index}>
+                  <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
+                  {index < breadCrumbs.length - 1 && <span>›</span>}
+                </span>
+              ))}
               <span>›</span>
               <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Plus, Check } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
@@ -15,31 +15,48 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
 import { MultiSelect } from "@/ui/multi-select";
 import React from "react";
+import {
+  Bulletin,
+  BulletinCreateBody,
+  BulletinDeadline,
+  BulletinColumn,
+} from "@/api/types/bulleten";
+import { useOrganizations } from "@/api/hooks/use-organizations";
+import { useDepartments } from "@/api/hooks/use-departmants";
+import { useUsers } from "@/api/hooks/use-user";
+import { Badge } from "@/ui/badge";
+import { LoadingButton } from "@/ui/loading-button";
 
 interface BulletinModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: BulletinFormData) => void;
+  onSubmit: (data: BulletinCreateBody) => void;
   mode: "create" | "edit";
   bulletin?: Bulletin;
-}
-
-interface Bulletin {
-  id: string;
-  name: string;
-  responsibleDepartment: string;
-  receivingOrganizations: string[];
-  responsiblePersons: string[];
-  periodType: string;
+  isLoading: boolean;
 }
 
 interface BulletinFormData {
   name: string;
-  responsibleDepartment: string;
-  receivingOrganizations: string[];
-  responsiblePersons: string[];
-  periodType: string;
+  description: string;
+  deadline: string;
+  mainOrganizations: string[];
+  secondaryOrganizations: string[];
+  responsibleEmployees: string[];
 }
+
+interface SelectedMainOrg {
+  mainOrgId: string;
+  mainOrgName: string;
+  secondaryOrgs: string[];
+}
+
+const deadlineOptions = [
+  { value: "weekly", label: "Haftalik" },
+  { value: "monthly", label: "Oylik" },
+  { value: "quarterly", label: "Choraklik" },
+  { value: "every_n_months", label: "Har N oyda" },
+];
 
 export function BulletinModal({
   isOpen,
@@ -47,76 +64,181 @@ export function BulletinModal({
   onSubmit,
   mode,
   bulletin,
+  isLoading,
 }: BulletinModalProps) {
   const [formData, setFormData] = useState<BulletinFormData>({
     name: "",
-    responsibleDepartment: "",
-    receivingOrganizations: [],
-    responsiblePersons: [],
-    periodType: "",
+    description: "",
+    deadline: "",
+    mainOrganizations: [],
+    secondaryOrganizations: [],
+    responsibleEmployees: [],
   });
 
+  const [selectedMainOrgs, setSelectedMainOrgs] = useState<SelectedMainOrg[]>(
+    []
+  );
+  const [currentMainOrgId, setCurrentMainOrgId] = useState<string>("");
+  const [currentSecondaryOrgs, setCurrentSecondaryOrgs] = useState<string[]>(
+    []
+  );
+
+  // Fetch data from API
+  const { data: organizationsData, isLoading: orgsLoading } = useOrganizations(
+    {}
+  );
+  const { data: departmentsData, isLoading: deptsLoading } = useDepartments({});
+  const { data: usersData, isLoading: usersLoading } = useUsers();
+
+  const organizations = organizationsData?.results || [];
+  const departments = departmentsData?.results || [];
+  const users = usersData?.results || [];
+
+  // Helper function to reconstruct selectedMainOrgs from bulletin data
+  const reconstructSelectedMainOrgs = (bulletin: Bulletin) => {
+    if (
+      !bulletin.main_organizations_list ||
+      !bulletin.main_organizations_list.length
+    ) {
+      return [];
+    }
+
+    const reconstructed: SelectedMainOrg[] = [];
+
+    bulletin.main_organizations_list.forEach((mainOrg) => {
+      // Find departments that belong to this main organization
+      const orgDepartments = departments.filter(
+        (dept) => dept.organization_id === mainOrg.id
+      );
+
+      // For now, we'll include all departments of this organization
+      // In a real scenario, you might need to store which specific departments were selected
+      const secondaryOrgIds = orgDepartments.map((dept) => dept.id);
+
+      reconstructed.push({
+        mainOrgId: mainOrg.id,
+        mainOrgName: mainOrg.name,
+        secondaryOrgs: secondaryOrgIds,
+      });
+    });
+
+    return reconstructed;
+  };
+
   // Reset form when modal opens/closes or mode changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       if (mode === "edit" && bulletin) {
+        const reconstructedMainOrgs = reconstructSelectedMainOrgs(bulletin);
+
         setFormData({
           name: bulletin.name || "",
-          responsibleDepartment: bulletin.responsibleDepartment || "",
-          receivingOrganizations: bulletin.receivingOrganizations || [],
-          responsiblePersons: bulletin.responsiblePersons || [],
-          periodType: bulletin.periodType || "",
+          description: bulletin.description || "",
+          deadline: bulletin.deadline?.period_type || "",
+          mainOrganizations:
+            bulletin.main_organizations_list?.map((org) => org.id) || [],
+          secondaryOrganizations: reconstructedMainOrgs.flatMap(
+            (org) => org.secondaryOrgs
+          ),
+          responsibleEmployees:
+            bulletin.employees_list?.map((emp) => emp.id) || [],
         });
+
+        setSelectedMainOrgs(reconstructedMainOrgs);
       } else {
         setFormData({
           name: "",
-          responsibleDepartment: "",
-          receivingOrganizations: [],
-          responsiblePersons: [],
-          periodType: "",
+          description: "",
+          deadline: "",
+          mainOrganizations: [],
+          secondaryOrganizations: [],
+          responsibleEmployees: [],
         });
+        setSelectedMainOrgs([]);
+        setCurrentMainOrgId("");
+        setCurrentSecondaryOrgs([]);
       }
     }
-  }, [isOpen, mode, bulletin]);
+  }, [isOpen, mode, bulletin, departments]); // Added departments dependency
 
-  // Mock data for dropdowns
-  const departmentOptions = [
-    "Qishloq xo'jaligi bo'limi",
-    "San'at bo'limi",
-    "Tibbiyot bo'limi",
-    "Ta'lim bo'limi",
-    "Iqtisodiyot bo'limi",
-  ];
+  const createBulletinData = (
+    formData: BulletinFormData
+  ): BulletinCreateBody => {
+    const defaultDeadline: BulletinDeadline = {
+      id: 0,
+      period_type: formData.deadline,
+      custom_deadline: null,
+      day_of_month: null,
+      day_of_week: null,
+      month: null,
+      interval: 1,
+      period_start: new Date().toISOString(),
+      current_deadline: new Date().toISOString(),
+    };
 
-  const organizationOptions = [
-    { value: "org1", label: "Byulletenni qabul qiluvchi davlat idorasi 1" },
-    { value: "org2", label: "Byulletenni qabul qiluvchi davlat idorasi 2" },
-    { value: "org3", label: "Byulletenni qabul qiluvchi davlat idorasi 3" },
-    { value: "org4", label: "Byulletenni qabul qiluvchi davlat idorasi 4" },
-    { value: "org5", label: "Byulletenni qabul qiluvchi davlat idorasi 5" },
-    { value: "org6", label: "Byulletenni qabul qiluvchi davlat idorasi 6" },
-    { value: "org7", label: "Byulletenni qabul qiluvchi davlat idorasi 7" },
-    { value: "org8", label: "Byulletenni qabul qiluvchi davlat idorasi 8" },
-  ];
+    return {
+      name: formData.name,
+      description: formData.description,
+      deadline: defaultDeadline,
+      columns: [], // Empty array as requested
+      organizations: formData.secondaryOrganizations, // Secondary organizations (departments)
+      main_organizations: formData.mainOrganizations, // Main organizations
+      responsible_employees: formData.responsibleEmployees,
+    };
+  };
 
-  const personOptions = [
-    { value: "person1", label: "Umarov A.P." },
-    { value: "person2", label: "Siddiqov M.R." },
-    { value: "person3", label: "Karimov Sh.T." },
-    { value: "person4", label: "Axmedov N.K." },
-    { value: "person5", label: "Yusupov D.A." },
-    { value: "person6", label: "Rahimov T.S." },
-    { value: "person7", label: "Mirzaev K.X." },
-    { value: "person8", label: "Safarov A.M." },
-  ];
+  const handleAddMainOrganization = () => {
+    if (currentMainOrgId && currentSecondaryOrgs.length > 0) {
+      const mainOrg = organizations.find((org) => org.id === currentMainOrgId);
+      if (mainOrg) {
+        const newSelectedMainOrg: SelectedMainOrg = {
+          mainOrgId: currentMainOrgId,
+          mainOrgName: mainOrg.name,
+          secondaryOrgs: [...currentSecondaryOrgs],
+        };
 
-  const periodTypeOptions = [
-    "Kunlik",
-    "Haftalik",
-    "Oylik",
-    "Yarim yillik",
-    "Yillik",
-  ];
+        setSelectedMainOrgs([...selectedMainOrgs, newSelectedMainOrg]);
+
+        // Update form data
+        const allMainOrgs = [...selectedMainOrgs, newSelectedMainOrg].map(
+          (org) => org.mainOrgId
+        );
+        const allSecondaryOrgs = [
+          ...selectedMainOrgs,
+          newSelectedMainOrg,
+        ].flatMap((org) => org.secondaryOrgs);
+
+        setFormData({
+          ...formData,
+          mainOrganizations: allMainOrgs,
+          secondaryOrganizations: allSecondaryOrgs,
+        });
+
+        // Reset current selection
+        setCurrentMainOrgId("");
+        setCurrentSecondaryOrgs([]);
+      }
+    }
+  };
+
+  const handleRemoveMainOrganization = (mainOrgId: string) => {
+    const updatedSelectedMainOrgs = selectedMainOrgs.filter(
+      (org) => org.mainOrgId !== mainOrgId
+    );
+    setSelectedMainOrgs(updatedSelectedMainOrgs);
+
+    // Update form data
+    const allMainOrgs = updatedSelectedMainOrgs.map((org) => org.mainOrgId);
+    const allSecondaryOrgs = updatedSelectedMainOrgs.flatMap(
+      (org) => org.secondaryOrgs
+    );
+
+    setFormData({
+      ...formData,
+      mainOrganizations: allMainOrgs,
+      secondaryOrganizations: allSecondaryOrgs,
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,57 +249,95 @@ export function BulletinModal({
       return;
     }
 
-    if (!formData.responsibleDepartment) {
-      alert("Mas'ul bo'limni tanlang");
+    if (!formData.description.trim()) {
+      alert("Byulleten tavsifini kiriting");
       return;
     }
 
-    if (formData.receivingOrganizations.length === 0) {
-      alert("Kamida bitta tashkilotni tanlang");
-      return;
-    }
-
-    if (formData.responsiblePersons.length === 0) {
-      alert("Kamida bitta mas'ul shaxsni tanlang");
-      return;
-    }
-
-    if (!formData.periodType) {
+    if (!formData.deadline) {
       alert("Muddat turini tanlang");
       return;
     }
 
-    onSubmit(formData);
-    onClose();
+    if (formData.mainOrganizations.length === 0) {
+      alert("Kamida bitta asosiy tashkilotni tanlang");
+      return;
+    }
+
+    if (formData.secondaryOrganizations.length === 0) {
+      alert("Kamida bitta ikkinchi darajali tashkilotni tanlang");
+      return;
+    }
+
+    if (formData.responsibleEmployees.length === 0) {
+      alert("Kamida bitta mas'ul shaxsni tanlang");
+      return;
+    }
+
+    const bulletinData = createBulletinData(formData);
+    onSubmit(bulletinData);
   };
 
-  const handleOrganizationChange = (values: string[]) => {
+  const handleResponsibleEmployeeChange = (values: string[]) => {
     setFormData({
       ...formData,
-      receivingOrganizations: values,
-    });
-  };
-
-  const handlePersonChange = (values: string[]) => {
-    setFormData({
-      ...formData,
-      responsiblePersons: values,
+      responsibleEmployees: values,
     });
   };
 
   const isFormValid = () => {
     return (
       formData.name.trim() &&
-      formData.responsibleDepartment &&
-      formData.receivingOrganizations.length > 0 &&
-      formData.responsiblePersons.length > 0 &&
-      formData.periodType
+      formData.description.trim() &&
+      formData.deadline &&
+      formData.mainOrganizations.length > 0 &&
+      formData.secondaryOrganizations.length > 0 &&
+      formData.responsibleEmployees.length > 0
     );
   };
 
+  const getAvailableMainOrgs = () => {
+    const selectedIds = selectedMainOrgs.map((org) => org.mainOrgId);
+    return organizations.filter((org) => !selectedIds.includes(org.id));
+  };
+
+  const getCurrentSecondaryOrgs = () => {
+    if (!currentMainOrgId) return [];
+    // Filter departments that belong to the selected main organization
+    return departments.filter(
+      (dept) => dept.organization_id === currentMainOrgId
+    );
+  };
+
+  const getSecondaryOrgName = (secOrgId: string) => {
+    const secOrg = departments.find((dept) => dept.id === secOrgId);
+    return secOrg?.name || secOrgId;
+  };
+
+  if (orgsLoading || deptsLoading || usersLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-[var(--foreground)]">
+              {mode === "create"
+                ? "Yangi byulletenni qo'shish"
+                : "Byulletenni tahrirlash"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg text-[var(--muted-foreground)]">
+              Ma'lumotlar yuklanmoqda...
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-[var(--foreground)]">
             {mode === "create"
@@ -207,90 +367,186 @@ export function BulletinModal({
             />
           </div>
 
-          {/* Responsible Department */}
+          {/* Bulletin Description */}
           <div className="space-y-3">
             <Label
-              htmlFor="department"
+              htmlFor="description"
               className="text-sm font-medium text-[var(--foreground)]"
             >
-              Byulletengacha masul bo'limni tanlang
+              Byulletenni tavsifini kiriting
             </Label>
-            <Select
-              value={formData.responsibleDepartment}
-              onValueChange={(value) =>
-                setFormData({ ...formData, responsibleDepartment: value })
+            <Input
+              id="description"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
               }
-            >
-              <SelectTrigger className="w-full border-[var(--border)]">
-                <SelectValue placeholder="Bolimni tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                {departmentOptions.map((dept) => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Receiving Organizations */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-[var(--foreground)]">
-              Byulletenni qabul qiluvchi tashkilotlarni tanlang
-            </Label>
-
-            <MultiSelect
-              options={organizationOptions}
-              selectedValues={formData.receivingOrganizations}
-              onSelectionChange={handleOrganizationChange}
-              placeholder="Tashkilotlarni tanlang"
-              searchPlaceholder="Tashkilotlarni qidirish..."
-              emptyMessage="Tashkilot topilmadi"
+              placeholder="Byulletenni tavsifini kiriting"
+              className="w-full border-[var(--border)]"
+              required
             />
           </div>
 
-          {/* Responsible Persons */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-[var(--foreground)]">
-              Masul shaxslarni tanlang
-            </Label>
-
-            <MultiSelect
-              options={personOptions}
-              selectedValues={formData.responsiblePersons}
-              onSelectionChange={handlePersonChange}
-              placeholder="Masul shaxslarni tanlang"
-              searchPlaceholder="Masul shaxslarni qidirish..."
-              emptyMessage="Masul shaxs topilmadi"
-            />
-          </div>
-
-          {/* Period Type */}
+          {/* Deadline Type */}
           <div className="space-y-3">
             <Label
-              htmlFor="periodType"
+              htmlFor="deadline"
               className="text-sm font-medium text-[var(--foreground)]"
             >
               Muddat turini tanlang
             </Label>
             <Select
-              value={formData.periodType}
+              value={formData.deadline}
               onValueChange={(value) =>
-                setFormData({ ...formData, periodType: value })
+                setFormData({ ...formData, deadline: value })
               }
             >
               <SelectTrigger className="w-full border-[var(--border)]">
                 <SelectValue placeholder="Muddat turini tanlang" />
               </SelectTrigger>
               <SelectContent>
-                {periodTypeOptions.map((period) => (
-                  <SelectItem key={period} value={period}>
-                    {period}
+                {deadlineOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Organization Selection */}
+          <div className="space-y-4">
+            {/* Selected Organizations Display */}
+            {selectedMainOrgs.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-[var(--foreground)]">
+                  Tanlangan tashkilotlar:
+                </h4>
+                {selectedMainOrgs.map((selectedOrg) => (
+                  <div
+                    key={selectedOrg.mainOrgId}
+                    className="p-3 border border-[var(--border)] rounded-lg bg-[var(--muted)]/20"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-[var(--foreground)]">
+                        {selectedOrg.mainOrgName}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleRemoveMainOrganization(selectedOrg.mainOrgId)
+                        }
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedOrg.secondaryOrgs.map((secOrgId) => (
+                        <Badge
+                          key={secOrgId}
+                          variant="secondary"
+                          className="text-xs"
+                        >
+                          {getSecondaryOrgName(secOrgId)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add New Organization */}
+            <div className="p-4 border border-[var(--border)] rounded-lg bg-[var(--muted)]/10">
+              <h4 className="text-sm font-medium text-[var(--foreground)] mb-3">
+                Yangi tashkilot qo'shish:
+              </h4>
+
+              {/* Step 1: Select Main Organization */}
+              <div className="space-y-3 mb-4">
+                <Label className="text-sm font-medium text-[var(--foreground)]">
+                  1. Asosiy tashkilotni tanlang
+                </Label>
+                <Select
+                  value={currentMainOrgId}
+                  onValueChange={(value) => {
+                    setCurrentMainOrgId(value);
+                    setCurrentSecondaryOrgs([]); // Reset secondary orgs when main org changes
+                  }}
+                >
+                  <SelectTrigger className="w-full border-[var(--border)]">
+                    <SelectValue placeholder="Asosiy tashkilotni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableMainOrgs().map((org) => (
+                      <SelectItem key={org.id} value={org.id}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Step 2: Select Secondary Organizations */}
+              {currentMainOrgId && (
+                <div className="space-y-3 mb-4">
+                  <Label className="text-sm font-medium text-[var(--foreground)]">
+                    2. Ikkinchi darajali tashkilotlarni tanlang
+                  </Label>
+                  {getCurrentSecondaryOrgs().length === 0 ? (
+                    <div className="text-sm text-[var(--muted-foreground)] p-3 border border-[var(--border)] rounded-md">
+                      Bu asosiy tashkilot uchun ikkinchi darajali tashkilotlar
+                      mavjud emas
+                    </div>
+                  ) : (
+                    <MultiSelect
+                      options={getCurrentSecondaryOrgs().map((org) => ({
+                        value: org.id,
+                        label: org.name,
+                      }))}
+                      selectedValues={currentSecondaryOrgs}
+                      onSelectionChange={setCurrentSecondaryOrgs}
+                      placeholder="Ikkinchi darajali tashkilotlarni tanlang"
+                      searchPlaceholder="Ikkinchi darajali tashkilotlarni qidirish..."
+                      emptyMessage="Ikkinchi darajali tashkilot topilmadi"
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Add Button */}
+              {currentMainOrgId && currentSecondaryOrgs.length > 0 && (
+                <Button
+                  type="button"
+                  onClick={handleAddMainOrganization}
+                  className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tashkilotni qo'shish
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Responsible Employees */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium text-[var(--foreground)]">
+              Mas'ul shaxslarni tanlang
+            </Label>
+            <MultiSelect
+              options={users.map((user) => ({
+                value: user.id,
+                label: `${user.first_name} ${user.last_name}`,
+              }))}
+              selectedValues={formData.responsibleEmployees}
+              onSelectionChange={handleResponsibleEmployeeChange}
+              placeholder="Mas'ul shaxslarni tanlang"
+              searchPlaceholder="Mas'ul shaxslarni qidirish..."
+              emptyMessage="Mas'ul shaxs topilmadi"
+            />
           </div>
 
           {/* Action Buttons */}
@@ -303,13 +559,13 @@ export function BulletinModal({
             >
               Bekor qilish
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
-              className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-6"
               disabled={!isFormValid()}
+              isPending={isLoading}
             >
               {mode === "create" ? "Saqlash" : "O'zgarishlarni saqlash"}
-            </Button>
+            </LoadingButton>
           </div>
         </form>
       </DialogContent>
