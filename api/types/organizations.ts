@@ -1,5 +1,3 @@
-import { PaginatedData } from "./general";
-
 export type OrganizationType =
   | "hukumat"
   | "vazirlik"
@@ -14,6 +12,7 @@ export interface Organization {
   type?: OrganizationType;
   parent: Organization;
   children: string[];
+  created: string;
   is_active?: boolean;
 }
 
@@ -26,7 +25,7 @@ export interface OrganizationCreateParams {
   parent_id?: string;
   children?: string[];
   is_active?: boolean;
-  type: OrganizationType;
+  type?: OrganizationType;
 }
 
 export interface OrganizationUpdateParams {

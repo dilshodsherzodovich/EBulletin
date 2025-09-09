@@ -19,6 +19,7 @@ import { PaginatedData } from "@/api/types/general";
 import { Organization } from "@/api/types/organizations";
 
 import { TableSkeleton } from "@/ui/table-skeleton";
+import { format } from "date-fns";
 
 interface OrganizationTableProps {
   organizations: PaginatedData<Organization>;
@@ -85,10 +86,7 @@ export function OrganizationTable({
               </TableHead>
               <TableHead className="w-16 p-3 ">#</TableHead>
               <TableHead className="p-3">Tashkilot</TableHead>
-              <TableHead className="p-3">Turi</TableHead>
-              <TableHead className="p-3">Yuqori tashkilot</TableHead>
               <TableHead className="p-3">Yaratilgan sana</TableHead>
-              <TableHead className="p-3">Holat</TableHead>
               <TableHead className="w-32 p-3">Amallar</TableHead>
             </TableRow>
           </TableHeader>
@@ -126,31 +124,8 @@ export function OrganizationTable({
                       <span className="font-medium">{organization.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant="secondary"
-                      className="bg-[var(--muted)] text-[var(--foreground)] border-none"
-                    >
-                      {organization.type}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {organization.parent?.name || "—"}
-                  </TableCell>
-                  <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {new Date().toDateString()}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant={organization.is_active ? "default" : "secondary"}
-                      className={
-                        organization.is_active
-                          ? "bg-green-100 text-green-800 border-none"
-                          : "bg-gray-100 text-gray-800 border-none"
-                      }
-                    >
-                      {organization.is_active ? "Faol" : "Nofaol"}
-                    </Badge>
+                    {format(organization.created, "dd.MM.yyyy HH:mm")}
                   </TableCell>
                   <TableCell className="p-3">
                     <div className="flex items-center gap-2">
