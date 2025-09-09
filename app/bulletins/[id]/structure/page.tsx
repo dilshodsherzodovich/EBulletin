@@ -11,6 +11,8 @@ import { useBulletinDetail, useUpdateBulletin } from "@/api/hooks/use-bulletin";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
+import { LoadingCard } from "@/ui/loading-card";
+import { Button } from "@/ui/button";
 
 interface BulletinField {
   id: string;
@@ -42,7 +44,11 @@ export default function BulletinStructurePage({
     null
   );
 
-  const { data: bulletinDetail, isPending, isFetching } = useBulletinDetail(id);
+  const {
+    data: bulletinDetail,
+    isPending: isPendingBulletinDetail,
+    isFetching,
+  } = useBulletinDetail(id);
   const { mutate: updateBulletin, isPending: isUpdatingBulletin } =
     useUpdateBulletin();
 
@@ -152,6 +158,14 @@ export default function BulletinStructurePage({
     );
   };
 
+  if (isPendingBulletinDetail) {
+    return (
+      <LoadingCard
+        breadCrumbs={[{ label: "Blyutenlar", href: "/bulletins" }]}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 p-6">
       {/* Breadcrumb Navigation */}
@@ -194,13 +208,13 @@ export default function BulletinStructurePage({
           <div className="text-sm text-[var(--muted-foreground)]">
             {fields?.length} ta maydon
           </div>
-          <button
+          <Button
             onClick={handleSaveStructure}
             className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white px-6 py-2 rounded-lg font-medium"
             disabled={isUpdatingBulletin}
           >
             {isUpdatingBulletin ? "Yuklanmoqda" : "Saqlash"}
-          </button>
+          </Button>
         </div>
       </div>
 
