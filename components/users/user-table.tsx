@@ -178,7 +178,7 @@ export function UserTable({
                       <div className="flex items-center gap-2">
                         <Building className="w-4 h-4 text-[var(--primary)]" />
                         <span className="text-[var(--muted-foreground)]">
-                          {user?.profile?.secondary_organization}
+                          {user?.profile?.secondary_organization?.name}
                         </span>
                       </div>
                     </TableCell>

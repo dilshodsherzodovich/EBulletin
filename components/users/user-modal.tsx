@@ -29,13 +29,6 @@ interface UserModalProps {
   isLoading?: boolean;
 }
 
-const departments = [
-  { value: "Moliya", label: "Moliya" },
-  { value: "Analitika", label: "Analitika" },
-  { value: "Rejalashtirish", label: "Rejalashtirish" },
-  { value: "Monitoring", label: "Monitoring" },
-];
-
 const roles = [
   { value: "ADMIN", label: "Admin" },
   { value: "MODERATOR", label: "Moderator" },
@@ -55,15 +48,17 @@ export function UserModal({
     useOrganizations({
       page: 1,
     });
-  const { data: deparments, isPending: isLoadingDepartments } = useDepartments({
-    page: 1,
-  });
+  const { data: departments, isPending: isLoadingDepartments } = useDepartments(
+    {
+      page: 1,
+    }
+  );
 
   const [formData, setFormData] = useState({
     lastName: "",
     firstName: "",
     secondary_organization_id: "",
-    organization: "Milliy statistika qo'mitasi",
+    organization: "",
     username: "",
     password: "",
     role: "",
@@ -77,8 +72,8 @@ export function UserModal({
       setFormData({
         lastName: user?.last_name || "",
         firstName: user?.first_name || "",
-        secondary_organization_id: user?.profile?.secondary_organization!,
-        organization: "Milliy statistika qo'mitasi",
+        secondary_organization_id: user?.profile?.secondary_organization.id!,
+        organization: user?.profile?.secondary_organization.organization.id!,
         username: user.username,
         password: "",
         role: user.role,
@@ -89,7 +84,7 @@ export function UserModal({
         lastName: "",
         firstName: "",
         secondary_organization_id: "",
-        organization: "Milliy statistika qo'mitasi",
+        organization: "",
         username: "",
         password: "",
         role: "",
@@ -142,7 +137,30 @@ export function UserModal({
       return;
     }
 
-    onSubmit(formData);
+    onSubmit(
+      mode === "create"
+        ? {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            username: formData.username,
+            role: formData.role,
+            is_active: formData.status === "active",
+            password: formData.password,
+            profile: {
+              secondary_organization: formData.secondary_organization_id,
+            },
+          }
+        : {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            username: formData.username,
+            role: formData.role,
+            is_active: formData.status === "active",
+            profile: {
+              secondary_organization: formData.secondary_organization_id,
+            },
+          }
+    );
   };
 
   const title =
@@ -194,7 +212,30 @@ export function UserModal({
               <Label className="text-sm text-[var(--muted-foreground)]">
                 Tashkilot
               </Label>
-              <Input value={formData.organization} readOnly />
+              <Select
+                value={formData.organization}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, organization: value })
+                }
+              >
+                <SelectTrigger
+                  className={errors.organization ? "border-red-500" : ""}
+                >
+                  <SelectValue placeholder="Tashkilot tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {organizations?.results?.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.organization && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.organization}
+                </p>
+              )}
             </div>
 
             <div>
@@ -213,9 +254,9 @@ export function UserModal({
                   <SelectValue placeholder="Bo'lim tanlang" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {departments?.results?.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id}>
+                      {opt.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
