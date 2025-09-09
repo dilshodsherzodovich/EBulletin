@@ -12,6 +12,15 @@ export const useBulletin = (params: { page: number }) => {
   });
 };
 
+export const useBulletinDetail = (id: string) => {
+  return useQuery({
+    queryKey: [queryKeys.bulletins.list, { id }],
+    queryFn: () => {
+      return bulletinService.getBulletinDetail(id);
+    },
+  });
+};
+
 export const useCreateBulletin = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -28,7 +37,7 @@ export const useUpdateBulletin = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: [queryKeys.bulletins.edit],
-    mutationFn: ({ id, data }: { id: string; data: BulletinCreateBody }) =>
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
       bulletinService.updateBulletin(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.bulletins.list] });

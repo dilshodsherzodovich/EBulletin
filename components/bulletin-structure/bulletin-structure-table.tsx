@@ -5,21 +5,13 @@ import { Edit, Trash2, GripVertical, Plus } from "lucide-react";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
-
-interface BulletinField {
-  id: string;
-  order: number;
-  name: string;
-  type: "number" | "text" | "date" | "classificator" | "file";
-  classificatorId?: string;
-  classificatorName?: string;
-}
+import { BulletinColumn } from "@/api/types/bulleten";
 
 interface BulletinStructureTableProps {
-  fields: BulletinField[];
-  onReorder: (fields: BulletinField[]) => void;
-  onEdit: (field: BulletinField) => void;
-  onDelete: (field: BulletinField) => void;
+  fields: BulletinColumn[];
+  onReorder: (fields: BulletinColumn[]) => void;
+  onEdit: (field: BulletinColumn) => void;
+  onDelete: (field: BulletinColumn) => void;
   onCreateNew: () => void;
 }
 
@@ -30,7 +22,7 @@ export function BulletinStructureTable({
   onDelete,
   onCreateNew,
 }: BulletinStructureTableProps) {
-  const [draggedField, setDraggedField] = useState<BulletinField | null>(null);
+  const [draggedField, setDraggedField] = useState<BulletinColumn | null>(null);
 
   const getFieldTypeLabel = (type: string) => {
     const labels: { [key: string]: string } = {
@@ -54,7 +46,7 @@ export function BulletinStructureTable({
     return colors[type] || "bg-gray-100 text-gray-800";
   };
 
-  const handleDragStart = (e: React.DragEvent, field: BulletinField) => {
+  const handleDragStart = (e: React.DragEvent, field: BulletinColumn) => {
     setDraggedField(field);
     e.dataTransfer.effectAllowed = "move";
   };
@@ -64,7 +56,7 @@ export function BulletinStructureTable({
     e.dataTransfer.dropEffect = "move";
   };
 
-  const handleDrop = (e: React.DragEvent, targetField: BulletinField) => {
+  const handleDrop = (e: React.DragEvent, targetField: BulletinColumn) => {
     e.preventDefault();
 
     if (!draggedField || draggedField.id === targetField.id) {
@@ -100,7 +92,7 @@ export function BulletinStructureTable({
             Maydonlar ro'yxati
           </h3>
           <div className="text-sm text-[var(--muted-foreground)]">
-            {fields.length} ta maydon
+            {fields?.length} ta maydon
           </div>
         </div>
         <Button
@@ -113,14 +105,14 @@ export function BulletinStructureTable({
       </div>
 
       <div className="p-4">
-        {fields.length === 0 ? (
+        {fields?.length === 0 ? (
           <div className="text-center py-8 text-[var(--muted-foreground)]">
             Hech qanday maydon qo'shilmagan. Yangi maydon qo'shish uchun
             yuqoridagi tugmani bosing.
           </div>
         ) : (
           <div className="space-y-2">
-            {fields.map((field, index) => (
+            {fields?.map((field, index) => (
               <div
                 key={field.id}
                 draggable

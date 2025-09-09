@@ -21,6 +21,16 @@ export const bulletinService = {
     }
   },
 
+  getBulletinDetail: async (id: string): Promise<Bulletin> => {
+    try {
+      const response = await api.get<Bulletin>(`/journal/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching bulletin detail ${id}:`, error);
+      throw error;
+    }
+  },
+
   createBulletin: async (body: BulletinCreateBody): Promise<Bulletin> => {
     try {
       const response = await api.post<Bulletin>("/journal/create/", body);
@@ -33,7 +43,7 @@ export const bulletinService = {
 
   updateBulletin: async (
     id: string,
-    body: BulletinCreateBody
+    body: Partial<BulletinCreateBody>
   ): Promise<Bulletin> => {
     try {
       const response = await api.patch<Bulletin>(`/journal/${id}/`, body);

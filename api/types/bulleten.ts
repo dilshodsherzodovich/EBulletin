@@ -14,12 +14,14 @@ export interface BulletinDeadline {
 }
 
 export interface BulletinColumn {
-  id: number;
+  id: string;
   name: string;
-  type: string;
-  journal: string;
+  type: "number" | "text" | "date" | "classificator";
+  journal?: string;
   order: number;
-  classificator: string | null;
+  classificator?: string | null;
+  classificatorId?: string;
+  classificatorName?: string;
 }
 
 export interface Bulletin {

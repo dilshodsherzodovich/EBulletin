@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import { Label } from "@/ui/label";
@@ -12,27 +12,20 @@ import {
   SelectValue,
 } from "@/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
-
-interface BulletinField {
-  id: string;
-  order: number;
-  name: string;
-  type: "number" | "text" | "date" | "classificator" | "file";
-  classificatorId?: string;
-  classificatorName?: string;
-}
+import { BulletinColumn } from "@/api/types/bulleten";
+import { useGetClassificators } from "@/api/hooks/use-classificator";
 
 interface BulletinStructureModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: BulletinFieldFormData) => void;
   mode: "create" | "edit";
-  field?: BulletinField;
+  field?: BulletinColumn;
 }
 
 interface BulletinFieldFormData {
   name: string;
-  type: "number" | "text" | "date" | "classificator" | "file";
+  type: "number" | "text" | "date" | "classificator";
   classificatorId?: string;
   classificatorName?: string;
 }
@@ -50,6 +43,17 @@ export function BulletinStructureModal({
     classificatorId: "",
     classificatorName: "",
   });
+
+  const { data: classificators, isPending } = useGetClassificators();
+
+  const classificatorOptions = useMemo(() => {
+    if (classificators?.count) {
+      return classificators?.results?.map((classificator) => ({
+        label: classificator.name,
+        value: classificator.id,
+      }));
+    } else return [];
+  }, [classificators]);
 
   // Reset form when modal opens/closes or mode changes
   useEffect(() => {
@@ -72,22 +76,11 @@ export function BulletinStructureModal({
     }
   }, [isOpen, mode, field]);
 
-  // Mock classificator options
-  const classificatorOptions = [
-    { value: "class1", label: "Muddatiy klassifikator" },
-    { value: "class2", label: "Tarqatma turlari" },
-    { value: "class3", label: "Tarqatish shakllari" },
-    { value: "class4", label: "Tashkilot turlari" },
-    { value: "class5", label: "Hududiy birliklar" },
-    { value: "class6", label: "Iqtisodiy faoliyat turlari" },
-  ];
-
   const fieldTypeOptions = [
     { value: "number", label: "Raqam" },
     { value: "text", label: "Matn" },
     { value: "date", label: "Sana" },
     { value: "classificator", label: "Klassifikator" },
-    { value: "file", label: "Fayl" },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,7 +113,7 @@ export function BulletinStructureModal({
   };
 
   const handleClassificatorChange = (classificatorId: string) => {
-    const selectedClassificator = classificatorOptions.find(
+    const selectedClassificator = classificatorOptions?.find(
       (c) => c.value === classificatorId
     );
     setFormData({
