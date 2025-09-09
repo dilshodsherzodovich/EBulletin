@@ -40,6 +40,9 @@ export const useEditClassificator = () => {
       queryClient.invalidateQueries({
         queryKey: [queryKeys.classificators.list],
       });
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.classificators.detail(params.id)],
+      });
     },
   });
 };

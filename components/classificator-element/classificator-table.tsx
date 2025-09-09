@@ -68,7 +68,6 @@ export function ClassificatorTable({
   const confirmBulkDelete = () => {
     onBulkDelete(selectedIds);
     setSelectedIds([]);
-    setShowDeleteConfirmation(false);
   };
 
   const cancelBulkDelete = () => {

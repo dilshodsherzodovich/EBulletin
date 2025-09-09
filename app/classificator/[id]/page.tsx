@@ -21,8 +21,8 @@ export default function ClassificatorDetailPage() {
 
   const {
     data: classificatorDetail,
-    isFetching,
-    isLoading,
+
+    isPending: isDetailPending,
     error,
   } = useGetClassificatorDetail(classificatorId);
 
@@ -89,6 +89,10 @@ export default function ClassificatorDetailPage() {
   ) => {
     if (!classificatorDetail) return;
 
+    console.log("Modal mode:", modalMode);
+    console.log("Received data:", data);
+    console.log("Selected element:", selectedElement);
+
     let elementsToSend: { id?: string; name: string }[] = [];
 
     if (modalMode === "create") {
@@ -120,6 +124,8 @@ export default function ClassificatorDetailPage() {
       }
     }
 
+    console.log("Elements to send to API:", elementsToSend);
+
     editClassificator(
       {
         id: classificatorId,
@@ -129,11 +135,15 @@ export default function ClassificatorDetailPage() {
         },
       },
       {
-        onSuccess: (data) => {
+        onSuccess: (responseData) => {
+          console.log("API response:", responseData);
+
+          // Update the cache with the response data
           queryClient.setQueryData(
             [queryKeys.classificators.detail(classificatorId)],
-            data
+            responseData
           );
+
           const successMessage =
             modalMode === "create"
               ? Array.isArray(data)
@@ -144,7 +154,9 @@ export default function ClassificatorDetailPage() {
           showSuccess(successMessage);
           setIsElementModalOpen(false);
         },
-        onError: () => {
+        onError: (error) => {
+          console.error("API error:", error);
+
           const errorMessage =
             modalMode === "create"
               ? "Element(lar)ni qo'shishda xatolik yuz berdi"
@@ -167,7 +179,10 @@ export default function ClassificatorDetailPage() {
           id: classificatorId,
           data: {
             name: classificatorDetail.name,
-            elements: updatedElements.map((el) => ({ name: el.name })),
+            elements: updatedElements.map((el) => ({
+              name: el.name,
+              id: el.id,
+            })),
           },
         },
         {
@@ -184,12 +199,6 @@ export default function ClassificatorDetailPage() {
     }
   };
 
-  // Loading state
-  if (isLoading || isFetching) {
-    return <LoadingCard />;
-  }
-
-  // Error state
   if (error) {
     return (
       <ErrorCard
@@ -204,6 +213,18 @@ export default function ClassificatorDetailPage() {
         backHref="/classificators"
         backLabel="Orqaga qaytish"
         retryLabel="Qayta yuklash"
+      />
+    );
+  }
+
+  if (isDetailPending) {
+    return (
+      <LoadingCard
+        variant="page"
+        breadCrumbs={[
+          { label: "Asosiy", href: "/" },
+          { label: "Klassifikator", href: "/classificators" },
+        ]}
       />
     );
   }
@@ -253,6 +274,7 @@ export default function ClassificatorDetailPage() {
         onSave={handleSaveElement}
         element={selectedElement}
         mode={modalMode}
+        isPending={isPending}
       />
 
       <ConfirmationDialog

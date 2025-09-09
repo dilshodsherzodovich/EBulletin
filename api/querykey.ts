@@ -28,4 +28,10 @@ export const queryKeys = {
     edit: "edit-department",
     delete: "delete-department",
   },
+  bulletins: {
+    list: "bulletins",
+    create: "create-bulletin",
+    edit: "edit-bulletin",
+    delete: "delete-bulletin",
+  },
 } as const;
