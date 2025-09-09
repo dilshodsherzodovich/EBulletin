@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
 import { LoadingCard } from "@/ui/loading-card";
 import { Button } from "@/ui/button";
+import { useGetClassificators } from "@/api/hooks/use-classificator";
 
 interface BulletinField {
   id: string;
@@ -44,6 +45,7 @@ export default function BulletinStructurePage({
     null
   );
 
+  const { data: classificators } = useGetClassificators();
   const {
     data: bulletinDetail,
     isPending: isPendingBulletinDetail,
@@ -53,8 +55,23 @@ export default function BulletinStructurePage({
     useUpdateBulletin();
 
   useEffect(() => {
-    setFields(bulletinDetail?.columns!);
-  }, [bulletinDetail?.id]);
+    if (bulletinDetail?.columns) {
+      setFields(
+        bulletinDetail.columns.map((col) => {
+          if (col.type === "classificator") {
+            return {
+              ...col,
+              classificatorId: col?.classificator || undefined,
+              classificatorName: classificators?.results?.find(
+                (classificator) => classificator?.id === col?.classificator
+              )?.name,
+            };
+          }
+          return col;
+        })
+      );
+    }
+  }, [bulletinDetail?.id, classificators]);
 
   const requestColumnDetails = useMemo(() => {
     return fields?.map((field) => ({

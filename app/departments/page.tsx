@@ -60,7 +60,7 @@ export default function DepartmentsPage() {
     if (modalMode === "create") {
       createDepartment(departmentData, {
         onSuccess: () => {
-          toast.success("Bo'lim muvaffaqiyatli qo'shildi!");
+          toast.success("Quyi tashkilot muvaffaqiyatli qo'shildi!");
         },
         onError: (error) => {
           toast.error(`Xatolik yuz berdi: ${error.message}`);
@@ -77,7 +77,9 @@ export default function DepartmentsPage() {
         { id: editingDepartment.id, ...departmentData },
         {
           onSuccess: () => {
-            toast.success("Bo'lim ma'lumotlari muvaffaqiyatli tahrirlandi!");
+            toast.success(
+              "Quyi tashkilot ma'lumotlari muvaffaqiyatli tahrirlandi!"
+            );
           },
           onError: (error) => {
             toast.error(`Xatolik yuz berdi: ${error.message}`);

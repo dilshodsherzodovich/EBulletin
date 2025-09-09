@@ -31,6 +31,8 @@ export function BulletinStructureTable({
       date: "Sana",
       classificator: "Klassifikator",
       file: "Fayl",
+      string: "Matn",
+      integer: "Raqam",
     };
     return labels[type] || type;
   };
@@ -38,7 +40,9 @@ export function BulletinStructureTable({
   const getFieldTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
       number: "bg-blue-100 text-blue-800",
+      integer: "bg-blue-100 text-blue-800",
       text: "bg-green-100 text-green-800",
+      string: "bg-green-100 text-green-800",
       date: "bg-purple-100 text-purple-800",
       classificator: "bg-orange-100 text-orange-800",
       file: "bg-gray-100 text-gray-800",
