@@ -15,6 +15,10 @@ export const queryKeys = {
     delete: "delete-organization",
   },
 
+  monitoring: {
+    get: "monitroing",
+  },
+
   classificators: {
     list: "classificators-list",
     create: "create-classificator",

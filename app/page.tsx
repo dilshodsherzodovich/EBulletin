@@ -38,6 +38,8 @@ import {
   AreaChart as RechartsAreaChart,
   Area,
 } from "recharts";
+import { useMonitoring } from "@/api/hooks/use-monitoring";
+import { MonitoringOrganization } from "@/api/types/monitoring";
 
 interface StatusData {
   onTime: number;
@@ -79,213 +81,51 @@ interface ChancelleryData {
 }
 
 export default function MonitoringPage() {
-  const [statusData] = useState<StatusData>({
-    onTime: 38.6,
-    delayed: 22.5,
-    noData: 30.8,
+  const { data: monitoring, isLoading, error, refetch } = useMonitoring();
+
+  // Transform API data to match component interfaces
+  const statusData: StatusData = {
+    onTime: monitoring?.results.total_stats.on_time_percentage || 0,
+    delayed: monitoring?.results.total_stats.late_percentage || 0,
+    noData: monitoring?.results.total_stats.missed_percentage || 0,
     total: 100,
-  });
+  };
 
-  const [organizations] = useState<OrganizationStatus[]>([
-    {
-      id: "1",
-      name: "Makroiqtisodiy ko'rsatkichlar va milliy hisoblar boshqarmasi",
-      status: "onTime",
-      completed: 13,
-      total: 15,
-      percentage: 78,
-    },
-    {
-      id: "2",
-      name: "Narxlar statistikasi boshqarmasi",
-      status: "onTime",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "3",
-      name: "Sanoat va energetika statistikasi boshqarmasi",
-      status: "delayed",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "4",
-      name: "Qishloq xo'jaligi va atrof-muhit statistikasi boshqarmasi",
-      status: "onTime",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "5",
-      name: "Investitsiyalar va qurilish statistikasi boshqarmasi",
-      status: "noData",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "6",
-      name: "Tashqi iqtisodiy faoliyat va savdo statistikasi boshqarmasi",
-      status: "onTime",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "7",
-      name: "Xizmatlar sohasi statistikasi boshqarmasi",
-      status: "delayed",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "8",
-      name: "Tadbirkorlik subyektlarini kuzatuv boshqarmasi",
-      status: "onTime",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "9",
-      name: "Demografiya, mehnat va gender statistikasi boshqarmasi",
-      status: "onTime",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "10",
-      name: "Aholi turmush darajasi statistikasi va kambag'allikni baholash boshqarmasi",
-      status: "delayed",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "11",
-      name: "Ijtimoiy soha statistikasi boshqarmasi",
-      status: "onTime",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-    {
-      id: "12",
-      name: "Statistik registrlarni yuritish bo'limi",
-      status: "onTime",
-      completed: 13,
-      total: 15,
-      percentage: 4.4,
-    },
-  ]);
+  const getStatusFromPercentages = (
+    org: MonitoringOrganization
+  ): "onTime" | "delayed" | "noData" => {
+    if (
+      org.on_time_percentage > org.late_percentage &&
+      org.on_time_percentage > org.missed_percentage
+    ) {
+      return "onTime";
+    } else if (org.late_percentage > org.missed_percentage) {
+      return "delayed";
+    } else {
+      return "noData";
+    }
+  };
 
-  const [monitoringData] = useState<MonitoringData[]>([
-    {
-      organization:
-        "Makroiqtisodiy ko'rsatkichlar va milliy hisoblar boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Narxlar statistikasi boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Sanoat va energetika statistikasi boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Qishloq xo'jaligi va atrof-muhit statistikasi boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Investitsiyalar va qurilish statistikasi boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization:
-        "Tashqi iqtisodiy faoliyat va savdo statistikasi boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Xizmatlar sohasi statistikasi boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Tadbirkorlik subyektlarini kuzatuv boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Demografiya, mehnat va gender statistikasi boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization:
-        "Aholi turmush darajasi statistikasi va kambag'allikni baholash boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Ijtimoiy soha statistikasi boshqarmasi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-    {
-      organization: "Statistik registrlarni yuritish bo'limi",
-      total: 5,
-      updated: 3,
-      pending: 2,
-      overdue: 1,
-      updatedAfterDeadline: 2,
-    },
-  ]);
+  const organizations: OrganizationStatus[] =
+    monitoring?.results.organizations.map((org) => ({
+      id: org.id,
+      name: org.name,
+      status: getStatusFromPercentages(org),
+      completed: org.on_time_count,
+      total: org.total_count,
+      percentage: org.on_time_percentage,
+    })) || [];
+
+  const monitoringTableData: MonitoringData[] =
+    monitoring?.results.organizations.map((org) => ({
+      organization: org.name,
+      total: org.total_count,
+      updated: org.on_time_count,
+      pending:
+        org.total_count - org.on_time_count - org.late_count - org.missed_count,
+      overdue: org.missed_count,
+      updatedAfterDeadline: org.late_count,
+    })) || [];
 
   const [chancelleryData] = useState<ChancelleryData[]>([
     {
@@ -424,6 +264,41 @@ export default function MonitoringPage() {
     return null;
   };
 
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] p-6 space-y-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[var(--primary)]" />
+            <p className="text-[var(--muted-foreground)]">
+              Ma'lumotlar yuklanmoqda...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] p-6 space-y-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-500" />
+            <p className="text-[var(--foreground)] font-semibold mb-2">
+              Xatolik yuz berdi
+            </p>
+            <p className="text-[var(--muted-foreground)]">
+              Ma'lumotlarni yuklashda xatolik yuz berdi
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[var(--background)] p-6 space-y-6">
       {/* Header */}
@@ -439,8 +314,15 @@ export default function MonitoringPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Yangilash
           </Button>
         </div>
@@ -750,7 +632,7 @@ export default function MonitoringPage() {
               </tr>
             </thead>
             <tbody>
-              {monitoringData.map((item, index) => (
+              {monitoringTableData.map((item, index) => (
                 <tr
                   key={index}
                   className="border-b border-[var(--border)] hover:bg-[var(--muted)]/20 transition-colors"
