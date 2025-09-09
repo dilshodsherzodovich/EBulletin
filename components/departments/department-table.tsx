@@ -17,6 +17,8 @@ import { DepartmentsFilters } from "@/components/departments/department-filters"
 import { Card } from "@/ui/card";
 import { PaginatedData } from "@/api/types/general";
 import { Department } from "@/api/types/deparments";
+import { TableSkeleton } from "@/ui/table-skeleton";
+import { format } from "date-fns";
 
 interface DepartmentTableProps {
   departments: PaginatedData<Department>;
@@ -24,6 +26,7 @@ interface DepartmentTableProps {
   onDelete: (department: Department) => void;
   onBulkDelete: (departmentIds: string[]) => void;
   onCreateNew: () => void;
+  isLoading?: boolean;
 }
 
 export function DepartmentTable({
@@ -32,19 +35,12 @@ export function DepartmentTable({
   onDelete,
   onBulkDelete,
   onCreateNew,
+  isLoading,
 }: DepartmentTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [orgFilter, setOrgFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  // Example options (replace with real data as needed)
-  const orgOptions = [
-    "",
-    "Milliy statistika qo'mitasi",
-    "Iqtisodiyot vazirligi",
-    "Moliya vazirligi",
-  ];
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -99,67 +95,77 @@ export function DepartmentTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {departments?.results?.map((department, index) => (
-                <TableRow
-                  key={department.id}
-                  className={" transition-colors hover:bg-muted/50 "}
-                >
-                  <TableCell className="p-3">
-                    <Checkbox
-                      checked={selectedIds.includes(department.id)}
-                      onCheckedChange={(checked) =>
-                        handleSelectDepartment(department.id, !!checked)
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="font-semibold text-[var(--primary)] p-3">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <span className="font-medium">{department.name}</span>
-                  </TableCell>
-                  <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {department.organization}
-                  </TableCell>
-                  <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {department.created}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant={department.is_active ? "default" : "secondary"}
-                      className={
-                        department.is_active
-                          ? "bg-green-100 text-green-800 border-none"
-                          : "bg-gray-100 text-gray-800 border-none"
-                      }
+              {isLoading ? (
+                <TableSkeleton columns={7} rows={5} />
+              ) : (
+                <>
+                  {departments?.results?.map((department, index) => (
+                    <TableRow
+                      key={department.id}
+                      className={" transition-colors hover:bg-muted/50 "}
                     >
-                      {department.is_active ? "Faol" : "Nofaol"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onEdit(department)}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                        aria-label="Tahrirlash"
-                      >
-                        <Edit className="h-4 w-4 text-[var(--primary)]" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onDelete(department)}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                        aria-label="O'chirish"
-                      >
-                        <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      <TableCell className="p-3">
+                        <Checkbox
+                          checked={selectedIds.includes(department.id)}
+                          onCheckedChange={(checked) =>
+                            handleSelectDepartment(department.id, !!checked)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="font-semibold text-[var(--primary)] p-3">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell className="p-3">
+                        <span className="font-medium">{department.name}</span>
+                      </TableCell>
+                      <TableCell className="p-3 text-[var(--muted-foreground)]">
+                        {department.organization}
+                      </TableCell>
+                      <TableCell className="p-3 text-[var(--muted-foreground)]">
+                        {department.created
+                          ? format(department.created, "dd.MM.yyyy HH:mm")
+                          : ""}
+                      </TableCell>
+                      <TableCell className="p-3">
+                        <Badge
+                          variant={
+                            department.is_active ? "default" : "secondary"
+                          }
+                          className={
+                            department.is_active
+                              ? "bg-green-100 text-green-800 border-none"
+                              : "bg-gray-100 text-gray-800 border-none"
+                          }
+                        >
+                          {department.is_active ? "Faol" : "Nofaol"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="p-3">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => onEdit(department)}
+                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                            aria-label="Tahrirlash"
+                          >
+                            <Edit className="h-4 w-4 text-[var(--primary)]" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => onDelete(department)}
+                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                            aria-label="O'chirish"
+                          >
+                            <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </>
+              )}
             </TableBody>
           </Table>
         </div>

@@ -34,7 +34,7 @@ export default function DepartmentsPage() {
 
   const {
     data: departmentsList,
-    isPending,
+    isPending: isPendingDepartments,
     isFetching,
   } = useDepartments({ page: 1 });
   const { mutate: createDepartment, isPending: isCreatingDep } =
@@ -156,6 +156,7 @@ export default function DepartmentsPage() {
           onDelete={handleOpenDeleteModal}
           onBulkDelete={handleBulkDelete}
           onCreateNew={handleOpenCreateModal}
+          isLoading={isPendingDepartments}
         />
       </Card>
 
