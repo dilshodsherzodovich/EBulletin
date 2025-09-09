@@ -270,7 +270,7 @@ export function UserModal({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
-                Login *
+                Foydalanuvchi nomi *
               </Label>
               <Input
                 value={formData.username}
@@ -278,6 +278,7 @@ export function UserModal({
                   setFormData({ ...formData, username: e.target.value })
                 }
                 className={errors.login ? "border-red-500" : ""}
+                autoComplete="off"
               />
               {errors.login && (
                 <p className="text-red-500 text-xs mt-1">{errors.login}</p>
@@ -299,6 +300,7 @@ export function UserModal({
                     ? "Yangi parol (bo'sh qoldirilsa o'zgarmaydi)"
                     : ""
                 }
+                autoComplete="off"
               />
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
