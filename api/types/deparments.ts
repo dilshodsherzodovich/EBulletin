@@ -5,7 +5,6 @@ export interface Department {
   organization: string;
   created: string;
   updated: string;
-  is_active: boolean;
 }
 
 export interface DepartmentGetParams {
@@ -15,7 +14,6 @@ export interface DepartmentGetParams {
 export interface DepartmentCreateParams {
   name: string;
   organization_id: string;
-  is_active?: boolean;
 }
 
 export interface DepartmentUpdateParams {

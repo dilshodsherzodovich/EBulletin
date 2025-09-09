@@ -90,7 +90,6 @@ export function DepartmentTable({
                 <TableHead className="p-3">Quyi tashkilot</TableHead>
                 <TableHead className="p-3">Tashkilot</TableHead>
                 <TableHead className="p-3">Yaratilgan sana</TableHead>
-                <TableHead className="p-3">Holat</TableHead>
                 <TableHead className="w-32 p-3">Amallar</TableHead>
               </TableRow>
             </TableHeader>
@@ -125,20 +124,6 @@ export function DepartmentTable({
                         {department.created
                           ? format(department.created, "dd.MM.yyyy HH:mm")
                           : ""}
-                      </TableCell>
-                      <TableCell className="p-3">
-                        <Badge
-                          variant={
-                            department.is_active ? "default" : "secondary"
-                          }
-                          className={
-                            department.is_active
-                              ? "bg-green-100 text-green-800 border-none"
-                              : "bg-gray-100 text-gray-800 border-none"
-                          }
-                        >
-                          {department.is_active ? "Faol" : "Nofaol"}
-                        </Badge>
                       </TableCell>
                       <TableCell className="p-3">
                         <div className="flex items-center gap-2">

@@ -36,7 +36,6 @@ export function DepartmentModal({
   const [formData, setFormData] = useState({
     name: "",
     organization: "",
-    status: "active" as "active" | "inactive",
   });
 
   const { data: organizationsData, isPending } = useOrganizations({ page: 1 });
@@ -47,13 +46,11 @@ export function DepartmentModal({
       setFormData({
         name: department.name,
         organization: department.organization_id,
-        status: department.is_active ? "active" : "inactive",
       });
     } else if (mode === "create") {
       setFormData({
         name: "",
         organization: "",
-        status: "active",
       });
     }
   }, [department, mode, isOpen, organizationsData]);
@@ -62,7 +59,6 @@ export function DepartmentModal({
     e.preventDefault();
     onSave({
       name: formData?.name.trim()!,
-      is_active: formData.status === "active",
       organization_id: formData.organization,
     });
   };
@@ -71,7 +67,6 @@ export function DepartmentModal({
     setFormData({
       name: "",
       organization: "",
-      status: "active",
     });
     onClose();
   };
@@ -123,45 +118,6 @@ export function DepartmentModal({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          </div>
-          <div>
-            <Label className="text-sm text-[var(--muted-foreground)]">
-              Holati
-            </Label>
-            <div className="flex items-center gap-6 mt-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name={`status-${mode}`}
-                  value="active"
-                  checked={formData.status === "active"}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value as "active" | "inactive",
-                    })
-                  }
-                  className="w-4 h-4 text-[var(--primary)] border-gray-300 focus:ring-[var(--primary)]"
-                />
-                <span className="text-[var(--foreground)] text-sm">Faol</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name={`status-${mode}`}
-                  value="inactive"
-                  checked={formData.status === "inactive"}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value as "active" | "inactive",
-                    })
-                  }
-                  className="w-4 h-4 text-[var(--primary)] border-gray-300 focus:ring-[var(--primary)]"
-                />
-                <span className="text-[var(--foreground)] text-sm">Nofaol</span>
-              </label>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4">
