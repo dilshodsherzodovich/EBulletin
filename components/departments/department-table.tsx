@@ -19,6 +19,7 @@ import { PaginatedData } from "@/api/types/general";
 import { Department } from "@/api/types/deparments";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { format } from "date-fns";
+import { PermissionGuard } from "../permission-guard";
 
 interface DepartmentTableProps {
   departments: PaginatedData<Department>;
@@ -127,24 +128,28 @@ export function DepartmentTable({
                       </TableCell>
                       <TableCell className="p-3">
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => onEdit(department)}
-                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                            aria-label="Tahrirlash"
-                          >
-                            <Edit className="h-4 w-4 text-[var(--primary)]" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => onDelete(department)}
-                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                            aria-label="O'chirish"
-                          >
-                            <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                          </Button>
+                          <PermissionGuard permission="edit_department">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => onEdit(department)}
+                              className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                              aria-label="Tahrirlash"
+                            >
+                              <Edit className="h-4 w-4 text-[var(--primary)]" />
+                            </Button>
+                          </PermissionGuard>
+                          <PermissionGuard permission="delete_department">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => onDelete(department)}
+                              className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                              aria-label="O'chirish"
+                            >
+                              <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                            </Button>
+                          </PermissionGuard>
                         </div>
                       </TableCell>
                     </TableRow>
