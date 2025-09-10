@@ -14,10 +14,18 @@ import {
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { CreateUserRequest } from "@/api/types/user";
 import { UserData } from "@/api/types/auth";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 // Keep the mock data for now
 
 export default function UsersPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "users")) {
+    redirect("/");
+  }
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");

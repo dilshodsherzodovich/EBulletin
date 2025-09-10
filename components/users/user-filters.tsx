@@ -12,6 +12,7 @@ import { Trash2 } from "lucide-react";
 import { userRoles } from "@/lib/users";
 import { useOrganizations } from "@/api/hooks/use-organizations";
 import { useDepartments } from "@/api/hooks/use-departmants";
+import { PermissionGuard } from "../permission-guard";
 
 interface UserFiltersProps {
   searchTerm: string;
@@ -114,27 +115,30 @@ export function UserFilters({
           <SelectItem value="inactive">Nofaol</SelectItem>
         </SelectContent>
       </Select>
-      <Button
-        onClick={onAdd}
-        className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap"
-      >
-        <span className="flex items-center">
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Yangi foydalanuvchi
-        </span>
-      </Button>
+      <PermissionGuard permission="create_user">
+        <Button
+          onClick={onAdd}
+          className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap"
+        >
+          <span className="flex items-center">
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Yangi foydalanuvchi
+          </span>
+        </Button>
+      </PermissionGuard>
+
       {selectedCount > 0 && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-[#6b7280]">
