@@ -193,6 +193,12 @@ export function canAccessSection(
     case "classificator": {
       return hasPermission(user, "view_classificators");
     }
+    case "bulletin_detail": {
+      return hasPermission(user, "view_journal_detail");
+    }
+    case "bulletin_structure": {
+      return hasPermission(user, "view_journal_structure");
+    }
     default:
       return false;
   }

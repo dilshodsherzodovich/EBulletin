@@ -15,6 +15,7 @@ import {
 import { BulletinRow, BulletinColumn } from "@/api/types/bulleten";
 import { useGetClassificatorDetail } from "@/api/hooks/use-classificator-detail";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
+import { PermissionGuard } from "../permission-guard";
 
 interface BulletinDataGridProps {
   columns: BulletinColumn[];
@@ -385,28 +386,32 @@ export function BulletinDataGrid({
                               </Button>
                             </>
                           ) : (
+                            <PermissionGuard permission="edit_journal_row">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleEditRow(row.id)}
+                                className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                                aria-label="Tahrirlash"
+                              >
+                                <Edit className="h-4 w-4 text-[var(--primary)]" />
+                              </Button>
+                            </PermissionGuard>
+                          )}
+                          <PermissionGuard permission="delete_journal_row">
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => handleEditRow(row.id)}
-                              className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                              aria-label="Tahrirlash"
+                              onClick={() => handleDeleteClick(row.id)}
+                              disabled={
+                                isRowLoading(row.id) || isRowEditing(row.id)
+                              }
+                              className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10 disabled:opacity-50"
+                              aria-label="O'chirish"
                             >
-                              <Edit className="h-4 w-4 text-[var(--primary)]" />
+                              <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
                             </Button>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleDeleteClick(row.id)}
-                            disabled={
-                              isRowLoading(row.id) || isRowEditing(row.id)
-                            }
-                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10 disabled:opacity-50"
-                            aria-label="O'chirish"
-                          >
-                            <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                          </Button>
+                          </PermissionGuard>
                         </>
                       )}
                     </div>

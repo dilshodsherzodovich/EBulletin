@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { redirect, useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
@@ -27,8 +27,16 @@ import { LoadingCard } from "@/ui/loading-card";
 import { FileUpload } from "@/ui/file-upload";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
+import { canAccessSection } from "@/lib/permissions";
+import { PermissionGuard } from "@/components/permission-guard";
 
 export default function BulletinDetailPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "bulletin_detail")) {
+    redirect("/");
+  }
+
   const queryClient = useQueryClient();
   const params = useParams();
   const router = useRouter();
@@ -304,10 +312,12 @@ export default function BulletinDetailPage() {
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Bulletin Ma'lumotlari</h2>
-          <Button onClick={handleAddRow} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Qator Qo'shish
-          </Button>
+          <PermissionGuard permission="create_journal_row">
+            <Button onClick={handleAddRow} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Qator Qo'shish
+            </Button>
+          </PermissionGuard>
         </div>
         <BulletinDataGrid
           columns={bulletin.columns || []}
