@@ -20,6 +20,7 @@ import { Organization } from "@/api/types/organizations";
 
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { format } from "date-fns";
+import { PermissionGuard } from "../permission-guard";
 
 interface OrganizationTableProps {
   organizations: PaginatedData<Organization>;
@@ -129,24 +130,28 @@ export function OrganizationTable({
                   </TableCell>
                   <TableCell className="p-3">
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onEdit(organization)}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                        aria-label="Tahrirlash"
-                      >
-                        <Edit className="h-4 w-4 text-[var(--primary)]" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onDelete(organization.id)}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                        aria-label="O'chirish"
-                      >
-                        <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                      </Button>
+                      <PermissionGuard permission="edit_organization">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onEdit(organization)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                          aria-label="Tahrirlash"
+                        >
+                          <Edit className="h-4 w-4 text-[var(--primary)]" />
+                        </Button>
+                      </PermissionGuard>
+                      <PermissionGuard permission="delete_organization">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onDelete(organization.id)}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                          aria-label="O'chirish"
+                        >
+                          <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                        </Button>
+                      </PermissionGuard>
                     </div>
                   </TableCell>
                 </TableRow>
