@@ -14,6 +14,8 @@ import { queryKeys } from "@/api/querykey";
 import { LoadingCard } from "@/ui/loading-card";
 import { Button } from "@/ui/button";
 import { useGetClassificators } from "@/api/hooks/use-classificator";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 interface BulletinField {
   id: string;
@@ -29,6 +31,12 @@ export default function BulletinStructurePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "bulletin_structure")) {
+    redirect("/");
+  }
+
   const queryClient = useQueryClient();
   const { id } = use(params);
   const snackBar = useSnackbar();
