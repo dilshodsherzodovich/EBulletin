@@ -6,7 +6,10 @@ import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
 import { Badge } from "@/ui/badge";
-import { useBulletinDetail } from "@/api/hooks/use-bulletin";
+import {
+  useBulletinDetail,
+  useCreateBulletinFile,
+} from "@/api/hooks/use-bulletin";
 import {
   useCreateBulletinRow,
   useUpdateBulletinRow,
@@ -22,8 +25,11 @@ import { ErrorCard } from "@/ui/error-card";
 import { BulletinDataGrid } from "@/components/bulletins/bulletin-data-grid";
 import { LoadingCard } from "@/ui/loading-card";
 import { FileUpload } from "@/ui/file-upload";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/api/querykey";
 
 export default function BulletinDetailPage() {
+  const queryClient = useQueryClient();
   const params = useParams();
   const router = useRouter();
   const bulletinId = params.id as string;
@@ -39,6 +45,7 @@ export default function BulletinDetailPage() {
     useUpdateBulletinRow();
   const { mutate: deleteBulletinRow, isPending: isDeletingRow } =
     useDeleteBulletinRow();
+  const { mutate: createBulletinFile } = useCreateBulletinFile();
 
   const { showSuccess, showError } = useSnackbar();
 
@@ -112,10 +119,27 @@ export default function BulletinDetailPage() {
 
   const handleFileUpload = (files: File[]) => {
     setUploadedFiles(files);
-    if (files.length > 0) {
-      showSuccess(`${files.length} ta fayl muvaffaqiyatli yuklandi`);
-    }
   };
+
+  useEffect(() => {
+    if (uploadedFiles.length) {
+      createBulletinFile(
+        { id: bulletinId, upload_file: uploadedFiles[0] },
+        {
+          onSuccess: () => {
+            showSuccess("Fayl muvaffaqiyatli yuklandi");
+            queryClient.invalidateQueries({
+              queryKey: [queryKeys.bulletins.detail(bulletinId)],
+            });
+          },
+          onError: (error) => {
+            showError(`Fayl yuklashda xatolik`, error.message);
+            setUploadedFiles([]);
+          },
+        }
+      );
+    }
+  }, [uploadedFiles]);
 
   const handleSaveRow = (
     rowId: string,
@@ -309,6 +333,7 @@ export default function BulletinDetailPage() {
           maxSize={200}
           maxFiles={10}
           onFilesChange={handleFileUpload}
+          filesUploaded={uploadedFiles}
           hint="PDF, Word, Excel, PowerPoint, rasm va arxiv fayllari qo'llab-quvvatlanadi"
         />
       </Card>

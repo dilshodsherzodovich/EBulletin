@@ -72,3 +72,10 @@ export interface BulletinCreateRow {
   journal: string;
   values: BulletinRowCell[];
 }
+
+export interface BulletinFile {
+  id: string;
+  journal: string;
+  upload_file: string;
+  user_info: string;
+}

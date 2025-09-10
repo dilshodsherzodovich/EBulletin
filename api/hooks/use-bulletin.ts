@@ -99,3 +99,11 @@ export const useDeleteBulletinRow = () => {
     },
   });
 };
+
+export const useCreateBulletinFile = () => {
+  return useMutation({
+    mutationFn: ({ id, upload_file }: { id: string; upload_file: File }) => {
+      return bulletinService.createBulletinFile(id, upload_file);
+    },
+  });
+};

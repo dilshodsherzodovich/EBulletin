@@ -2,6 +2,7 @@ import {
   Bulletin,
   BulletinCreateBody,
   BulletinCreateRow,
+  BulletinFile,
   BulletinRow,
 } from "../types/bulleten";
 import api from "@/api/axios";
@@ -74,6 +75,27 @@ export const bulletinService = {
       return response.data;
     } catch (error) {
       console.error("Error fetching bulletin:", error);
+      throw error;
+    }
+  },
+
+  createBulletinFile: async (
+    id: string,
+    upload_file: File
+  ): Promise<BulletinFile> => {
+    try {
+      const formData = new FormData();
+      formData.append("journal", id);
+      formData.append("upload_file", upload_file);
+
+      const response = await api.post<BulletinFile>(
+        "/journal/upload-history/",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error uploading bulletin file:", error);
       throw error;
     }
   },

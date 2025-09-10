@@ -22,9 +22,11 @@ export interface FileUploadProps {
   multiple?: boolean;
   maxSize?: number; // in MB
   maxFiles?: number;
+  filesUploaded: File[];
   onFilesChange?: (files: File[]) => void;
   className?: string;
   disabled?: boolean;
+  isUploadingFile?: boolean;
 }
 
 const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
@@ -39,8 +41,10 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       maxSize = 200, // Default to 200MB
       maxFiles = 5,
       onFilesChange,
+      filesUploaded,
       className,
       disabled = false,
+      isUploadingFile,
       ...props
     },
     ref
@@ -52,6 +56,10 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
     const hasError = !!error || !!uploadError;
     const hasSuccess = !!success && !hasError;
+
+    React.useEffect(() => {
+      setFiles(filesUploaded);
+    }, [filesUploaded]);
 
     const validateFile = (file: File): string | null => {
       if (maxSize && file.size > maxSize * 1024 * 1024) {
