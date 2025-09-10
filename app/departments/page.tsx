@@ -16,8 +16,16 @@ import { Department, DepartmentCreateParams } from "@/api/types/deparments";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 export default function DepartmentsPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "departments")) {
+    redirect("/");
+  }
+
   const queryClient = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

@@ -20,8 +20,16 @@ import {
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
 import { getPageCount } from "@/lib/utils";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 export default function BulletinsPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "bulletins")) {
+    redirect("/");
+  }
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [showModal, setShowModal] = useState(false);

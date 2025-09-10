@@ -18,8 +18,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 export default function OrganizationsPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "organizations")) {
+    redirect("/");
+  }
+
   const queryClient = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

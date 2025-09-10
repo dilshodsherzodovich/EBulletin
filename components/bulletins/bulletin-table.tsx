@@ -21,6 +21,7 @@ import Link from "next/link";
 import { Bulletin } from "@/api/types/bulleten";
 import { Organization } from "@/api/types/organizations";
 import { TableSkeleton } from "@/ui/table-skeleton";
+import { PermissionGuard } from "../permission-guard";
 
 interface BulletinTableProps {
   bulletins: Bulletin[];
@@ -315,38 +316,46 @@ export function BulletinTable({
                     </TableCell>
                     <TableCell className="p-3">
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => onEdit(bulletin)}
-                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                          aria-label="Tahrirlash"
-                        >
-                          <Edit className="h-4 w-4 text-[var(--primary)]" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDeleteClick(bulletin)}
-                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                          aria-label="O'chirish"
-                        >
-                          <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                        </Button>
-                        <Link
-                          href={`/bulletins/${bulletin.id}/detail`}
-                          className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
-                          aria-label="Ma'lumotlar"
-                        >
-                          <Eye className="h-4 w-4 text-[var(--primary)]" />
-                        </Link>
-                        <Link
-                          href={`/bulletins/${bulletin.id}/structure`}
-                          className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
-                          aria-label="Struktura"
-                        >
-                          <BarChart3 className="h-4 w-4 text-[var(--primary)]" />
-                        </Link>
+                        <PermissionGuard permission="edit_journal">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => onEdit(bulletin)}
+                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                            aria-label="Tahrirlash"
+                          >
+                            <Edit className="h-4 w-4 text-[var(--primary)]" />
+                          </Button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="delete_journal">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleDeleteClick(bulletin)}
+                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                            aria-label="O'chirish"
+                          >
+                            <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                          </Button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="view_journal_detail">
+                          <Link
+                            href={`/bulletins/${bulletin.id}/detail`}
+                            className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
+                            aria-label="Ma'lumotlar"
+                          >
+                            <Eye className="h-4 w-4 text-[var(--primary)]" />
+                          </Link>
+                        </PermissionGuard>
+                        <PermissionGuard permission="view_journal_structure">
+                          <Link
+                            href={`/bulletins/${bulletin.id}/structure`}
+                            className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
+                            aria-label="Struktura"
+                          >
+                            <BarChart3 className="h-4 w-4 text-[var(--primary)]" />
+                          </Link>
+                        </PermissionGuard>
                       </div>
                     </TableCell>
                   </TableRow>

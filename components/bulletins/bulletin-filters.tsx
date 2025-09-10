@@ -12,6 +12,7 @@ import {
 import { Trash2, Plus, Search, Filter, X } from "lucide-react";
 import { Organization } from "@/api/types/organizations";
 import { Badge } from "@/ui/badge";
+import { PermissionGuard } from "../permission-guard";
 
 interface BulletinFiltersProps {
   searchTerm: string;
@@ -123,13 +124,15 @@ export function BulletinFilters({
               O'chirish ({selectedCount})
             </Button>
           )}
-          <Button
-            onClick={onAdd}
-            className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap flex items-center"
-          >
-            <Plus className="text-white size-5" />
-            Qo'shish
-          </Button>
+          <PermissionGuard permission="create_journal">
+            <Button
+              onClick={onAdd}
+              className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap flex items-center"
+            >
+              <Plus className="text-white size-5" />
+              Yangi byulleten
+            </Button>
+          </PermissionGuard>
         </div>
       </div>
 
