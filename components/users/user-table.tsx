@@ -19,9 +19,10 @@ import { UserFilters } from "@/components/users/user-filters";
 import { Card } from "@/ui/card";
 import { PaginatedData } from "@/api/types/general";
 import { UserData, UserRole } from "@/api/types/user";
-import { getRoleName } from "@/lib/utils";
+import { getPageCount, getRoleName } from "@/lib/utils";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { PermissionGuard } from "../permission-guard";
+import { Pagination } from "@/ui/pagination";
 
 interface UserTableProps {
   users: PaginatedData<UserData>;
@@ -32,6 +33,9 @@ interface UserTableProps {
   onBulkDelete: (ids: string[]) => void;
   onCreateNew: () => void;
   isLoading: boolean;
+  totalPages: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
 }
 
 export function UserTable({
@@ -43,6 +47,9 @@ export function UserTable({
   onBulkDelete,
   onCreateNew,
   isLoading,
+  totalPages,
+  currentPage,
+  onPageChange,
 }: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState(""); // Added search state
   const [roleFilter, setRoleFilter] = useState("all");
@@ -229,6 +236,15 @@ export function UserTable({
               )}
             </TableBody>
           </Table>
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-[var(--border)]">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={getPageCount(totalPages, 10)}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
         </div>
       </Card>
     </div>

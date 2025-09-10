@@ -20,6 +20,8 @@ import { Department } from "@/api/types/deparments";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { format } from "date-fns";
 import { PermissionGuard } from "../permission-guard";
+import { Pagination } from "@/ui/pagination";
+import { getPageCount } from "@/lib/utils";
 
 interface DepartmentTableProps {
   departments: PaginatedData<Department>;
@@ -28,6 +30,9 @@ interface DepartmentTableProps {
   onBulkDelete: (departmentIds: string[]) => void;
   onCreateNew: () => void;
   isLoading?: boolean;
+  totalPages: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
 }
 
 export function DepartmentTable({
@@ -37,6 +42,9 @@ export function DepartmentTable({
   onBulkDelete,
   onCreateNew,
   isLoading,
+  totalPages,
+  currentPage,
+  onPageChange,
 }: DepartmentTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -158,6 +166,15 @@ export function DepartmentTable({
               )}
             </TableBody>
           </Table>
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-[var(--border)]">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={getPageCount(totalPages, 10)}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
         </div>
       </Card>
     </div>

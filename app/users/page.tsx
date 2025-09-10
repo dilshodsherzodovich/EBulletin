@@ -35,11 +35,12 @@ export default function UsersPage() {
     userId?: string;
     isBulk?: boolean;
   }>({ isOpen: false });
+  const [page, setPage] = useState(1);
 
   // Use snackbar for notifications
   const { showSuccess, showError, showInfo } = useSnackbar();
 
-  const { data: usersList, isPending } = useUsers();
+  const { data: usersList, isPending } = useUsers({ page });
   const { mutate: createUser, isPending: isCreatingUser } = useCreateUser();
   const { mutate: editUser, isPending: isEditingUser } = useUpdateUser();
   const { mutate: deleteUser, isPending: isDeletingUser } = useDeleteUser();
@@ -140,6 +141,9 @@ export default function UsersPage() {
         onBulkDelete={handleBulkDelete}
         onCreateNew={handleOpenCreateModal}
         isLoading={isPending}
+        totalPages={usersList?.count || 1}
+        currentPage={page}
+        onPageChange={setPage}
       />
 
       <UserModal

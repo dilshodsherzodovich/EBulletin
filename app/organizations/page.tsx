@@ -41,13 +41,13 @@ export default function OrganizationsPage() {
     organizationId?: string;
     isBulk?: boolean;
   }>({ isOpen: false });
-
+  const [page, setPage] = useState(1);
   const {
     data: organizationsList,
     isPending,
     isFetching,
     error,
-  } = useOrganizations({ page: 1 });
+  } = useOrganizations({ page });
 
   const { mutate: createOrganization, isPending: isCreatingOrg } =
     useCreateOrganization();
@@ -189,6 +189,9 @@ export default function OrganizationsPage() {
         onBulkDelete={handleBulkDelete}
         onCreateNew={handleOpenCreateModal}
         isLoading={isPending}
+        totalPages={organizationsList?.count || 1}
+        currentPage={page}
+        onPageChange={setPage}
       />
 
       <OrganizationModal

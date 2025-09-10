@@ -23,9 +23,11 @@ export const userService = {
     }
   },
 
-  getUsers: async (): Promise<PaginatedData<UserData>> => {
+  getUsers: async ({ page = 1 }: { page: number } = { page: 1 }) => {
     try {
-      const response = await api.get<PaginatedData<UserData>>("/user/all/");
+      const response = await api.get<PaginatedData<UserData>>(
+        `/user/all/?page=${page}`
+      );
       return response.data;
     } catch (error) {
       console.error("Get users error:", error);

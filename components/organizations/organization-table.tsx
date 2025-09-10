@@ -21,6 +21,8 @@ import { Organization } from "@/api/types/organizations";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { format } from "date-fns";
 import { PermissionGuard } from "../permission-guard";
+import { Pagination } from "@/ui/pagination";
+import { getPageCount } from "@/lib/utils";
 
 interface OrganizationTableProps {
   organizations: PaginatedData<Organization>;
@@ -31,6 +33,9 @@ interface OrganizationTableProps {
   onBulkDelete: (ids: string[]) => void;
   onCreateNew: () => void;
   isLoading: boolean;
+  totalPages: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
 }
 
 export function OrganizationTable({
@@ -42,6 +47,9 @@ export function OrganizationTable({
   onBulkDelete,
   onCreateNew,
   isLoading,
+  totalPages,
+  currentPage,
+  onPageChange,
 }: OrganizationTableProps) {
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -159,6 +167,15 @@ export function OrganizationTable({
             )}
           </TableBody>
         </Table>
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-[var(--border)]">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={getPageCount(totalPages, 10)}
+              onPageChange={onPageChange}
+            />
+          </div>
+        )}
       </div>
     </Card>
   );
