@@ -333,7 +333,7 @@ export default function BulletinDetailPage() {
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Fayllar</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Bulletin bilan bog'liq fayllarni yuklang (maksimal 200MB)
+            Bulletin bilan bog'liq fayllar (maksimal 200MB)
           </p>
         </div>
         <FileUpload

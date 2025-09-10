@@ -12,6 +12,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { truncate } from "@/lib/utils";
+import { PermissionGuard } from "@/components/permission-guard";
 
 export interface FileUploadProps {
   label?: string;
@@ -151,54 +152,56 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
     return (
       <div ref={ref} className={cn("space-y-2", className)} {...props}>
-        {label && (
-          <label className="text-sm font-medium text-[#374151] leading-none">
-            {label}
-          </label>
-        )}
-
-        <div
-          className={cn(
-            "relative border-1 border-dashed rounded-lg p-6 transition-colors",
-            dragActive && !disabled
-              ? "border-[#2354bf] bg-[#2354bf]/5"
-              : hasError
-              ? "border-[#ff5959] bg-[#ff5959]/5"
-              : hasSuccess
-              ? "border-[#10b981] bg-[#10b981]/5"
-              : "border-[#d1d5db] hover:border-[#2354bf] hover:bg-[#f9fafb]",
-            disabled && "opacity-50 cursor-not-allowed"
+        <PermissionGuard permission="create_bulletin_file">
+          {label && (
+            <label className="text-sm font-medium text-[#374151] leading-none">
+              {label}
+            </label>
           )}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept={accept}
-            multiple={multiple}
-            onChange={handleInputChange}
-            disabled={disabled}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-          />
 
-          <div className="text-center">
-            <Upload className="mx-auto h-8 w-8 text-[#6b7280] mb-2" />
-            <p className="text-sm text-[#374151] mb-1">
-              <span className="font-medium text-[#2354bf]">
-                Fayl tanlash uchun bosing
-              </span>{" "}
-              yoki fayllarni bu yerga sudrab keling
-            </p>
-            <p className="text-xs text-[#6b7280]">
-              {accept && `Qo'llab-quvvatlanadigan formatlar: ${accept}`}
-              {maxSize && ` • Maksimal hajm: ${maxSize}MB`}
-              {multiple && maxFiles && ` • ${maxFiles} tagacha fayl`}
-            </p>
+          <div
+            className={cn(
+              "relative border-1 border-dashed rounded-lg p-6 transition-colors",
+              dragActive && !disabled
+                ? "border-[#2354bf] bg-[#2354bf]/5"
+                : hasError
+                ? "border-[#ff5959] bg-[#ff5959]/5"
+                : hasSuccess
+                ? "border-[#10b981] bg-[#10b981]/5"
+                : "border-[#d1d5db] hover:border-[#2354bf] hover:bg-[#f9fafb]",
+              disabled && "opacity-50 cursor-not-allowed"
+            )}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept={accept}
+              multiple={multiple}
+              onChange={handleInputChange}
+              disabled={disabled}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+            />
+
+            <div className="text-center">
+              <Upload className="mx-auto h-8 w-8 text-[#6b7280] mb-2" />
+              <p className="text-sm text-[#374151] mb-1">
+                <span className="font-medium text-[#2354bf]">
+                  Fayl tanlash uchun bosing
+                </span>{" "}
+                yoki fayllarni bu yerga sudrab keling
+              </p>
+              <p className="text-xs text-[#6b7280]">
+                {accept && `Qo'llab-quvvatlanadigan formatlar: ${accept}`}
+                {maxSize && ` • Maksimal hajm: ${maxSize}MB`}
+                {multiple && maxFiles && ` • ${maxFiles} tagacha fayl`}
+              </p>
+            </div>
           </div>
-        </div>
+        </PermissionGuard>
 
         {files.length > 0 && (
           <div className="space-y-2">

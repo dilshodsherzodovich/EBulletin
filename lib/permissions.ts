@@ -59,8 +59,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "edit_journal_row",
     "delete_journal_row",
     "view_bulletin_files",
-    "create_bulletin_file",
-    "delete_bulletin_file",
     "view_journal_structure",
     "create_journal_structure",
     "edit_journal_structure",
