@@ -1,5 +1,5 @@
 import { LoginResponse } from "@/api/types/auth";
-import { UserRole } from "@/api/types/user";
+import { UserData, UserRole } from "@/api/types/user";
 
 export type Permission =
   | "view_dashboard"
@@ -149,17 +149,17 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 };
 
 export function hasPermission(
-  user: LoginResponse | null,
+  user: UserData | null,
   permission: Permission
 ): boolean {
   if (!user) return false;
-  const role = user.user_data.role as UserRole;
+  const role = user?.role as UserRole;
   const userPermissions = ROLE_PERMISSIONS[role] || [];
   return userPermissions.includes(permission);
 }
 
 export function hasAnyPermission(
-  user: LoginResponse | null,
+  user: UserData | null,
   permissions: Permission[]
 ): boolean {
   if (!user) return false;
@@ -167,7 +167,7 @@ export function hasAnyPermission(
 }
 
 export function hasAllPermissions(
-  user: LoginResponse | null,
+  user: UserData | null,
   permissions: Permission[]
 ): boolean {
   if (!user) return false;
@@ -175,7 +175,7 @@ export function hasAllPermissions(
 }
 
 export function canAccessSection(
-  user: LoginResponse | null,
+  user: UserData | null,
   section: string
 ): boolean {
   switch (section) {
