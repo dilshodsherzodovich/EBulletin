@@ -20,6 +20,8 @@ export interface BulletinColumn {
   journal?: string;
   order: number;
   classificator?: string | null;
+  classificatorId?: string;
+  classificatorName?: string;
 }
 
 export interface Bulletin {
