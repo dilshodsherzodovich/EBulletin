@@ -162,7 +162,7 @@ export default function BulletinStructurePage({
       { id, data: { columns: requestColumnDetails } },
       {
         onSuccess: (data) => {
-          queryClient.setQueryData([queryKeys.bulletins.list, { id }], data);
+          queryClient.setQueryData([queryKeys.bulletins.detail(id)], data);
           queryClient.invalidateQueries({
             queryKey: [queryKeys.bulletins.list],
           });

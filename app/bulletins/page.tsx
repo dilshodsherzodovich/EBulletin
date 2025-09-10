@@ -10,6 +10,7 @@ import {
   useUpdateBulletin,
   useDeleteBulletin,
 } from "@/api/hooks/use-bulletin";
+import { useOrganizations } from "@/api/hooks/use-organizations";
 import {
   Bulletin,
   BulletinCreateBody,
@@ -18,6 +19,7 @@ import {
 } from "@/api/types/bulleten";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
+import { getPageCount } from "@/lib/utils";
 
 export default function BulletinsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -28,12 +30,32 @@ export default function BulletinsPage() {
     Bulletin | undefined
   >(undefined);
 
-  const { data: bulletins, isPending, isError } = useBulletin({ page: 1 });
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [organizationFilter, setOrganizationFilter] = useState("all");
+  const [periodTypeFilter, setPeriodTypeFilter] = useState("all");
+
+  // API calls
+  const {
+    data: bulletins,
+    isPending,
+    isError,
+  } = useBulletin({ page: currentPage });
+  const { data: organizationsData, isLoading: isLoadingOrganizations } =
+    useOrganizations({ page: 1 });
   const { mutate: createBulletin, isPending: isCreating } = useCreateBulletin();
   const { mutate: updateBulletin, isPending: isUpdating } = useUpdateBulletin();
   const { mutate: deleteBulletin, isPending: isDeleting } = useDeleteBulletin();
 
   const { showSuccess, showError } = useSnackbar();
+
+  // Calculate pagination
+  const totalPages = getPageCount(bulletins?.count || 0, pageSize) || 1;
+  const organizations = organizationsData?.results || [];
 
   const handleSelectionChange = (ids: string[]) => {
     setSelectedIds(ids);
@@ -113,6 +135,19 @@ export default function BulletinsPage() {
     setShowDeleteConfirmation(false);
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSelectedIds([]); // Clear selection when changing pages
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setOrganizationFilter("all");
+    setPeriodTypeFilter("all");
+    setCurrentPage(1);
+    setSelectedIds([]);
+  };
+
   if (isError) {
     return (
       <ErrorCard
@@ -149,6 +184,18 @@ export default function BulletinsPage() {
         onAssignResponsible={handleAssignResponsible}
         isLoading={isPending}
         isDeleting={isDeleting}
+        organizations={organizations}
+        isLoadingOrganizations={isLoadingOrganizations}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        organizationFilter={organizationFilter}
+        onOrganizationChange={setOrganizationFilter}
+        periodTypeFilter={periodTypeFilter}
+        onPeriodTypeChange={setPeriodTypeFilter}
+        onClearFilters={handleClearFilters}
       />
 
       <BulletinModal

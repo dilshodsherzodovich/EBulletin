@@ -3,6 +3,7 @@ import { classificatorDetailService } from "../services/classificator-detail.ser
 import { queryKeys } from "../querykey";
 
 export const useGetClassificatorDetail = (id: string) => {
+  if (!id) return;
   return useQuery({
     queryKey: [queryKeys.classificators.detail(id)],
     queryFn: () => classificatorDetailService.getClassificatorDetail(id),

@@ -9,34 +9,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
-import { Trash2, Plus } from "lucide-react";
-
-interface Bulletin {
-  id: string;
-  name: string;
-  category: string;
-  createdDate: string;
-  responsibleAssigned: boolean;
-  responsible: string;
-  status: "active" | "inactive" | "completed";
-  responsibleDepartment: string;
-  receivingOrganizations: string[];
-  responsiblePersons: string[];
-  periodType: string;
-}
+import { Trash2, Plus, Search, Filter, X } from "lucide-react";
+import { Organization } from "@/api/types/organizations";
+import { Badge } from "@/ui/badge";
 
 interface BulletinFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   selectedCount: number;
   onBulkDelete: () => void;
-  categoryFilter: string;
-  onCategoryChange: (value: string) => void;
-  statusFilter: string;
-  onStatusChange: (value: string) => void;
-  departmentFilter: string;
-  onDepartmentChange: (value: string) => void;
+  organizationFilter: string;
+  onOrganizationChange: (value: string) => void;
+  periodTypeFilter: string;
+  onPeriodTypeChange: (value: string) => void;
   onAdd: () => void;
+  organizations: Organization[];
+  isLoadingOrganizations?: boolean;
+  onClearFilters: () => void;
+  hasActiveFilters: boolean;
 }
 
 export function BulletinFilters({
@@ -44,100 +34,136 @@ export function BulletinFilters({
   onSearchChange,
   selectedCount,
   onBulkDelete,
-  categoryFilter,
-  onCategoryChange,
-  statusFilter,
-  onStatusChange,
-  departmentFilter,
-  onDepartmentChange,
+  organizationFilter,
+  onOrganizationChange,
+  periodTypeFilter,
+  onPeriodTypeChange,
   onAdd,
+  organizations,
+  isLoadingOrganizations = false,
+  onClearFilters,
+  hasActiveFilters,
 }: BulletinFiltersProps) {
+  const periodTypes = [
+    { value: "all", label: "Barcha muddatlar" },
+    { value: "weekly", label: "Haftalik" },
+    { value: "monthly", label: "Oylik" },
+    { value: "quarterly", label: "Choraklik" },
+    { value: "every_n_months", label: "Har N oyda" },
+    { value: "daily", label: "Kunlik" },
+    { value: "yearly", label: "Yillik" },
+  ];
+
   return (
-    <div className="flex items-center justify-between bg-[var(--table-header-bg)] p-4 border-b border-[var(--border)]">
-      <div className="flex items-center gap-4 flex-1">
-        <div className="flex-1 max-w-sm">
-          <Input
-            placeholder="Umumiy qidiruv..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="border-[var(--border)]"
-          />
-        </div>
+    <div className="flex flex-col gap-3 bg-[var(--table-header-bg)] p-4 border-b border-[var(--border)]">
+      {/* Main Filters Row */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 flex-1">
+          {/* Search Input */}
+          <div className="flex-1 max-w-sm relative flex items-center">
+            <Search className=" h-4 w-4 text-gray-400 absolute left-2 translate-y-[-5px]" />
+            <Input
+              placeholder="Byulleten nomi bo'yicha qidiruv..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="border-[var(--border)] pl-10"
+            />
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Select value={categoryFilter} onValueChange={onCategoryChange}>
-            <SelectTrigger className="w-40 border-[var(--border)]">
-              <SelectValue placeholder="Kategoriya" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barcha kategoriyalar</SelectItem>
-              <SelectItem value="Qishloq xo'jaligi">
-                Qishloq xo'jaligi
-              </SelectItem>
-              <SelectItem value="San'at">San'at</SelectItem>
-              <SelectItem value="Tibbiyot">Tibbiyot</SelectItem>
-              <SelectItem value="Ta'lim">Ta'lim</SelectItem>
-              <SelectItem value="Iqtisodiyot">Iqtisodiyot</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={departmentFilter} onValueChange={onDepartmentChange}>
-            <SelectTrigger className="w-40 border-[var(--border)]">
-              <SelectValue placeholder="Quyi tashkilot" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barcha Quyi tashkilotlar</SelectItem>
-              <SelectItem value="Qishloq xo'jaligi Quyi tashkiloti">
-                Qishloq xo'jaligi Quyi tashkiloti
-              </SelectItem>
-              <SelectItem value="San'at Quyi tashkiloti">
-                San'at Quyi tashkiloti
-              </SelectItem>
-              <SelectItem value="Tibbiyot Quyi tashkiloti">
-                Tibbiyot Quyi tashkiloti
-              </SelectItem>
-              <SelectItem value="Ta'lim Quyi tashkiloti">
-                Ta'lim Quyi tashkiloti
-              </SelectItem>
-              <SelectItem value="Iqtisodiyot Quyi tashkiloti">
-                Iqtisodiyot Quyi tashkiloti
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={statusFilter} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-40 border-[var(--border)]">
-              <SelectValue placeholder="Holat" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Barcha holatlar</SelectItem>
-              <SelectItem value="active">Faol</SelectItem>
-              <SelectItem value="inactive">Nofaol</SelectItem>
-              <SelectItem value="completed">Bajarilgan</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {selectedCount > 0 && (
-          <Button
-            variant="outline"
-            onClick={onBulkDelete}
-            className="text-[var(--destructive)] border-[var(--destructive)] hover:bg-[var(--destructive)]/10"
+          {/* Organization Filter */}
+          <Select
+            value={organizationFilter}
+            onValueChange={onOrganizationChange}
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            O'chirish ({selectedCount})
+            <SelectTrigger className="w-48 border-[var(--border)]">
+              <SelectValue placeholder="Tashkilot tanlang" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Barcha tashkilotlar</SelectItem>
+              {isLoadingOrganizations ? (
+                <SelectItem value="loading" disabled>
+                  Yuklanmoqda...
+                </SelectItem>
+              ) : (
+                organizations.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+
+          {/* Period Type Filter */}
+          <Select value={periodTypeFilter} onValueChange={onPeriodTypeChange}>
+            <SelectTrigger className="w-40 border-[var(--border)]">
+              <SelectValue placeholder="Muddat turi" />
+            </SelectTrigger>
+            <SelectContent>
+              {periodTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Clear Filters Button */}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {selectedCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={onBulkDelete}
+              className="text-[var(--destructive)] border-[var(--destructive)] hover:bg-[var(--destructive)]/10"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              O'chirish ({selectedCount})
+            </Button>
+          )}
+          <Button
+            onClick={onAdd}
+            className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap flex items-center"
+          >
+            <Plus className="text-white size-5" />
+            Qo'shish
           </Button>
-        )}
-        <Button
-          onClick={onAdd}
-          className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap flex items-center"
-        >
-          <Plus className="text-white size-5" />
-          Qo'shish
-        </Button>
+        </div>
       </div>
+
+      {/* Active Filters Display */}
+      {hasActiveFilters && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-gray-600">Faol filtrlar:</span>
+          {organizationFilter !== "all" && (
+            <Badge variant="secondary" className="text-xs">
+              Tashkilot:{" "}
+              {organizations.find((org) => org.id === organizationFilter)
+                ?.name || organizationFilter}
+            </Badge>
+          )}
+          {periodTypeFilter !== "all" && (
+            <Badge variant="secondary" className="text-xs">
+              Muddat:{" "}
+              {periodTypes.find((type) => type.value === periodTypeFilter)
+                ?.label || periodTypeFilter}
+            </Badge>
+          )}
+          {searchTerm && (
+            <Badge variant="secondary" className="text-xs">
+              Qidiruv: "{searchTerm}"
+            </Badge>
+          )}
+          {hasActiveFilters && (
+            <Button size="sm" onClick={onClearFilters} variant="outline">
+              <X className="h-4 w-4 mr-1" />
+              Tozalash
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

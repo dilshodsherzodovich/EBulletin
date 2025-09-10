@@ -40,3 +40,9 @@ export const getRoleName = (roleName: UserRole): string => {
     }
   }
 };
+
+export const truncate = (text: string, options: { length: number }) => {
+  return text.length > options.length
+    ? text.slice(0, options.length) + "..."
+    : text;
+};

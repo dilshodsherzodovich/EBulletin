@@ -23,7 +23,7 @@ export interface CreateUserRequest {
   username: string;
   is_active: boolean;
   profile: {
-    secondary_organization: string;
+    secondary_organization_id: string;
   };
 }
 

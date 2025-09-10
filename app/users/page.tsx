@@ -13,7 +13,6 @@ import {
 } from "@/api/hooks/use-user";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { CreateUserRequest } from "@/api/types/user";
-import { toast } from "sonner";
 import { UserData } from "@/api/types/auth";
 
 // Keep the mock data for now

@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { bulletinService } from "../services/bulletin.service";
+import {
+  bulletinRowService,
+  bulletinService,
+} from "../services/bulletin.service";
 import { queryKeys } from "../querykey";
-import { BulletinCreateBody } from "../types/bulleten";
+import { BulletinCreateBody, BulletinCreateRow } from "../types/bulleten";
 
 export const useBulletin = (params: { page: number }) => {
   return useQuery({
@@ -14,7 +17,7 @@ export const useBulletin = (params: { page: number }) => {
 
 export const useBulletinDetail = (id: string) => {
   return useQuery({
-    queryKey: [queryKeys.bulletins.list, { id }],
+    queryKey: [queryKeys.bulletins.detail(id)],
     queryFn: () => {
       return bulletinService.getBulletinDetail(id);
     },
@@ -52,6 +55,47 @@ export const useDeleteBulletin = () => {
     mutationFn: (id: string) => bulletinService.deleteBulletin(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [queryKeys.bulletins.list] });
+    },
+  });
+};
+
+export const useCreateBulletinRow = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [queryKeys.bulletins.createRow],
+    mutationFn: (data: BulletinCreateRow) =>
+      bulletinRowService.createBulletinRow(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.bulletins.detail(variables.journal)],
+      });
+    },
+  });
+};
+
+export const useUpdateBulletinRow = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [queryKeys.bulletins.updateRow],
+    mutationFn: ({ id, data }: { id: string; data: BulletinCreateRow }) =>
+      bulletinRowService.updateBulletinRow(id, data),
+    onSuccess: (_, { data }) => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.bulletins.detail(data.journal)],
+      });
+    },
+  });
+};
+
+export const useDeleteBulletinRow = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [queryKeys.bulletins.deleteRow],
+    mutationFn: (id: string) => bulletinRowService.deleteBulletinRow(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.bulletins.detail(id)],
+      });
     },
   });
 };

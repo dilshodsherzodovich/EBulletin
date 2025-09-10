@@ -37,5 +37,9 @@ export const queryKeys = {
     create: "create-bulletin",
     edit: "edit-bulletin",
     delete: "delete-bulletin",
+    detail: (id: string) => `bulletin-detail-${id}`,
+    createRow: "create-bulletin-row",
+    updateRow: "update-bulletin-row",
+    deleteRow: "delete-bulletin-row",
   },
 } as const;

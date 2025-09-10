@@ -20,8 +20,6 @@ export interface BulletinColumn {
   journal?: string;
   order: number;
   classificator?: string | null;
-  classificatorId?: string;
-  classificatorName?: string;
 }
 
 export interface Bulletin {
@@ -42,6 +40,7 @@ export interface Bulletin {
     username: string;
     full_name: string;
   };
+  rows: BulletinRow[];
 }
 
 export interface BulletinCreateBody {
@@ -52,4 +51,22 @@ export interface BulletinCreateBody {
   organizations: string[];
   main_organizations: string[];
   responsible_employees: string[];
+}
+
+// Updated to match the actual bulletinDetail API response
+export interface BulletinRow {
+  id: string;
+  order: number;
+  values: Record<string, string | number | Date>;
+}
+
+// For individual cell data (used in create requests)
+export interface BulletinRowCell {
+  column: string;
+  value: string | number | Date;
+}
+
+export interface BulletinCreateRow {
+  journal: string;
+  values: BulletinRowCell[];
 }

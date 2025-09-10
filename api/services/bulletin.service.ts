@@ -1,4 +1,9 @@
-import { Bulletin, BulletinCreateBody } from "../types/bulleten";
+import {
+  Bulletin,
+  BulletinCreateBody,
+  BulletinCreateRow,
+  BulletinRow,
+} from "../types/bulleten";
 import api from "@/api/axios";
 import { PaginatedData } from "../types/general";
 
@@ -69,6 +74,46 @@ export const bulletinService = {
       return response.data;
     } catch (error) {
       console.error("Error fetching bulletin:", error);
+      throw error;
+    }
+  },
+};
+
+export const bulletinRowService = {
+  createBulletinRow: async (body: BulletinCreateRow): Promise<BulletinRow> => {
+    try {
+      const response = await api.post<BulletinRow>(
+        "/journal/row/create/",
+        body
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating bulletin row:", error);
+      throw error;
+    }
+  },
+
+  updateBulletinRow: async (
+    id: string,
+    body: BulletinCreateRow
+  ): Promise<BulletinRow> => {
+    try {
+      const response = await api.patch<BulletinRow>(
+        `/journal/row/${id}/`,
+        body
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating bulletin row:", error);
+      throw error;
+    }
+  },
+
+  deleteBulletinRow: async (id: string): Promise<void> => {
+    try {
+      await api.delete(`/journal/row/${id}/`);
+    } catch (error) {
+      console.error("Error deleting bulletin row:", error);
       throw error;
     }
   },

@@ -29,13 +29,6 @@ interface UserModalProps {
   isLoading?: boolean;
 }
 
-const roles = [
-  { value: "ADMIN", label: "Admin" },
-  { value: "MODERATOR", label: "Moderator" },
-  { value: "OBSERVER", label: "Kuzatuvchi" },
-  { value: "Moderator", label: "Moderator" },
-];
-
 export function UserModal({
   isOpen,
   onClose,
@@ -147,7 +140,7 @@ export function UserModal({
             is_active: formData.status === "active",
             password: formData.password,
             profile: {
-              secondary_organization: formData.secondary_organization_id,
+              secondary_organization_id: formData.secondary_organization_id,
             },
           }
         : {
@@ -157,7 +150,7 @@ export function UserModal({
             role: formData.role,
             is_active: formData.status === "active",
             profile: {
-              secondary_organization: formData.secondary_organization_id,
+              secondary_organization_id: formData.secondary_organization_id,
             },
           }
     );
