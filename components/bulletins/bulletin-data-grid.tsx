@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
-import { Trash2, Save, Loader2, Edit } from "lucide-react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { Trash2, Save, Loader2, Edit, Plus } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import {
@@ -26,6 +26,7 @@ interface BulletinDataGridProps {
     rowId: string,
     updatedValues?: Record<string, string | number>
   ) => void;
+  onAddRow: () => void;
   loadingRows: Set<string>;
 }
 
@@ -49,14 +50,9 @@ function EditableCell({
   const selectRef = useRef<HTMLSelectElement>(null);
 
   // Only call the hook when we have a valid classificator ID
-  const classificatorQuery = useGetClassificatorDetail(
-    column.type === "classificator" && column.classificator
-      ? column.classificator
-      : ""
+  const { data: classificatorData } = useGetClassificatorDetail(
+    column.classificator || ""
   );
-
-  // Handle the case when the hook returns undefined
-  const classificatorData = classificatorQuery?.data;
 
   // Auto focus when editing starts
   useEffect(() => {
@@ -156,6 +152,7 @@ export function BulletinDataGrid({
   onUpdateRow,
   onDeleteRow,
   onSaveRow,
+  onAddRow,
   loadingRows,
 }: BulletinDataGridProps) {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -170,6 +167,41 @@ export function BulletinDataGrid({
     () => [...columns].sort((a, b) => a.order - b.order),
     [columns]
   );
+
+  // Check if any row is currently being edited
+  const hasActiveEditingRow = editingRows.size > 0;
+
+  // Memoize handleEditRow to prevent infinite loops
+  const handleEditRow = useCallback(
+    (rowId: string) => {
+      const row = rows.find((r) => r.id === rowId);
+      if (!row) return;
+
+      // Initialize temp data with current row values
+      const initialTempData: Record<string, string> = {};
+      sortedColumns.forEach((column) => {
+        const currentValue = row.values[column.id];
+        initialTempData[column.id] = String(currentValue || "");
+      });
+
+      setTempRowData((prev) => ({
+        ...prev,
+        [rowId]: initialTempData,
+      }));
+      setEditingRows((prev) => new Set(prev).add(rowId));
+    },
+    [rows, sortedColumns]
+  );
+
+  // Auto-edit newly added rows (temp rows) - Fixed dependency issue
+  useEffect(() => {
+    const tempRows = rows.filter((row) => row.id.startsWith("temp-"));
+    tempRows.forEach((tempRow) => {
+      if (!editingRows.has(tempRow.id)) {
+        handleEditRow(tempRow.id);
+      }
+    });
+  }, [rows, editingRows, handleEditRow]);
 
   // Get cell value for a specific row and column
   const getCellValue = (row: BulletinRow, columnId: string) => {
@@ -196,24 +228,6 @@ export function BulletinDataGrid({
   // Check if row is in edit mode
   const isRowEditing = (rowId: string) => {
     return editingRows.has(rowId);
-  };
-
-  const handleEditRow = (rowId: string) => {
-    const row = rows.find((r) => r.id === rowId);
-    if (!row) return;
-
-    // Initialize temp data with current row values
-    const initialTempData: Record<string, string> = {};
-    sortedColumns.forEach((column) => {
-      const currentValue = row.values[column.id];
-      initialTempData[column.id] = String(currentValue || "");
-    });
-
-    setTempRowData((prev) => ({
-      ...prev,
-      [rowId]: initialTempData,
-    }));
-    setEditingRows((prev) => new Set(prev).add(rowId));
   };
 
   const handleTempValueChange = (
@@ -253,21 +267,12 @@ export function BulletinDataGrid({
     // Then save with the updated values
     onSaveRow(rowId, updatedValues);
 
-    // Clean up temp data and exit edit mode
-    setTempRowData((prev) => {
-      const newData = { ...prev };
-      delete newData[rowId];
-      return newData;
-    });
-    setEditingRows((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(rowId);
-      return newSet;
-    });
+    // Clear states immediately after save action
+    clearRowStates(rowId);
   };
 
-  const handleCancelEdit = (rowId: string) => {
-    // Clean up temp data and exit edit mode
+  // Function to clear row states
+  const clearRowStates = useCallback((rowId: string) => {
     setTempRowData((prev) => {
       const newData = { ...prev };
       delete newData[rowId];
@@ -278,6 +283,10 @@ export function BulletinDataGrid({
       newSet.delete(rowId);
       return newSet;
     });
+  }, []);
+
+  const handleCancelEdit = (rowId: string) => {
+    clearRowStates(rowId);
   };
 
   const handleDeleteClick = (rowId: string) => {
@@ -288,6 +297,8 @@ export function BulletinDataGrid({
   const confirmDelete = () => {
     if (rowToDelete) {
       onDeleteRow(rowToDelete);
+      // Clear states after delete
+      clearRowStates(rowToDelete);
       setRowToDelete(null);
       setShowDeleteConfirmation(false);
     }
@@ -418,6 +429,38 @@ export function BulletinDataGrid({
                   </TableCell>
                 </TableRow>
               ))
+            )}
+            {/* Add Row Button Row - Only show when no rows are being edited */}
+            {!hasActiveEditingRow && (
+              <TableRow className="border-t-2 border-dashed border-gray-300">
+                <TableCell className="sticky left-0 bg-white z-10">
+                  <PermissionGuard permission="create_journal_row">
+                    <Button
+                      onClick={onAddRow}
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                      aria-label="Yangi qator qo'shish"
+                    >
+                      <Plus className="h-4 w-4 text-[var(--primary)]" />
+                    </Button>
+                  </PermissionGuard>
+                </TableCell>
+                {sortedColumns.map((column) => (
+                  <TableCell key={`add-${column.id}`} className="min-w-[150px]">
+                    <div className="py-1 px-2 min-h-[32px] flex items-center">
+                      <span className="text-gray-400 text-sm italic">
+                        {column.name}
+                      </span>
+                    </div>
+                  </TableCell>
+                ))}
+                <TableCell className="sticky right-0 bg-white z-10 border-l border-gray-200">
+                  <div className="flex items-center justify-center">
+                    <span className="text-xs text-gray-400">Yangi qator</span>
+                  </div>
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>

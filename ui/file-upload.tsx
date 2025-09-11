@@ -10,9 +10,12 @@ import {
   FileText,
   AlertCircle,
   CheckCircle,
+  Trash2,
+  Send,
 } from "lucide-react";
 import { truncate } from "@/lib/utils";
 import { PermissionGuard } from "@/components/permission-guard";
+import { Button } from "@/ui/button";
 
 export interface FileUploadProps {
   label?: string;
@@ -25,6 +28,8 @@ export interface FileUploadProps {
   maxFiles?: number;
   filesUploaded: File[];
   onFilesChange?: (files: File[]) => void;
+  onSubmit?: (files: File[]) => void;
+  onCancel?: () => void;
   className?: string;
   disabled?: boolean;
   isUploadingFile?: boolean;
@@ -42,6 +47,8 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       maxSize = 200, // Default to 200MB
       maxFiles = 5,
       onFilesChange,
+      onSubmit,
+      onCancel,
       filesUploaded,
       className,
       disabled = false,
@@ -57,6 +64,7 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
     const hasError = !!error || !!uploadError;
     const hasSuccess = !!success && !hasError;
+    const hasFiles = files.length > 0;
 
     React.useEffect(() => {
       setFiles(filesUploaded);
@@ -111,6 +119,23 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
       }
     };
 
+    const handleSubmit = () => {
+      if (files.length > 0 && onSubmit) {
+        onSubmit(files);
+      }
+    };
+
+    const handleCancel = () => {
+      setFiles([]);
+      setUploadError("");
+      if (onFilesChange) {
+        onFilesChange([]);
+      }
+      if (onCancel) {
+        onCancel();
+      }
+    };
+
     const handleDrag = (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
@@ -135,9 +160,14 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
     const getFileIcon = (file: File) => {
       if (file.type.startsWith("image/"))
-        return <ImageIcon className="h-5 w-5" />;
-      if (file.type.includes("pdf")) return <FileText className="h-5 w-5" />;
-      return <File className="h-5 w-5" />;
+        return <ImageIcon className="h-5 w-5 text-blue-500" />;
+      if (file.type.includes("pdf"))
+        return <FileText className="h-5 w-5 text-red-500" />;
+      if (file.type.includes("word") || file.type.includes("document"))
+        return <FileText className="h-5 w-5 text-blue-600" />;
+      if (file.type.includes("excel") || file.type.includes("spreadsheet"))
+        return <FileText className="h-5 w-5 text-green-600" />;
+      return <File className="h-5 w-5 text-gray-500" />;
     };
 
     const formatFileSize = (bytes: number) => {
@@ -171,76 +201,111 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
                 : "border-[#d1d5db] hover:border-[#2354bf] hover:bg-[#f9fafb]",
               disabled && "opacity-50 cursor-not-allowed"
             )}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
           >
-            <input
-              ref={inputRef}
-              type="file"
-              accept={accept}
-              multiple={multiple}
-              onChange={handleInputChange}
-              disabled={disabled}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-            />
+            {!hasFiles ? (
+              <div
+                className="text-center"
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept={accept}
+                  multiple={multiple}
+                  onChange={handleInputChange}
+                  disabled={disabled}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                />
+                <Upload className="mx-auto h-8 w-8 text-[#6b7280] mb-2" />
+                <p className="text-sm text-[#374151] mb-1">
+                  <span className="font-medium text-[#2354bf]">
+                    Fayl tanlash uchun bosing
+                  </span>{" "}
+                  yoki fayllarni bu yerga sudrab keling
+                </p>
+                <p className="text-xs text-[#6b7280]">
+                  {accept && `Qo'llab-quvvatlanadigan formatlar: ${accept}`}
+                  {maxSize && ` • Maksimal hajm: ${maxSize}MB`}
+                  {multiple && maxFiles && ` • ${maxFiles} tagacha fayl`}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-[#374151] mb-3">
+                    Tanlangan fayllar ({files.length})
+                  </p>
+                </div>
 
-            <div className="text-center">
-              <Upload className="mx-auto h-8 w-8 text-[#6b7280] mb-2" />
-              <p className="text-sm text-[#374151] mb-1">
-                <span className="font-medium text-[#2354bf]">
-                  Fayl tanlash uchun bosing
-                </span>{" "}
-                yoki fayllarni bu yerga sudrab keling
-              </p>
-              <p className="text-xs text-[#6b7280]">
-                {accept && `Qo'llab-quvvatlanadigan formatlar: ${accept}`}
-                {maxSize && ` • Maksimal hajm: ${maxSize}MB`}
-                {multiple && maxFiles && ` • ${maxFiles} tagacha fayl`}
-              </p>
-            </div>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {files.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {getFileIcon(file)}
+                        <div>
+                          <p className="text-sm font-medium text-[#374151]">
+                            {truncate(file.name, { length: 30 })}
+                          </p>
+                          <p className="text-xs text-[#6b7280]">
+                            {formatFileSize(file.size)}
+                          </p>
+                        </div>
+                      </div>
+                      {!disabled && (
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="text-[#6b7280] hover:text-[#ff5959] transition-colors cursor-pointer p-1"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+          {hasFiles && (
+            <div className="flex justify-center gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={disabled || isUploadingFile}
+                className="px-4"
+              >
+                Bekor qilish
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={disabled || isUploadingFile || files.length === 0}
+                className="px-4 bg-[var(--primary)] hover:bg-[var(--primary)]/90"
+              >
+                {isUploadingFile ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Yuklanmoqda...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Yuklash
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </PermissionGuard>
 
-        {files.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-[#374151]">
-              Tanlangan fayllar:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="inline-flex w-[200px] items-center justify-between p-3 bg-[#f9fafb] rounded-lg border"
-                >
-                  <div className="flex items-center space-x-3">
-                    {getFileIcon(file)}
-                    <div>
-                      <p className="text-sm font-medium text-[#374151]">
-                        {truncate(file.name, { length: 20 })}
-                      </p>
-                      <p className="text-xs text-[#6b7280]">
-                        {formatFileSize(file.size)}
-                      </p>
-                    </div>
-                  </div>
-                  {!disabled && (
-                    <button
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      className="text-[#6b7280] hover:text-[#ff5959] transition-colors cursor-pointer"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {hint && !hasError && !hasSuccess && (
+        {hint && !hasError && !hasSuccess && !hasFiles && (
           <p className="text-xs text-[#6b7280]">{hint}</p>
         )}
         {(error || uploadError) && (

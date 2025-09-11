@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { redirect, useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
 import { Badge } from "@/ui/badge";
@@ -19,16 +19,18 @@ import {
   BulletinRow,
   BulletinColumn,
   BulletinCreateRow,
+  BulletinFile,
 } from "@/api/types/bulleten";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
 import { BulletinDataGrid } from "@/components/bulletins/bulletin-data-grid";
+
 import { LoadingCard } from "@/ui/loading-card";
 import { FileUpload } from "@/ui/file-upload";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
 import { canAccessSection } from "@/lib/permissions";
-import { PermissionGuard } from "@/components/permission-guard";
+import { BulletinFileHistory } from "@/components/bulletins/bulletin-file-history";
 
 export default function BulletinDetailPage() {
   const user = JSON.parse(localStorage.getItem("user")!);
@@ -45,6 +47,7 @@ export default function BulletinDetailPage() {
   const [rows, setRows] = useState<BulletinRow[]>([]);
   const [loadingRows, setLoadingRows] = useState<Set<string>>(new Set());
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   const { data: bulletin, isLoading, isError } = useBulletinDetail(bulletinId);
   const { mutate: createBulletinRow, isPending: isCreatingRow } =
@@ -129,25 +132,54 @@ export default function BulletinDetailPage() {
     setUploadedFiles(files);
   };
 
-  useEffect(() => {
-    if (uploadedFiles.length) {
-      createBulletinFile(
-        { id: bulletinId, upload_file: uploadedFiles[0] },
-        {
-          onSuccess: () => {
-            showSuccess("Fayl muvaffaqiyatli yuklandi");
-            queryClient.invalidateQueries({
-              queryKey: [queryKeys.bulletins.detail(bulletinId)],
-            });
-          },
-          onError: (error) => {
-            showError(`Fayl yuklashda xatolik`, error.message);
-            setUploadedFiles([]);
-          },
-        }
-      );
+  const handleFileSubmit = (files: File[]) => {
+    if (files.length === 0) return;
+
+    setIsUploadingFile(true);
+
+    // Upload the first file (assuming single file upload based on your API)
+    createBulletinFile(
+      { id: bulletinId, upload_file: files[0] },
+      {
+        onSuccess: () => {
+          showSuccess("Fayl muvaffaqiyatli yuklandi");
+          setUploadedFiles([]); // Clear the uploaded files after successful upload
+          queryClient.invalidateQueries({
+            queryKey: [queryKeys.bulletins.detail(bulletinId)],
+          });
+          setIsUploadingFile(false);
+        },
+        onError: (error) => {
+          showError(`${(error as any).response.data[0]}`);
+          setIsUploadingFile(false);
+        },
+      }
+    );
+  };
+
+  const handleFileCancel = () => {
+    setUploadedFiles([]);
+  };
+
+  const handleFileDownload = (file: BulletinFile) => {
+    if (!file.upload_file) {
+      showError("Fayl topilmadi");
+      return;
     }
-  }, [uploadedFiles]);
+
+    try {
+      // Create a download link
+      const link = document.createElement("a");
+      link.href = file.upload_file; // Assuming this is a URL to the file
+      link.download = file.upload_file.split("/").pop() || "download";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      showError("Fayl yuklab olishda xatolik yuz berdi");
+      console.error(error);
+    }
+  };
 
   const handleSaveRow = (
     rowId: string,
@@ -312,12 +344,6 @@ export default function BulletinDetailPage() {
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Bulletin Ma'lumotlari</h2>
-          <PermissionGuard permission="create_journal_row">
-            <Button onClick={handleAddRow} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Qator Qo'shish
-            </Button>
-          </PermissionGuard>
         </div>
         <BulletinDataGrid
           columns={bulletin.columns || []}
@@ -325,10 +351,12 @@ export default function BulletinDetailPage() {
           onUpdateRow={handleUpdateRow}
           onDeleteRow={handleDeleteRow}
           onSaveRow={handleSaveRow}
+          onAddRow={handleAddRow}
           loadingRows={loadingRows}
         />
       </Card>
 
+      {/* File Upload */}
       <Card className="p-4">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Fayllar</h2>
@@ -343,10 +371,20 @@ export default function BulletinDetailPage() {
           maxSize={200}
           maxFiles={10}
           onFilesChange={handleFileUpload}
+          onSubmit={handleFileSubmit}
+          onCancel={handleFileCancel}
           filesUploaded={uploadedFiles}
+          isUploadingFile={isUploadingFile}
           hint="PDF, Word, Excel, PowerPoint, rasm va arxiv fayllari qo'llab-quvvatlanadi"
         />
       </Card>
+
+      {/* File History */}
+      <BulletinFileHistory
+        files={bulletin.upload_history || []}
+        isLoading={isLoading}
+        onDownload={handleFileDownload}
+      />
     </div>
   );
 }

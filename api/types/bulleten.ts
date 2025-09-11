@@ -43,6 +43,7 @@ export interface Bulletin {
     full_name: string;
   };
   rows: BulletinRow[];
+  upload_history: BulletinFile[];
 }
 
 export interface BulletinCreateBody {
@@ -75,7 +76,13 @@ export interface BulletinCreateRow {
 
 export interface BulletinFile {
   id: string;
-  journal: string;
-  upload_file: string;
-  user_info: string;
+  status: "on_time" | "late" | "not_submitted";
+  upload_file: string | null;
+  upload_at: string;
+  deadline: string;
+  user_info: {
+    id: string;
+    username: string;
+    full_name: string;
+  };
 }

@@ -328,28 +328,25 @@ export function UserModal({
                 <p className="text-red-500 text-xs mt-1">{errors.login}</p>
               )}
             </div>
-            <div>
-              <Label className="text-sm text-[var(--muted-foreground)]">
-                Parol {mode === "create" && "*"}
-              </Label>
-              <Input
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className={errors.password ? "border-red-500" : ""}
-                placeholder={
-                  mode === "edit"
-                    ? "Yangi parol (bo'sh qoldirilsa o'zgarmaydi)"
-                    : ""
-                }
-                autoComplete="off"
-              />
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-              )}
-            </div>
+            {mode === "create" && (
+              <div>
+                <Label className="text-sm text-[var(--muted-foreground)]">
+                  Parol *
+                </Label>
+                <Input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className={errors.password ? "border-red-500" : ""}
+                  autoComplete="off"
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                )}
+              </div>
+            )}
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
                 Rol *

@@ -50,7 +50,7 @@ export const userService = {
     userData: Partial<CreateUserRequest>
   ): Promise<UserDetailResponse> => {
     try {
-      const response = await api.put<UserDetailResponse>(
+      const response = await api.patch<UserDetailResponse>(
         `/user/${id}/`,
         userData
       );

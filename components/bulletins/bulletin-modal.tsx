@@ -55,7 +55,6 @@ const deadlineOptions = [
   { value: "weekly", label: "Haftalik" },
   { value: "monthly", label: "Oylik" },
   { value: "quarterly", label: "Choraklik" },
-  { value: "every_n_months", label: "Har N oyda" },
 ];
 
 export function BulletinModal({
@@ -82,6 +81,9 @@ export function BulletinModal({
   const [currentSecondaryOrgs, setCurrentSecondaryOrgs] = useState<string[]>(
     []
   );
+
+  // Add errors state
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch data from API
   const { data: organizationsData, isLoading: orgsLoading } = useOrganizations(
@@ -158,6 +160,8 @@ export function BulletinModal({
         setCurrentMainOrgId("");
         setCurrentSecondaryOrgs([]);
       }
+      // Clear errors when modal opens
+      setErrors({});
     }
   }, [isOpen, mode, bulletin, departments]); // Added departments dependency
 
@@ -240,37 +244,38 @@ export function BulletinModal({
     });
   };
 
+  // Add validation function
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Byulleten nomini kiriting";
+    }
+    if (!formData.description.trim()) {
+      newErrors.description = "Byulleten tavsifini kiriting";
+    }
+    if (!formData.deadline) {
+      newErrors.deadline = "Muddat turini tanlang";
+    }
+    if (formData.mainOrganizations.length === 0) {
+      newErrors.mainOrganizations = "Kamida bitta asosiy tashkilotni tanlang";
+    }
+    if (formData.secondaryOrganizations.length === 0) {
+      newErrors.secondaryOrganizations =
+        "Kamida bitta quyi tashkilotni tanlang";
+    }
+    if (formData.responsibleEmployees.length === 0) {
+      newErrors.responsibleEmployees = "Kamida bitta mas'ul shaxsni tanlang";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.name.trim()) {
-      alert("Byulleten nomini kiriting");
-      return;
-    }
-
-    if (!formData.description.trim()) {
-      alert("Byulleten tavsifini kiriting");
-      return;
-    }
-
-    if (!formData.deadline) {
-      alert("Muddat turini tanlang");
-      return;
-    }
-
-    if (formData.mainOrganizations.length === 0) {
-      alert("Kamida bitta asosiy tashkilotni tanlang");
-      return;
-    }
-
-    if (formData.secondaryOrganizations.length === 0) {
-      alert("Kamida bitta ikkinchi darajali tashkilotni tanlang");
-      return;
-    }
-
-    if (formData.responsibleEmployees.length === 0) {
-      alert("Kamida bitta mas'ul shaxsni tanlang");
+    if (!validateForm()) {
       return;
     }
 
@@ -283,6 +288,10 @@ export function BulletinModal({
       ...formData,
       responsibleEmployees: values,
     });
+    // Clear error when user makes selection
+    if (values.length > 0 && errors.responsibleEmployees) {
+      setErrors((prev) => ({ ...prev, responsibleEmployees: "" }));
+    }
   };
 
   const isFormValid = () => {
@@ -358,13 +367,22 @@ export function BulletinModal({
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                // Clear error when user starts typing
+                if (e.target.value.trim() && errors.name) {
+                  setErrors((prev) => ({ ...prev, name: "" }));
+                }
+              }}
               placeholder="Byulletenni nomini kiriting"
-              className="w-full border-[var(--border)]"
+              className={`w-full border-[var(--border)] ${
+                errors.name ? "border-red-500" : ""
+              }`}
               required
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
           {/* Bulletin Description */}
@@ -378,13 +396,22 @@ export function BulletinModal({
             <Input
               id="description"
               value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, description: e.target.value });
+                // Clear error when user starts typing
+                if (e.target.value.trim() && errors.description) {
+                  setErrors((prev) => ({ ...prev, description: "" }));
+                }
+              }}
               placeholder="Byulletenni tavsifini kiriting"
-              className="w-full border-[var(--border)]"
+              className={`w-full border-[var(--border)] ${
+                errors.description ? "border-red-500" : ""
+              }`}
               required
             />
+            {errors.description && (
+              <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+            )}
           </div>
 
           {/* Deadline Type */}
@@ -397,11 +424,19 @@ export function BulletinModal({
             </Label>
             <Select
               value={formData.deadline}
-              onValueChange={(value) =>
-                setFormData({ ...formData, deadline: value })
-              }
+              onValueChange={(value) => {
+                setFormData({ ...formData, deadline: value });
+                // Clear error when user makes selection
+                if (value && errors.deadline) {
+                  setErrors((prev) => ({ ...prev, deadline: "" }));
+                }
+              }}
             >
-              <SelectTrigger className="w-full border-[var(--border)]">
+              <SelectTrigger
+                className={`w-full border-[var(--border)] ${
+                  errors.deadline ? "border-red-500" : ""
+                }`}
+              >
                 <SelectValue placeholder="Muddat turini tanlang" />
               </SelectTrigger>
               <SelectContent>
@@ -412,6 +447,9 @@ export function BulletinModal({
                 ))}
               </SelectContent>
             </Select>
+            {errors.deadline && (
+              <p className="text-red-500 text-xs mt-1">{errors.deadline}</p>
+            )}
           </div>
 
           {/* Organization Selection */}
@@ -494,12 +532,11 @@ export function BulletinModal({
               {currentMainOrgId && (
                 <div className="space-y-3 mb-4">
                   <Label className="text-sm font-medium text-[var(--foreground)]">
-                    2. Ikkinchi darajali tashkilotlarni tanlang
+                    2. Quyi tashkilotlarni tanlang
                   </Label>
                   {getCurrentSecondaryOrgs().length === 0 ? (
                     <div className="text-sm text-[var(--muted-foreground)] p-3 border border-[var(--border)] rounded-md">
-                      Bu asosiy tashkilot uchun ikkinchi darajali tashkilotlar
-                      mavjud emas
+                      Bu asosiy tashkilot uchun quyi tashkilotlar mavjud emas
                     </div>
                   ) : (
                     <MultiSelect
@@ -509,9 +546,9 @@ export function BulletinModal({
                       }))}
                       selectedValues={currentSecondaryOrgs}
                       onSelectionChange={setCurrentSecondaryOrgs}
-                      placeholder="Ikkinchi darajali tashkilotlarni tanlang"
-                      searchPlaceholder="Ikkinchi darajali tashkilotlarni qidirish..."
-                      emptyMessage="Ikkinchi darajali tashkilot topilmadi"
+                      placeholder="Quyi tashkilotlarni tanlang"
+                      searchPlaceholder="Quyi tashkilotlarni qidirish..."
+                      emptyMessage="Quyi tashkilot topilmadi"
                     />
                   )}
                 </div>
@@ -529,6 +566,18 @@ export function BulletinModal({
                 </Button>
               )}
             </div>
+
+            {/* Organization validation errors */}
+            {errors.mainOrganizations && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.mainOrganizations}
+              </p>
+            )}
+            {errors.secondaryOrganizations && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.secondaryOrganizations}
+              </p>
+            )}
           </div>
 
           {/* Responsible Employees */}
@@ -547,6 +596,11 @@ export function BulletinModal({
               searchPlaceholder="Mas'ul shaxslarni qidirish..."
               emptyMessage="Mas'ul shaxs topilmadi"
             />
+            {errors.responsibleEmployees && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.responsibleEmployees}
+              </p>
+            )}
           </div>
 
           {/* Action Buttons */}

@@ -7,5 +7,6 @@ export const useGetClassificatorDetail = (id: string) => {
     queryKey: [queryKeys.classificators.detail(id)],
     queryFn: () => classificatorDetailService.getClassificatorDetail(id),
     retry: false,
+    enabled: !!id,
   });
 };
