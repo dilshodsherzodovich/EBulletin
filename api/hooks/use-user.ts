@@ -20,10 +20,16 @@ export function useCreateUser() {
   });
 }
 
-export function useUsers({ page = 1 }: { page: number } = { page: 1 }) {
+export function useUsers({
+  page,
+  no_page,
+}: {
+  page?: number;
+  no_page?: boolean;
+}) {
   return useQuery({
     queryKey: [queryKeys.users.all, page],
-    queryFn: () => userService.getUsers({ page }),
+    queryFn: () => userService.getUsers({ page, no_page }),
     staleTime: 5 * 60 * 1000,
     retry: (failureCount, error: any) => {
       if (error?.response?.status === 401 || error?.response?.status === 403) {

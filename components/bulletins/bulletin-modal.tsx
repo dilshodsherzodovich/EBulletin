@@ -86,11 +86,15 @@ export function BulletinModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch data from API
-  const { data: organizationsData, isLoading: orgsLoading } = useOrganizations(
-    {}
-  );
-  const { data: departmentsData, isLoading: deptsLoading } = useDepartments({});
-  const { data: usersData, isLoading: usersLoading } = useUsers();
+  const { data: organizationsData, isLoading: orgsLoading } = useOrganizations({
+    no_page: true,
+  });
+  const { data: departmentsData, isLoading: deptsLoading } = useDepartments({
+    no_page: true,
+  });
+  const { data: usersData, isLoading: usersLoading } = useUsers({
+    no_page: true,
+  });
 
   const organizations = organizationsData?.results || [];
   const departments = departmentsData?.results || [];
@@ -307,7 +311,7 @@ export function BulletinModal({
 
   const getAvailableMainOrgs = () => {
     const selectedIds = selectedMainOrgs.map((org) => org.mainOrgId);
-    return organizations.filter((org) => !selectedIds.includes(org.id));
+    return organizations?.filter((org) => !selectedIds.includes(org.id)) || [];
   };
 
   const getCurrentSecondaryOrgs = () => {

@@ -9,6 +9,7 @@ export interface Department {
 
 export interface DepartmentGetParams {
   page?: number;
+  no_page?: boolean;
 }
 
 export interface DepartmentCreateParams {

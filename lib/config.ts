@@ -25,11 +25,11 @@ const getApiBaseUrl = (): string => {
   if (isDev) {
     const devUrl = process.env.NEXT_PUBLIC_DEV_API_BASE_URL;
     console.log("🔍 Dev URL from env:", devUrl); // Debug log
-    return devUrl || "https://bb7b9431db0e.ngrok-free.app/api/";
+    return devUrl || "https://e-back.stat.uz/api/";
   } else {
     const prodUrl = process.env.NEXT_PUBLIC_PROD_API_BASE_URL;
     console.log("🔍 Prod URL from env:", prodUrl); // Debug log
-    return prodUrl || "https://bb7b9431db0e.ngrok-free.app/api/";
+    return prodUrl || "https://e-back.stat.uz/api/";
   }
 };
 
