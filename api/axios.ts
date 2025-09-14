@@ -40,6 +40,22 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Check if request has no_page parameter
+    const hasNoPage =
+      response.config.params?.no_page === true ||
+      response.config.params?.no_page === "true" ||
+      response.config.url?.includes("no_page=true");
+
+    if (hasNoPage) {
+      // Wrap response data in PaginatedData structure
+      response.data = {
+        results: response.data,
+        count: response.data?.length || 0,
+        next: null,
+        previous: null,
+      };
+    }
+
     return response;
   },
   (error) => {
