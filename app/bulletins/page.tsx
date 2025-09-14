@@ -10,6 +10,7 @@ import {
   useUpdateBulletin,
   useDeleteBulletin,
 } from "@/api/hooks/use-bulletin";
+import { useOrganizations } from "@/api/hooks/use-organizations";
 import {
   Bulletin,
   BulletinCreateBody,
@@ -18,8 +19,17 @@ import {
 } from "@/api/types/bulleten";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
+import { getPageCount } from "@/lib/utils";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 export default function BulletinsPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "bulletins")) {
+    redirect("/");
+  }
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -28,12 +38,32 @@ export default function BulletinsPage() {
     Bulletin | undefined
   >(undefined);
 
-  const { data: bulletins, isPending, isError } = useBulletin({ page: 1 });
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [organizationFilter, setOrganizationFilter] = useState("all");
+  const [periodTypeFilter, setPeriodTypeFilter] = useState("all");
+
+  // API calls
+  const {
+    data: bulletins,
+    isPending,
+    isError,
+  } = useBulletin({ page: currentPage });
+  const { data: organizationsData, isLoading: isLoadingOrganizations } =
+    useOrganizations({ page: 1 });
   const { mutate: createBulletin, isPending: isCreating } = useCreateBulletin();
   const { mutate: updateBulletin, isPending: isUpdating } = useUpdateBulletin();
   const { mutate: deleteBulletin, isPending: isDeleting } = useDeleteBulletin();
 
   const { showSuccess, showError } = useSnackbar();
+
+  // Calculate pagination
+  const totalPages = getPageCount(bulletins?.count || 0, pageSize) || 1;
+  const organizations = organizationsData?.results || [];
 
   const handleSelectionChange = (ids: string[]) => {
     setSelectedIds(ids);
@@ -113,6 +143,19 @@ export default function BulletinsPage() {
     setShowDeleteConfirmation(false);
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSelectedIds([]); // Clear selection when changing pages
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setOrganizationFilter("all");
+    setPeriodTypeFilter("all");
+    setCurrentPage(1);
+    setSelectedIds([]);
+  };
+
   if (isError) {
     return (
       <ErrorCard
@@ -126,7 +169,7 @@ export default function BulletinsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 ">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[var(--foreground)]">
@@ -149,6 +192,18 @@ export default function BulletinsPage() {
         onAssignResponsible={handleAssignResponsible}
         isLoading={isPending}
         isDeleting={isDeleting}
+        organizations={organizations}
+        isLoadingOrganizations={isLoadingOrganizations}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        organizationFilter={organizationFilter}
+        onOrganizationChange={setOrganizationFilter}
+        periodTypeFilter={periodTypeFilter}
+        onPeriodTypeChange={setPeriodTypeFilter}
+        onClearFilters={handleClearFilters}
       />
 
       <BulletinModal

@@ -1,4 +1,10 @@
-import { Bulletin, BulletinCreateBody } from "../types/bulleten";
+import {
+  Bulletin,
+  BulletinCreateBody,
+  BulletinCreateRow,
+  BulletinFile,
+  BulletinRow,
+} from "../types/bulleten";
 import api from "@/api/axios";
 import { PaginatedData } from "../types/general";
 
@@ -69,6 +75,67 @@ export const bulletinService = {
       return response.data;
     } catch (error) {
       console.error("Error fetching bulletin:", error);
+      throw error;
+    }
+  },
+
+  createBulletinFile: async (
+    id: string,
+    upload_file: File
+  ): Promise<BulletinFile> => {
+    try {
+      const formData = new FormData();
+      formData.append("journal", id);
+      formData.append("upload_file", upload_file);
+
+      const response = await api.post<BulletinFile>(
+        "/journal/upload-history/",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error uploading bulletin file:", error);
+      throw error;
+    }
+  },
+};
+
+export const bulletinRowService = {
+  createBulletinRow: async (body: BulletinCreateRow): Promise<BulletinRow> => {
+    try {
+      const response = await api.post<BulletinRow>(
+        "/journal/row/create/",
+        body
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating bulletin row:", error);
+      throw error;
+    }
+  },
+
+  updateBulletinRow: async (
+    id: string,
+    body: BulletinCreateRow
+  ): Promise<BulletinRow> => {
+    try {
+      const response = await api.patch<BulletinRow>(
+        `/journal/row/${id}/`,
+        body
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating bulletin row:", error);
+      throw error;
+    }
+  },
+
+  deleteBulletinRow: async (id: string): Promise<void> => {
+    try {
+      await api.delete(`/journal/row/${id}/`);
+    } catch (error) {
+      console.error("Error deleting bulletin row:", error);
       throw error;
     }
   },

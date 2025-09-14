@@ -19,6 +19,9 @@ import { PaginatedData } from "@/api/types/general";
 import { Department } from "@/api/types/deparments";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { format } from "date-fns";
+import { PermissionGuard } from "../permission-guard";
+import { Pagination } from "@/ui/pagination";
+import { getPageCount } from "@/lib/utils";
 
 interface DepartmentTableProps {
   departments: PaginatedData<Department>;
@@ -27,6 +30,9 @@ interface DepartmentTableProps {
   onBulkDelete: (departmentIds: string[]) => void;
   onCreateNew: () => void;
   isLoading?: boolean;
+  totalPages: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
 }
 
 export function DepartmentTable({
@@ -36,6 +42,9 @@ export function DepartmentTable({
   onBulkDelete,
   onCreateNew,
   isLoading,
+  totalPages,
+  currentPage,
+  onPageChange,
 }: DepartmentTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,24 +136,28 @@ export function DepartmentTable({
                       </TableCell>
                       <TableCell className="p-3">
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => onEdit(department)}
-                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                            aria-label="Tahrirlash"
-                          >
-                            <Edit className="h-4 w-4 text-[var(--primary)]" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => onDelete(department)}
-                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                            aria-label="O'chirish"
-                          >
-                            <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                          </Button>
+                          <PermissionGuard permission="edit_department">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => onEdit(department)}
+                              className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                              aria-label="Tahrirlash"
+                            >
+                              <Edit className="h-4 w-4 text-[var(--primary)]" />
+                            </Button>
+                          </PermissionGuard>
+                          <PermissionGuard permission="delete_department">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => onDelete(department)}
+                              className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                              aria-label="O'chirish"
+                            >
+                              <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                            </Button>
+                          </PermissionGuard>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -153,6 +166,15 @@ export function DepartmentTable({
               )}
             </TableBody>
           </Table>
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-[var(--border)]">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={getPageCount(totalPages, 10)}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
         </div>
       </Card>
     </div>

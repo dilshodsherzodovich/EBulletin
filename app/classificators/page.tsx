@@ -5,7 +5,6 @@ import { ClassificatorTable } from "@/components/classificators/classificator-ta
 import { ClassificatorModal } from "@/components/classificators/classificator-modal";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { classificatorService } from "@/api/services/classificator.service";
 import {
   useBulkDeleteClassificators,
   useCreateClassificator,
@@ -19,8 +18,16 @@ import {
 } from "@/api/types/classificator";
 import { queryKeys } from "@/api/querykey";
 import { useSnackbar } from "@/providers/snackbar-provider";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 export default function ClassificatorsPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "classificator")) {
+    redirect("/");
+  }
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");

@@ -40,3 +40,16 @@ export const getRoleName = (roleName: UserRole): string => {
     }
   }
 };
+
+export const truncate = (text: string, options: { length: number }) => {
+  return text.length > options.length
+    ? text.slice(0, options.length) + "..."
+    : text;
+};
+
+export const getFileName = (url: string) => {
+  if (!url) return "Fayl topilmadi";
+  const fileName = url.split("/").pop() || "download";
+
+  return truncate(fileName, { length: 20 });
+};

@@ -16,8 +16,16 @@ import { Department, DepartmentCreateParams } from "@/api/types/deparments";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 export default function DepartmentsPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "departments")) {
+    redirect("/");
+  }
+
   const queryClient = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -26,6 +34,7 @@ export default function DepartmentsPage() {
   const [editingDepartment, setEditingDepartment] = useState<
     Department | undefined
   >();
+  const [page, setPage] = useState(1);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     departmentId?: string;
@@ -36,7 +45,7 @@ export default function DepartmentsPage() {
     data: departmentsList,
     isPending: isPendingDepartments,
     isFetching,
-  } = useDepartments({ page: 1 });
+  } = useDepartments({ page });
   const { mutate: createDepartment, isPending: isCreatingDep } =
     useCreateDepartment();
   const { mutate: editDepartment, isPending: isEditingDep } =
@@ -157,6 +166,9 @@ export default function DepartmentsPage() {
           onBulkDelete={handleBulkDelete}
           onCreateNew={handleOpenCreateModal}
           isLoading={isPendingDepartments}
+          totalPages={departmentsList?.count || 1}
+          currentPage={page}
+          onPageChange={setPage}
         />
       </Card>
 

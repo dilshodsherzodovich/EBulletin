@@ -16,9 +16,12 @@ import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
 import { BulletinFilters } from "./bulletin-filters";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
+import { Pagination } from "@/ui/pagination";
 import Link from "next/link";
 import { Bulletin } from "@/api/types/bulleten";
+import { Organization } from "@/api/types/organizations";
 import { TableSkeleton } from "@/ui/table-skeleton";
+import { PermissionGuard } from "../permission-guard";
 
 interface BulletinTableProps {
   bulletins: Bulletin[];
@@ -31,6 +34,20 @@ interface BulletinTableProps {
   onAssignResponsible: (bulletin: Bulletin) => void;
   isLoading: boolean;
   isDeleting: boolean;
+  organizations: Organization[];
+  isLoadingOrganizations?: boolean;
+  // Pagination props
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  // Filter props
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  organizationFilter: string;
+  onOrganizationChange: (value: string) => void;
+  periodTypeFilter: string;
+  onPeriodTypeChange: (value: string) => void;
+  onClearFilters: () => void;
 }
 
 // Deadline type mapping to Uzbek labels
@@ -58,11 +75,19 @@ export function BulletinTable({
   onCreateNew,
   isLoading,
   isDeleting,
+  organizations,
+  isLoadingOrganizations = false,
+  currentPage,
+  totalPages,
+  onPageChange,
+  searchTerm,
+  onSearchChange,
+  organizationFilter,
+  onOrganizationChange,
+  periodTypeFilter,
+  onPeriodTypeChange,
+  onClearFilters,
 }: BulletinTableProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [departmentFilter, setDepartmentFilter] = useState("all");
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [bulletinToDelete, setBulletinToDelete] = useState<Bulletin | null>(
     null
@@ -72,23 +97,25 @@ export function BulletinTable({
     const matchesSearch = bulletin.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "all" ||
+
+    const matchesOrganization =
+      organizationFilter === "all" ||
       (bulletin.main_organizations_list &&
         bulletin.main_organizations_list.some(
-          (org) => org.name === categoryFilter
+          (org) => org.id === organizationFilter
         ));
-    const matchesStatus = statusFilter === "all"; // API doesn't have status field
-    const matchesDepartment =
-      departmentFilter === "all" ||
-      (bulletin.main_organizations_list &&
-        bulletin.main_organizations_list.some(
-          (org) => org.name === departmentFilter
-        ));
-    return (
-      matchesSearch && matchesCategory && matchesStatus && matchesDepartment
-    );
+
+    const matchesPeriodType =
+      periodTypeFilter === "all" ||
+      bulletin.deadline?.period_type === periodTypeFilter;
+
+    return matchesSearch && matchesOrganization && matchesPeriodType;
   });
+
+  const hasActiveFilters =
+    searchTerm !== "" ||
+    organizationFilter !== "all" ||
+    periodTypeFilter !== "all";
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -134,16 +161,18 @@ export function BulletinTable({
       <Card className="rounded-xl">
         <BulletinFilters
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={onSearchChange}
           selectedCount={selectedIds.length}
           onBulkDelete={handleBulkDelete}
-          categoryFilter={categoryFilter}
-          onCategoryChange={setCategoryFilter}
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-          departmentFilter={departmentFilter}
-          onDepartmentChange={setDepartmentFilter}
+          organizationFilter={organizationFilter}
+          onOrganizationChange={onOrganizationChange}
+          periodTypeFilter={periodTypeFilter}
+          onPeriodTypeChange={onPeriodTypeChange}
           onAdd={onCreateNew}
+          organizations={organizations}
+          isLoadingOrganizations={isLoadingOrganizations}
+          onClearFilters={onClearFilters}
+          hasActiveFilters={hasActiveFilters}
         />
         <div className="overflow-hidden">
           <Table>
@@ -174,8 +203,10 @@ export function BulletinTable({
               ) : filteredBulletins.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center py-8">
-                    <div className="text-lg text-[var(--muted-foreground)]">
-                      Byulletenlar topilmadi.
+                    <div className="text-sm text-[var(--muted-foreground)]">
+                      {hasActiveFilters
+                        ? "Filtrlar bo'yicha byulletenlar topilmadi."
+                        : "Byulletenlar topilmadi."}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -194,7 +225,7 @@ export function BulletinTable({
                       />
                     </TableCell>
                     <TableCell className="font-semibold text-[var(--primary)] p-3">
-                      {index + 1}
+                      {(currentPage - 1) * 10 + index + 1}
                     </TableCell>
                     <TableCell className="font-medium p-3 max-w-xs">
                       <div className="truncate" title={bulletin.name}>
@@ -285,39 +316,46 @@ export function BulletinTable({
                     </TableCell>
                     <TableCell className="p-3">
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => onEdit(bulletin)}
-                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                          aria-label="Tahrirlash"
-                        >
-                          <Edit className="h-4 w-4 text-[var(--primary)]" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleDeleteClick(bulletin)}
-                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
-                          aria-label="O'chirish"
-                        >
-                          <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-gray-100"
-                          aria-label="Ko'rish"
-                        >
-                          <Eye className="h-4 w-4 text-[var(--muted-foreground)]" />
-                        </Button>
-                        <Link
-                          href={`/bulletins/${bulletin.id}/structure`}
-                          className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
-                          aria-label="Struktura"
-                        >
-                          <BarChart3 className="h-4 w-4 text-[var(--primary)]" />
-                        </Link>
+                        <PermissionGuard permission="edit_journal">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => onEdit(bulletin)}
+                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                            aria-label="Tahrirlash"
+                          >
+                            <Edit className="h-4 w-4 text-[var(--primary)]" />
+                          </Button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="delete_journal">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleDeleteClick(bulletin)}
+                            className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                            aria-label="O'chirish"
+                          >
+                            <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                          </Button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="view_journal_detail">
+                          <Link
+                            href={`/bulletins/${bulletin.id}/detail`}
+                            className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
+                            aria-label="Ma'lumotlar"
+                          >
+                            <Eye className="h-4 w-4 text-[var(--primary)]" />
+                          </Link>
+                        </PermissionGuard>
+                        <PermissionGuard permission="view_journal_structure">
+                          <Link
+                            href={`/bulletins/${bulletin.id}/structure`}
+                            className="inline-flex items-center justify-center h-8 w-8 p-0 border border-[var(--border)] rounded-md hover:bg-[var(--primary)]/10 transition-colors"
+                            aria-label="Struktura"
+                          >
+                            <BarChart3 className="h-4 w-4 text-[var(--primary)]" />
+                          </Link>
+                        </PermissionGuard>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -326,6 +364,17 @@ export function BulletinTable({
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-[var(--border)]">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+            />
+          </div>
+        )}
       </Card>
 
       <ConfirmationDialog

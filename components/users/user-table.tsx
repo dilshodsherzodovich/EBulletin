@@ -19,8 +19,10 @@ import { UserFilters } from "@/components/users/user-filters";
 import { Card } from "@/ui/card";
 import { PaginatedData } from "@/api/types/general";
 import { UserData, UserRole } from "@/api/types/user";
-import { getRoleName } from "@/lib/utils";
+import { getPageCount, getRoleName } from "@/lib/utils";
 import { TableSkeleton } from "@/ui/table-skeleton";
+import { PermissionGuard } from "../permission-guard";
+import { Pagination } from "@/ui/pagination";
 
 interface UserTableProps {
   users: PaginatedData<UserData>;
@@ -31,6 +33,9 @@ interface UserTableProps {
   onBulkDelete: (ids: string[]) => void;
   onCreateNew: () => void;
   isLoading: boolean;
+  totalPages: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
 }
 
 export function UserTable({
@@ -42,6 +47,9 @@ export function UserTable({
   onBulkDelete,
   onCreateNew,
   isLoading,
+  totalPages,
+  currentPage,
+  onPageChange,
 }: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState(""); // Added search state
   const [roleFilter, setRoleFilter] = useState("all");
@@ -199,24 +207,28 @@ export function UserTable({
                     </TableCell>
                     <TableCell className="p-3">
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => onEdit(user)}
-                          className="h-8 w-8 p-0 border-1 border-[var(--border)] hover:bg-[var(--primary)]/10 shadow-none"
-                          aria-label="Tahrirlash"
-                        >
-                          <Edit className="h-4 w-4 text-[var(--primary)]" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => onDelete(user.id)}
-                          className="h-8 w-8 p-0 border-1 border-[var(--border)] hover:bg-[var(--destructive)]/10 shadow-none"
-                          aria-label="O'chirish"
-                        >
-                          <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                        </Button>
+                        <PermissionGuard permission="edit_user">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => onEdit(user)}
+                            className="h-8 w-8 p-0 border-1 border-[var(--border)] hover:bg-[var(--primary)]/10 shadow-none"
+                            aria-label="Tahrirlash"
+                          >
+                            <Edit className="h-4 w-4 text-[var(--primary)]" />
+                          </Button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="delete_user">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => onDelete(user.id)}
+                            className="h-8 w-8 p-0 border-1 border-[var(--border)] hover:bg-[var(--destructive)]/10 shadow-none"
+                            aria-label="O'chirish"
+                          >
+                            <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                          </Button>
+                        </PermissionGuard>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -224,6 +236,15 @@ export function UserTable({
               )}
             </TableBody>
           </Table>
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-[var(--border)]">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={getPageCount(totalPages, 10)}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
         </div>
       </Card>
     </div>

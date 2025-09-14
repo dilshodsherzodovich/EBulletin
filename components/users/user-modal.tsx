@@ -29,13 +29,6 @@ interface UserModalProps {
   isLoading?: boolean;
 }
 
-const roles = [
-  { value: "ADMIN", label: "Admin" },
-  { value: "MODERATOR", label: "Moderator" },
-  { value: "OBSERVER", label: "Kuzatuvchi" },
-  { value: "Moderator", label: "Moderator" },
-];
-
 export function UserModal({
   isOpen,
   onClose,
@@ -67,6 +60,16 @@ export function UserModal({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Filter departments based on selected organization
+  const filteredDepartments = useMemo(() => {
+    if (!formData.organization || !departments?.results) {
+      return [];
+    }
+    return departments.results.filter(
+      (dept) => dept.organization_id === formData.organization
+    );
+  }, [formData.organization, departments?.results]);
+
   useEffect(() => {
     if (mode === "edit" && user) {
       setFormData({
@@ -93,6 +96,30 @@ export function UserModal({
     }
     setErrors({});
   }, [mode, user, isOpen]);
+
+  // Reset secondary organization when main organization changes
+  useEffect(() => {
+    if (formData.organization) {
+      // Check if current secondary organization belongs to selected main organization
+      const currentDept = departments?.results?.find(
+        (dept) => dept.id === formData.secondary_organization_id
+      );
+
+      if (
+        !currentDept ||
+        currentDept.organization_id !== formData.organization
+      ) {
+        setFormData((prev) => ({
+          ...prev,
+          secondary_organization_id: "",
+        }));
+      }
+    }
+  }, [
+    formData.organization,
+    departments?.results,
+    formData.secondary_organization_id,
+  ]);
 
   const isSubmitButtonDisabled = useMemo(() => {
     return (
@@ -147,7 +174,7 @@ export function UserModal({
             is_active: formData.status === "active",
             password: formData.password,
             profile: {
-              secondary_organization: formData.secondary_organization_id,
+              secondary_organization_id: formData.secondary_organization_id,
             },
           }
         : {
@@ -157,7 +184,7 @@ export function UserModal({
             role: formData.role,
             is_active: formData.status === "active",
             profile: {
-              secondary_organization: formData.secondary_organization_id,
+              secondary_organization_id: formData.secondary_organization_id,
             },
           }
     );
@@ -247,18 +274,35 @@ export function UserModal({
                 onValueChange={(value) =>
                   setFormData({ ...formData, secondary_organization_id: value })
                 }
+                disabled={!formData.organization}
               >
                 <SelectTrigger
                   className={errors.department ? "border-red-500" : ""}
                 >
-                  <SelectValue placeholder="Quyi tashkilot tanlang" />
+                  <SelectValue
+                    placeholder={
+                      !formData.organization
+                        ? "Avval tashkilot tanlang"
+                        : filteredDepartments.length === 0
+                        ? "Bu tashkilotda quyi tashkilotlar yo'q"
+                        : "Quyi tashkilot tanlang"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments?.results?.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id}>
-                      {opt.name}
-                    </SelectItem>
-                  ))}
+                  {filteredDepartments.length > 0 ? (
+                    filteredDepartments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-2 py-1.5 text-sm text-gray-500">
+                      {!formData.organization
+                        ? "Avval tashkilot tanlang"
+                        : "Bu tashkilotda quyi tashkilotlar yo'q"}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
               {errors.department && (
@@ -284,28 +328,25 @@ export function UserModal({
                 <p className="text-red-500 text-xs mt-1">{errors.login}</p>
               )}
             </div>
-            <div>
-              <Label className="text-sm text-[var(--muted-foreground)]">
-                Parol {mode === "create" && "*"}
-              </Label>
-              <Input
-                type="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className={errors.password ? "border-red-500" : ""}
-                placeholder={
-                  mode === "edit"
-                    ? "Yangi parol (bo'sh qoldirilsa o'zgarmaydi)"
-                    : ""
-                }
-                autoComplete="off"
-              />
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-              )}
-            </div>
+            {mode === "create" && (
+              <div>
+                <Label className="text-sm text-[var(--muted-foreground)]">
+                  Parol *
+                </Label>
+                <Input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  className={errors.password ? "border-red-500" : ""}
+                  autoComplete="off"
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                )}
+              </div>
+            )}
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
                 Rol *

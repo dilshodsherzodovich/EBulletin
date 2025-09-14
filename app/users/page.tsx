@@ -13,12 +13,19 @@ import {
 } from "@/api/hooks/use-user";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { CreateUserRequest } from "@/api/types/user";
-import { toast } from "sonner";
 import { UserData } from "@/api/types/auth";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 // Keep the mock data for now
 
 export default function UsersPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "users")) {
+    redirect("/");
+  }
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
@@ -28,11 +35,12 @@ export default function UsersPage() {
     userId?: string;
     isBulk?: boolean;
   }>({ isOpen: false });
+  const [page, setPage] = useState(1);
 
   // Use snackbar for notifications
   const { showSuccess, showError, showInfo } = useSnackbar();
 
-  const { data: usersList, isPending } = useUsers();
+  const { data: usersList, isPending } = useUsers({ page });
   const { mutate: createUser, isPending: isCreatingUser } = useCreateUser();
   const { mutate: editUser, isPending: isEditingUser } = useUpdateUser();
   const { mutate: deleteUser, isPending: isDeletingUser } = useDeleteUser();
@@ -133,6 +141,9 @@ export default function UsersPage() {
         onBulkDelete={handleBulkDelete}
         onCreateNew={handleOpenCreateModal}
         isLoading={isPending}
+        totalPages={usersList?.count || 1}
+        currentPage={page}
+        onPageChange={setPage}
       />
 
       <UserModal

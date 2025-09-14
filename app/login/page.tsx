@@ -21,7 +21,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-4xl font-extrabold text-white drop-shadow-lg mb-4 tracking-tight">
-            Milliy Statistika <span className="text-[#ffd700]">Qo'mitasi</span>
+            Milliy Statistika Qo'mitasi
           </h1>
           <p className="text-lg text-white/80 font-medium mb-6 max-w-xl mx-auto">
             Zamonaviy statistik axborot tizimi orqali ma'lumotlarni tez va

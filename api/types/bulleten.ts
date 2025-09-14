@@ -42,6 +42,8 @@ export interface Bulletin {
     username: string;
     full_name: string;
   };
+  rows: BulletinRow[];
+  upload_history: BulletinFile[];
 }
 
 export interface BulletinCreateBody {
@@ -52,4 +54,35 @@ export interface BulletinCreateBody {
   organizations: string[];
   main_organizations: string[];
   responsible_employees: string[];
+}
+
+// Updated to match the actual bulletinDetail API response
+export interface BulletinRow {
+  id: string;
+  order: number;
+  values: Record<string, string | number | Date>;
+}
+
+// For individual cell data (used in create requests)
+export interface BulletinRowCell {
+  column: string;
+  value: string | number | Date;
+}
+
+export interface BulletinCreateRow {
+  journal: string;
+  values: BulletinRowCell[];
+}
+
+export interface BulletinFile {
+  id: string;
+  status: "on_time" | "late" | "not_submitted";
+  upload_file: string | null;
+  upload_at: string;
+  deadline: string;
+  user_info: {
+    id: string;
+    username: string;
+    full_name: string;
+  };
 }

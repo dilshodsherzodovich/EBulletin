@@ -18,8 +18,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
+import { canAccessSection } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 export default function OrganizationsPage() {
+  const user = JSON.parse(localStorage.getItem("user")!);
+
+  if (!user || !canAccessSection(user, "organizations")) {
+    redirect("/");
+  }
+
   const queryClient = useQueryClient();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -33,13 +41,13 @@ export default function OrganizationsPage() {
     organizationId?: string;
     isBulk?: boolean;
   }>({ isOpen: false });
-
+  const [page, setPage] = useState(1);
   const {
     data: organizationsList,
     isPending,
     isFetching,
     error,
-  } = useOrganizations({ page: 1 });
+  } = useOrganizations({ page });
 
   const { mutate: createOrganization, isPending: isCreatingOrg } =
     useCreateOrganization();
@@ -181,6 +189,9 @@ export default function OrganizationsPage() {
         onBulkDelete={handleBulkDelete}
         onCreateNew={handleOpenCreateModal}
         isLoading={isPending}
+        totalPages={organizationsList?.count || 1}
+        currentPage={page}
+        onPageChange={setPage}
       />
 
       <OrganizationModal

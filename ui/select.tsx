@@ -40,7 +40,7 @@ function SelectTrigger({
         "data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground",
         "flex w-full items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-4 py-2",
         "text-sm whitespace-nowrap transition-colors outline-none",
-        "focus:border-blue-500 hover:border-gray-400",
+        "focus:border-primary hover:border-gray-400",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50",
         "aria-invalid:border-red-500 aria-invalid:focus:border-red-500",
         "data-[size=default]:h-10 data-[size=sm]:h-8", // Increased height for better usability
@@ -122,7 +122,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "focus:bg-primary focus:text-white [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}
       {...props}
