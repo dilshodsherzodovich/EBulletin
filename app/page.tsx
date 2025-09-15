@@ -688,7 +688,7 @@ export default function MonitoringPage() {
       </Card>
 
       {/* Chancellery Section */}
-      <Card className="border-[var(--border)] rounded-xl">
+      {/* <Card className="border-[var(--border)] rounded-xl">
         <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-3">
             <Target className="w-6 h-6 text-[var(--primary)]" />
@@ -773,7 +773,7 @@ export default function MonitoringPage() {
             ))}
           </div>
         </div>
-      </Card>
+      </Card> */}
     </div>
   );
 }
