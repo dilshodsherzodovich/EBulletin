@@ -55,6 +55,7 @@ const deadlineOptions = [
   { value: "weekly", label: "Haftalik" },
   { value: "monthly", label: "Oylik" },
   { value: "quarterly", label: "Choraklik" },
+  { value: "yearly", label: "Yillik" },
 ];
 
 export function BulletinModal({
