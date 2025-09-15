@@ -37,6 +37,9 @@ export default function BulletinsPage() {
   const [selectedBulletin, setSelectedBulletin] = useState<
     Bulletin | undefined
   >(undefined);
+  const [bulletinToDelete, setBulletinToDelete] = useState<Bulletin | null>(
+    null
+  );
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,15 +79,8 @@ export default function BulletinsPage() {
   };
 
   const handleDelete = (bulletin: Bulletin) => {
-    deleteBulletin(bulletin.id, {
-      onSuccess: () => {
-        showSuccess("Byulleten muvaffaqiyatli o'chirildi");
-        setShowDeleteConfirmation(false);
-      },
-      onError: () => {
-        showError("Byulleten o'chirishda xatolik yuz berdi");
-      },
-    });
+    setBulletinToDelete(bulletin);
+    setShowDeleteConfirmation(true);
   };
 
   const handleBulkDelete = (ids: string[]) => {
@@ -135,12 +131,27 @@ export default function BulletinsPage() {
     }
   };
 
-  const confirmBulkDelete = () => {
-    handleBulkDeleteConfirm(selectedIds);
+  const confirmDelete = () => {
+    if (bulletinToDelete) {
+      deleteBulletin(bulletinToDelete.id, {
+        onSuccess: () => {
+          showSuccess("Byulleten muvaffaqiyatli o'chirildi");
+          setShowDeleteConfirmation(false);
+          setBulletinToDelete(null);
+        },
+        onError: () => {
+          showError("Byulleten o'chirishda xatolik yuz berdi");
+        },
+      });
+    } else if (selectedIds.length > 0) {
+      handleBulkDeleteConfirm(selectedIds);
+      setShowDeleteConfirmation(false);
+    }
   };
 
-  const cancelBulkDelete = () => {
+  const cancelDelete = () => {
     setShowDeleteConfirmation(false);
+    setBulletinToDelete(null);
   };
 
   const handlePageChange = (page: number) => {
@@ -189,7 +200,6 @@ export default function BulletinsPage() {
         onDelete={handleDelete}
         onBulkDelete={handleBulkDelete}
         onCreateNew={handleCreateNew}
-        onAssignResponsible={handleAssignResponsible}
         isLoading={isPending}
         isDeleting={isDeleting}
         organizations={organizations}
@@ -217,13 +227,22 @@ export default function BulletinsPage() {
 
       <ConfirmationDialog
         isOpen={showDeleteConfirmation}
-        onClose={cancelBulkDelete}
-        onConfirm={confirmBulkDelete}
-        title="Byulletenlarni o'chirish"
-        message={`${selectedIds.length} ta byulletenni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.`}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        title={
+          bulletinToDelete
+            ? "Byulletenni o'chirish"
+            : "Byulletenlarni o'chirish"
+        }
+        message={
+          bulletinToDelete
+            ? `"${bulletinToDelete.name}" byulletenni o'chirishni xohlaysizma? Bu amalni qaytarib bo'lmaydi.`
+            : `${selectedIds.length} ta byulletenni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi.`
+        }
         confirmText="O'chirish"
         cancelText="Bekor qilish"
         variant="danger"
+        isDoingAction={isDeleting}
       />
     </div>
   );

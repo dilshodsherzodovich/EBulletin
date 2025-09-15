@@ -83,8 +83,6 @@ export function BulletinModal({
     []
   );
 
-  console.log(bulletin);
-
   // Add errors state
   const [errors, setErrors] = useState<Record<string, string>>({});
 

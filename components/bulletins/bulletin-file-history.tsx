@@ -119,7 +119,7 @@ export function BulletinFileHistory({
     return (
       <Card className="p-4">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Fayl yuklash tarixi</h2>
+          <h2 className="text-lg font-semibold">Yuklangan fayllar</h2>
           <p className="text-sm text-gray-600 mt-1">
             Bulletin uchun yuklangan fayllar tarixi
           </p>
@@ -132,7 +132,7 @@ export function BulletinFileHistory({
   return (
     <Card className="p-4">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold">Fayl yuklash tarixi</h2>
+        <h2 className="text-lg font-semibold">Yuklangan fayllar</h2>
         <p className="text-sm text-gray-600 mt-1">
           Bulletin uchun yuklangan fayllar tarixi
         </p>

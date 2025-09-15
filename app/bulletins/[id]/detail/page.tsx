@@ -31,6 +31,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
 import { canAccessSection } from "@/lib/permissions";
 import { BulletinFileHistory } from "@/components/bulletins/bulletin-file-history";
+import { PermissionGuard } from "@/components/permission-guard";
 
 export default function BulletinDetailPage() {
   const user = JSON.parse(localStorage.getItem("user")!);
@@ -297,87 +298,98 @@ export default function BulletinDetailPage() {
       </div>
 
       {/* Simple Info */}
-      <Card className="p-4">
-        <div className="grid grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="font-medium text-gray-500">Muddat:</span>
-            <Badge variant="secondary" className="ml-2">
-              {bulletin.deadline.period_type === "weekly" && "Haftalik"}
-              {bulletin.deadline.period_type === "monthly" && "Oylik"}
-              {bulletin.deadline.period_type === "quarterly" && "Choraklik"}
-              {bulletin.deadline.period_type === "every_n_months" && "Har n oy"}
-            </Badge>
-          </div>
-          <div>
-            <span className="font-medium text-gray-500">Tashkilotlar:</span>
-            <span className="ml-2">
-              {bulletin.main_organizations_list?.map((org) => (
-                <div className="flex  gap-2">
-                  <h4 className="font-bold text-primary">{org.name}</h4>:
-                  <Badge className="text-xs">
-                    {org.secondary_organizations
-                      ?.map((org) => org.name)
-                      .join(", ")}
+      <PermissionGuard permission="view_bulletin_main_info">
+        <Card className="p-4">
+          <div className="grid grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-gray-500">Muddat:</span>
+              <Badge variant="secondary" className="ml-2">
+                {bulletin.deadline.period_type === "weekly" && "Haftalik"}
+                {bulletin.deadline.period_type === "monthly" && "Oylik"}
+                {bulletin.deadline.period_type === "quarterly" && "Choraklik"}
+                {bulletin.deadline.period_type === "every_n_months" &&
+                  "Har n oy"}
+              </Badge>
+            </div>
+            <div>
+              <span className="font-medium text-gray-500">Tashkilotlar:</span>
+              <span className="ml-2">
+                {bulletin.main_organizations_list?.map((org) => (
+                  <div className="flex  gap-2">
+                    <h4 className="font-bold text-primary">{org.name}</h4>:
+                    <Badge className="text-xs">
+                      {org.secondary_organizations
+                        ?.map((org) => org.name)
+                        .join(", ")}
+                    </Badge>
+                  </div>
+                )) || "Tashkilotlar yo'q"}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-500">Xodimlar:</span>
+              <span className="ml-2">
+                {bulletin.employees_list.map((employee) => (
+                  <Badge
+                    variant="primary"
+                    key={employee.id}
+                    className="text-xs"
+                  >
+                    {employee.first_name} {employee.last_name}
                   </Badge>
-                </div>
-              )) || "Tashkilotlar yo'q"}
-            </span>
+                ))}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-500">Ustunlar:</span>
+              <span className="ml-2">{bulletin.columns?.length || 0} ta</span>
+            </div>
           </div>
-          <div>
-            <span className="font-medium text-gray-500">Xodimlar:</span>
-            <span className="ml-2">
-              {bulletin.employees_list.map((employee) => (
-                <Badge variant="primary" key={employee.id} className="text-xs">
-                  {employee.first_name} {employee.last_name}
-                </Badge>
-              ))}
-            </span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-500">Ustunlar:</span>
-            <span className="ml-2">{bulletin.columns?.length || 0} ta</span>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      </PermissionGuard>
 
       {/* Data Grid */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Bulletin Ma'lumotlari</h2>
-        </div>
-        <BulletinDataGrid
-          columns={bulletin.columns || []}
-          rows={rows}
-          onUpdateRow={handleUpdateRow}
-          onDeleteRow={handleDeleteRow}
-          onSaveRow={handleSaveRow}
-          onAddRow={handleAddRow}
-          loadingRows={loadingRows}
-        />
-      </Card>
+      <PermissionGuard permission="view_bulletin_table">
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Bulletin Ma'lumotlari</h2>
+          </div>
+          <BulletinDataGrid
+            columns={bulletin.columns || []}
+            rows={rows}
+            onUpdateRow={handleUpdateRow}
+            onDeleteRow={handleDeleteRow}
+            onSaveRow={handleSaveRow}
+            onAddRow={handleAddRow}
+            loadingRows={loadingRows}
+          />
+        </Card>
+      </PermissionGuard>
 
       {/* File Upload */}
-      <Card className="p-4">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Fayllar</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Bulletin bilan bog'liq fayllar (maksimal 200MB)
-          </p>
-        </div>
-        <FileUpload
-          label="Fayllarni yuklang"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
-          multiple={true}
-          maxSize={200}
-          maxFiles={10}
-          onFilesChange={handleFileUpload}
-          onSubmit={handleFileSubmit}
-          onCancel={handleFileCancel}
-          filesUploaded={uploadedFiles}
-          isUploadingFile={isUploadingFile}
-          hint="PDF, Word, Excel, PowerPoint, rasm va arxiv fayllari qo'llab-quvvatlanadi"
-        />
-      </Card>
+      <PermissionGuard permission="create_bulletin_file">
+        <Card className="p-4">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold">Fayllar</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Bulletin bilan bog'liq fayllar (maksimal 200MB)
+            </p>
+          </div>
+          <FileUpload
+            label="Fayllarni yuklang"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
+            multiple={true}
+            maxSize={200}
+            maxFiles={10}
+            onFilesChange={handleFileUpload}
+            onSubmit={handleFileSubmit}
+            onCancel={handleFileCancel}
+            filesUploaded={uploadedFiles}
+            isUploadingFile={isUploadingFile}
+            hint="PDF, Word, Excel, PowerPoint, rasm va arxiv fayllari qo'llab-quvvatlanadi"
+          />
+        </Card>
+      </PermissionGuard>
 
       {/* File History */}
       <BulletinFileHistory

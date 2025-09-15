@@ -182,128 +182,126 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
 
     return (
       <div ref={ref} className={cn("space-y-2", className)} {...props}>
-        <PermissionGuard permission="create_bulletin_file">
-          {label && (
-            <label className="text-sm font-medium text-[#374151] leading-none">
-              {label}
-            </label>
+        {label && (
+          <label className="text-sm font-medium text-[#374151] leading-none">
+            {label}
+          </label>
+        )}
+
+        <div
+          className={cn(
+            "relative border-1 border-dashed rounded-lg p-6 transition-colors",
+            dragActive && !disabled
+              ? "border-[#2354bf] bg-[#2354bf]/5"
+              : hasError
+              ? "border-[#ff5959] bg-[#ff5959]/5"
+              : hasSuccess
+              ? "border-[#10b981] bg-[#10b981]/5"
+              : "border-[#d1d5db] hover:border-[#2354bf] hover:bg-[#f9fafb]",
+            disabled && "opacity-50 cursor-not-allowed"
           )}
-
-          <div
-            className={cn(
-              "relative border-1 border-dashed rounded-lg p-6 transition-colors",
-              dragActive && !disabled
-                ? "border-[#2354bf] bg-[#2354bf]/5"
-                : hasError
-                ? "border-[#ff5959] bg-[#ff5959]/5"
-                : hasSuccess
-                ? "border-[#10b981] bg-[#10b981]/5"
-                : "border-[#d1d5db] hover:border-[#2354bf] hover:bg-[#f9fafb]",
-              disabled && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            {!hasFiles ? (
-              <div
-                className="text-center"
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-              >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept={accept}
-                  multiple={multiple}
-                  onChange={handleInputChange}
-                  disabled={disabled}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                />
-                <Upload className="mx-auto h-8 w-8 text-[#6b7280] mb-2" />
-                <p className="text-sm text-[#374151] mb-1">
-                  <span className="font-medium text-[#2354bf]">
-                    Fayl tanlash uchun bosing
-                  </span>{" "}
-                  yoki fayllarni bu yerga sudrab keling
-                </p>
-                <p className="text-xs text-[#6b7280]">
-                  {accept && `Qo'llab-quvvatlanadigan formatlar: ${accept}`}
-                  {maxSize && ` • Maksimal hajm: ${maxSize}MB`}
-                  {multiple && maxFiles && ` • ${maxFiles} tagacha fayl`}
+        >
+          {!hasFiles ? (
+            <div
+              className="text-center"
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                accept={accept}
+                multiple={multiple}
+                onChange={handleInputChange}
+                disabled={disabled}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+              />
+              <Upload className="mx-auto h-8 w-8 text-[#6b7280] mb-2" />
+              <p className="text-sm text-[#374151] mb-1">
+                <span className="font-medium text-[#2354bf]">
+                  Fayl tanlash uchun bosing
+                </span>{" "}
+                yoki fayllarni bu yerga sudrab keling
+              </p>
+              <p className="text-xs text-[#6b7280]">
+                {accept && `Qo'llab-quvvatlanadigan formatlar: ${accept}`}
+                {maxSize && ` • Maksimal hajm: ${maxSize}MB`}
+                {multiple && maxFiles && ` • ${maxFiles} tagacha fayl`}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-sm font-medium text-[#374151] mb-3">
+                  Tanlangan fayllar ({files.length})
                 </p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-[#374151] mb-3">
-                    Tanlangan fayllar ({files.length})
-                  </p>
-                </div>
 
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {files.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200"
-                    >
-                      <div className="flex items-center space-x-3">
-                        {getFileIcon(file)}
-                        <div>
-                          <p className="text-sm font-medium text-[#374151]">
-                            {truncate(file.name, { length: 30 })}
-                          </p>
-                          <p className="text-xs text-[#6b7280]">
-                            {formatFileSize(file.size)}
-                          </p>
-                        </div>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {files.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200"
+                  >
+                    <div className="flex items-center space-x-3">
+                      {getFileIcon(file)}
+                      <div>
+                        <p className="text-sm font-medium text-[#374151]">
+                          {truncate(file.name, { length: 30 })}
+                        </p>
+                        <p className="text-xs text-[#6b7280]">
+                          {formatFileSize(file.size)}
+                        </p>
                       </div>
-                      {!disabled && (
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="text-[#6b7280] hover:text-[#ff5959] transition-colors cursor-pointer p-1"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
                     </div>
-                  ))}
-                </div>
+                    {!disabled && (
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="text-[#6b7280] hover:text-[#ff5959] transition-colors cursor-pointer p-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-          {hasFiles && (
-            <div className="flex justify-center gap-3 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={disabled || isUploadingFile}
-                className="px-4"
-              >
-                Bekor qilish
-              </Button>
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                disabled={disabled || isUploadingFile || files.length === 0}
-                className="px-4 bg-[var(--primary)] hover:bg-[var(--primary)]/90"
-              >
-                {isUploadingFile ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Yuklanmoqda...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Yuklash
-                  </>
-                )}
-              </Button>
             </div>
           )}
-        </PermissionGuard>
+        </div>
+        {hasFiles && (
+          <div className="flex justify-center gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={disabled || isUploadingFile}
+              className="px-4"
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={disabled || isUploadingFile || files.length === 0}
+              className="px-4 bg-[var(--primary)] hover:bg-[var(--primary)]/90"
+            >
+              {isUploadingFile ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Yuklanmoqda...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Yuklash
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
         {hint && !hasError && !hasSuccess && !hasFiles && (
           <p className="text-xs text-[#6b7280]">{hint}</p>
