@@ -26,9 +26,7 @@ export default function LoginPage() {
           <p className="text-lg text-white/80 font-medium mb-6 max-w-xl mx-auto">
             Zamonaviy statistik axborot tizimi orqali ma'lumotlarni tez va
             ishonchli boshqarish. <br />
-            <span className="text-[#ffd700] font-semibold">
-              E-Byulleten
-            </span>{" "}
+            <span className="text-[#ffd700] font-semibold">E-Byulleten</span>
             platformasiga xush kelibsiz!
           </p>
           <div className="w-24 h-1 bg-gradient-to-r from-[#4978ce] via-[#2354bf] to-[#927be3] rounded-full mx-auto mb-2 opacity-80"></div>

@@ -83,6 +83,8 @@ export function BulletinModal({
     []
   );
 
+  console.log(bulletin);
+
   // Add errors state
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -113,14 +115,9 @@ export function BulletinModal({
     const reconstructed: SelectedMainOrg[] = [];
 
     bulletin.main_organizations_list.forEach((mainOrg) => {
-      // Find departments that belong to this main organization
-      const orgDepartments = departments.filter(
-        (dept) => dept.organization_id === mainOrg.id
+      const secondaryOrgIds = mainOrg.secondary_organizations.map(
+        (dept) => dept.id
       );
-
-      // For now, we'll include all departments of this organization
-      // In a real scenario, you might need to store which specific departments were selected
-      const secondaryOrgIds = orgDepartments.map((dept) => dept.id);
 
       reconstructed.push({
         mainOrgId: mainOrg.id,
