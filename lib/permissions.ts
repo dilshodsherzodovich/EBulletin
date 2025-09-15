@@ -84,12 +84,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "view_bulletin_file_dropbox",
     "view_bulletin_main_info",
   ],
-  OBSERVER: [
-    "view_dashboard",
-    "view_journals",
-    "view_journal_detail",
-    "view_bulletin_files",
-  ],
+  OBSERVER: ["view_journals", "view_journal_detail", "view_bulletin_files"],
 };
 
 export function hasPermission(

@@ -7,11 +7,12 @@ import { Label } from "@/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/ui/card";
 import { Eye, EyeOff, User, Lock, Loader2 } from "lucide-react";
 import { useLogin } from "@/api/hooks/use-auth";
-import { LoginCredentials } from "@/api/types/auth";
+import { LoginCredentials, LoginResponse } from "@/api/types/auth";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-
+  const router = useRouter();
   const [formData, setFormData] = useState<LoginCredentials>({
     username: "",
     password: "",
@@ -26,7 +27,15 @@ export function LoginForm() {
       return;
     }
 
-    loginMutation.mutate(formData);
+    loginMutation.mutate(formData, {
+      onSuccess: (data: LoginResponse) => {
+        if (data.user_data.role.toLowerCase() === "observer") {
+          router.push("/bulletins");
+        } else {
+          router.push("/");
+        }
+      },
+    });
   };
 
   const handleInputChange = (field: keyof LoginCredentials, value: string) => {

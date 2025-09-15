@@ -150,14 +150,13 @@ export function MultiSelect({
           style={{ zIndex: 999999 }}
         >
           {/* Search Input */}
-          <div className="flex items-center border-b border-[var(--border)]/60 px-3 py-2 bg-white">
-            <Search className="mr-2 h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
-            <Input
+          <div className="p-2 border-b border-[var(--border)]">
+            <input
+              type="text"
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="border-0 focus:ring-0 focus:ring-offset-0 px-0 mb-0 flex-1 text-sm bg-transparent h-8 min-h-0 placeholder:text-[var(--muted-foreground)] text-[var(--foreground)]"
-              autoFocus
+              className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
           </div>
 

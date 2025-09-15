@@ -184,7 +184,7 @@ export function BulletinTable({
             ) : filteredBulletins.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} className="text-center py-8">
-                  <div className="text-sm text-[var(--muted-foreground)]">
+                  <div className="text-sm whitespace-nowrap text-[var(--muted-foreground)]">
                     {hasActiveFilters
                       ? "Filtrlar bo'yicha byulletenlar topilmadi."
                       : "Byulletenlar topilmadi."}
@@ -225,25 +225,29 @@ export function BulletinTable({
                               key={mainOrg.id}
                               className="border border-[var(--border)] rounded-lg p-2 bg-[var(--muted)]/10"
                             >
-                              <div className="text-xs font-medium text-[var(--foreground)] mb-1 flex flex-wrap items-center gap-1">
-                                {mainOrg.name}:
+                              <div className="text-xs font-medium text-[var(--foreground)] mb-1">
+                                <div className="break-words leading-tight">
+                                  {mainOrg.name}:
+                                </div>
                                 {mainOrg.secondary_organizations &&
                                 mainOrg.secondary_organizations.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1">
+                                  <div className="flex flex-wrap gap-1 mt-1">
                                     {mainOrg.secondary_organizations.map(
                                       (secOrg) => (
                                         <Badge
                                           key={secOrg.id}
-                                          variant="outline"
-                                          className="text-xs px-2 py-1 border-[var(--border)] bg-white"
+                                          variant="secondary"
+                                          className="text-xs px-2 py-1 border-[var(--border)] break-words whitespace-normal"
                                         >
-                                          {secOrg.name}
+                                          <span className="break-words">
+                                            {secOrg.name}
+                                          </span>
                                         </Badge>
                                       )
                                     )}
                                   </div>
                                 ) : (
-                                  <div className="text-xs text-[var(--muted-foreground)] italic">
+                                  <div className="text-xs text-[var(--muted-foreground)] italic mt-1">
                                     Ikkinchi darajali tashkilotlar yo'q
                                   </div>
                                 )}
@@ -266,14 +270,16 @@ export function BulletinTable({
                         <Badge
                           key={emp.id}
                           variant="outline"
-                          className="text-xs px-2 py-1 border-[var(--border)] bg-[var(--primary)]/10 text-[var(--primary)]"
+                          className="text-xs px-2 py-1 border-[var(--border)] bg-[var(--primary)]/10 text-[var(--primary)] break-words"
                         >
-                          {emp.first_name} {emp.last_name}
+                          <span className="break-words">
+                            {emp.first_name} {emp.last_name}
+                          </span>
                         </Badge>
                       ))}
                       {(!bulletin.employees_list ||
                         bulletin.employees_list.length === 0) && (
-                        <div className="text-sm text-[var(--muted-foreground)] italic">
+                        <div className="text-sm whitespace-nowrap text-[var(--muted-foreground)] italic">
                           Mas'ul shaxslar tanlanmagan
                         </div>
                       )}

@@ -83,6 +83,8 @@ export function BulletinModal({
     []
   );
 
+  const [mainOrgSearchTerm, setMainOrgSearchTerm] = useState("");
+
   // Add errors state
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -513,17 +515,35 @@ export function BulletinModal({
                   onValueChange={(value) => {
                     setCurrentMainOrgId(value);
                     setCurrentSecondaryOrgs([]); // Reset secondary orgs when main org changes
+                    setMainOrgSearchTerm(""); // Clear search after selection
                   }}
                 >
                   <SelectTrigger className="w-full border-[var(--border)]">
                     <SelectValue placeholder="Asosiy tashkilotni tanlang" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getAvailableMainOrgs().map((org) => (
-                      <SelectItem key={org.id} value={org.id}>
-                        {org.name}
-                      </SelectItem>
-                    ))}
+                    <div className="max-h-60 overflow-y-auto">
+                      {getAvailableMainOrgs()
+                        .filter((org) =>
+                          org.name
+                            .toLowerCase()
+                            .includes(mainOrgSearchTerm.toLowerCase())
+                        )
+                        .map((org) => (
+                          <SelectItem key={org.id} value={org.id}>
+                            {org.name}
+                          </SelectItem>
+                        ))}
+                      {getAvailableMainOrgs().filter((org) =>
+                        org.name
+                          .toLowerCase()
+                          .includes(mainOrgSearchTerm.toLowerCase())
+                      ).length === 0 && (
+                        <div className="px-3 py-2 text-sm text-[var(--muted-foreground)]">
+                          Tashkilot topilmadi
+                        </div>
+                      )}
+                    </div>
                   </SelectContent>
                 </Select>
               </div>
