@@ -59,6 +59,8 @@ export function UserModal({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [orgSearchTerm, setOrgSearchTerm] = useState("");
+  const [deptSearchTerm, setDeptSearchTerm] = useState("");
 
   // Filter departments based on selected organization
   const filteredDepartments = useMemo(() => {
@@ -69,6 +71,23 @@ export function UserModal({
       (dept) => dept.organization_id === formData.organization
     );
   }, [formData.organization, departments?.results]);
+
+  // Filter organizations based on search term
+  const filteredOrganizations = useMemo(() => {
+    if (!organizations?.results) return [];
+    if (!orgSearchTerm) return organizations.results;
+    return organizations.results.filter((org) =>
+      org.name.toLowerCase().includes(orgSearchTerm.toLowerCase())
+    );
+  }, [organizations?.results, orgSearchTerm]);
+
+  // Filter departments based on search term
+  const filteredDepartmentsBySearch = useMemo(() => {
+    if (!deptSearchTerm) return filteredDepartments;
+    return filteredDepartments.filter((dept) =>
+      dept.name.toLowerCase().includes(deptSearchTerm.toLowerCase())
+    );
+  }, [filteredDepartments, deptSearchTerm]);
 
   useEffect(() => {
     if (mode === "edit" && user) {
@@ -95,6 +114,8 @@ export function UserModal({
       });
     }
     setErrors({});
+    setOrgSearchTerm("");
+    setDeptSearchTerm("");
   }, [mode, user, isOpen]);
 
   // Reset secondary organization when main organization changes
@@ -115,6 +136,7 @@ export function UserModal({
         }));
       }
     }
+    setDeptSearchTerm(""); // Clear department search when organization changes
   }, [
     formData.organization,
     departments?.results,
@@ -237,13 +259,14 @@ export function UserModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
-                Tashkilot
+                Tashkilot *
               </Label>
               <Select
                 value={formData.organization}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, organization: value })
-                }
+                onValueChange={(value) => {
+                  setFormData({ ...formData, organization: value });
+                  setOrgSearchTerm(""); // Clear search after selection
+                }}
               >
                 <SelectTrigger
                   className={errors.organization ? "border-red-500" : ""}
@@ -251,11 +274,28 @@ export function UserModal({
                   <SelectValue placeholder="Tashkilot tanlang" />
                 </SelectTrigger>
                 <SelectContent>
-                  {organizations?.results?.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id}>
-                      {opt.name}
-                    </SelectItem>
-                  ))}
+                  <div className="p-2 border-b border-[var(--border)]">
+                    <input
+                      type="text"
+                      placeholder="Qidirish..."
+                      value={orgSearchTerm}
+                      onChange={(e) => setOrgSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                    />
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {filteredOrganizations.length > 0 ? (
+                      filteredOrganizations.map((org) => (
+                        <SelectItem key={org.id} value={org.id}>
+                          {org.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-sm text-[var(--muted-foreground)]">
+                        Tashkilot topilmadi
+                      </div>
+                    )}
+                  </div>
                 </SelectContent>
               </Select>
               {errors.organization && (
@@ -271,9 +311,13 @@ export function UserModal({
               </Label>
               <Select
                 value={formData.secondary_organization_id}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, secondary_organization_id: value })
-                }
+                onValueChange={(value) => {
+                  setFormData({
+                    ...formData,
+                    secondary_organization_id: value,
+                  });
+                  setDeptSearchTerm(""); // Clear search after selection
+                }}
                 disabled={!formData.organization}
               >
                 <SelectTrigger
@@ -283,26 +327,38 @@ export function UserModal({
                     placeholder={
                       !formData.organization
                         ? "Avval tashkilot tanlang"
-                        : filteredDepartments.length === 0
+                        : filteredDepartmentsBySearch.length === 0
                         ? "Bu tashkilotda quyi tashkilotlar yo'q"
                         : "Quyi tashkilot tanlang"
                     }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredDepartments.length > 0 ? (
-                    filteredDepartments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-1.5 text-sm text-gray-500">
-                      {!formData.organization
-                        ? "Avval tashkilot tanlang"
-                        : "Bu tashkilotda quyi tashkilotlar yo'q"}
-                    </div>
-                  )}
+                  <div className="p-2 border-b border-[var(--border)]">
+                    <input
+                      type="text"
+                      placeholder="Qidirish..."
+                      value={deptSearchTerm}
+                      onChange={(e) => setDeptSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                      disabled={!formData.organization}
+                    />
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {filteredDepartmentsBySearch.length > 0 ? (
+                      filteredDepartmentsBySearch.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-sm text-[var(--muted-foreground)]">
+                        {!formData.organization
+                          ? "Avval tashkilot tanlang"
+                          : "Quyi tashkilot topilmadi"}
+                      </div>
+                    )}
+                  </div>
                 </SelectContent>
               </Select>
               {errors.department && (
