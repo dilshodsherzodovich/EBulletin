@@ -39,11 +39,11 @@ export function UserModal({
 }: UserModalProps) {
   const { data: organizations, isPending: isLoadingOrganizations } =
     useOrganizations({
-      page: 1,
+      no_page: true,
     });
   const { data: departments, isPending: isLoadingDepartments } = useDepartments(
     {
-      page: 1,
+      no_page: true,
     }
   );
 
