@@ -21,6 +21,7 @@ import { Bulletin } from "@/api/types/bulleten";
 import { Organization } from "@/api/types/organizations";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { PermissionGuard } from "../permission-guard";
+import { format } from "date-fns";
 
 interface BulletinTableProps {
   bulletins: Bulletin[];
@@ -158,7 +159,7 @@ export function BulletinTable({
           <TableHeader>
             <TableRow className="bg-muted/50 text-[var(--table-header-fg)] ">
               <PermissionGuard permission="delete_journal">
-                <TableHead className="w-12 p-3 ">
+                <TableHead className="w-4 p-3 ">
                   <Checkbox
                     checked={
                       selectedIds.length === filteredBulletins.length &&
@@ -168,15 +169,16 @@ export function BulletinTable({
                   />
                 </TableHead>
               </PermissionGuard>
-              <TableHead className="w-16 p-3 ">№</TableHead>
+              <TableHead className="w-8 p-3 ">№</TableHead>
               <TableHead className="p-3">Byulleten nomi</TableHead>
+              <TableHead className="p-3">Byulleten tavsifi</TableHead>
               <PermissionGuard permission="view_bulletin_main_info">
                 <TableHead className="p-3">Tashkilotlar</TableHead>
               </PermissionGuard>
               <TableHead className="p-3">Mas'ul shaxslar</TableHead>
-              <TableHead className="p-3">Muddat turi</TableHead>
               <TableHead className="p-3">Yaratilgan sana</TableHead>
-              <TableHead className="p-3">Holat</TableHead>
+              <TableHead className="p-3">Muddat turi</TableHead>
+              <TableHead className="p-3">Muddati</TableHead>
               <TableHead className="w-32 p-3">Amallar </TableHead>
             </TableRow>
           </TableHeader>
@@ -213,9 +215,14 @@ export function BulletinTable({
                   <TableCell className="font-semibold text-[var(--primary)] p-3">
                     {(currentPage - 1) * 10 + index + 1}
                   </TableCell>
-                  <TableCell className="font-medium p-3 max-w-xs">
+                  <TableCell className="font-medium p-3 max-w-lg">
                     <div className="truncate" title={bulletin.name}>
                       {bulletin.name}
+                    </div>
+                  </TableCell>
+                  <TableCell className="p-3 max-w-md">
+                    <div className="truncate" title={bulletin.description}>
+                      {bulletin.description}
                     </div>
                   </TableCell>
                   <PermissionGuard permission="view_bulletin_main_info">
@@ -287,6 +294,9 @@ export function BulletinTable({
                       )}
                     </div>
                   </TableCell>
+                  <TableCell className="p-3 text-[var(--muted-foreground)]">
+                    {format(bulletin.created, "dd.MM.yyyy")}
+                  </TableCell>
                   <TableCell className="p-3">
                     <Badge
                       variant="secondary"
@@ -296,18 +306,9 @@ export function BulletinTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {bulletin.created
-                      ? new Date(bulletin.created).toLocaleDateString("uz-UZ")
-                      : "N/A"}
+                    {format(bulletin.deadline?.current_deadline, "dd.MM.yyyy")}
                   </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant="default"
-                      className="bg-green-100 text-green-800 border-none"
-                    >
-                      Faol
-                    </Badge>
-                  </TableCell>
+
                   <TableCell className="p-3">
                     <div className="flex items-center gap-2">
                       <PermissionGuard permission="edit_journal">

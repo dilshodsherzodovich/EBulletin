@@ -38,6 +38,8 @@ export function DepartmentModal({
     organization: "",
   });
 
+  const [orgSearchTerm, setOrgSearchTerm] = useState("");
+
   const { data: organizationsData, isPending } = useOrganizations({
     no_page: true,
   });
@@ -55,6 +57,8 @@ export function DepartmentModal({
         organization: "",
       });
     }
+    // Clear search when modal opens
+    setOrgSearchTerm("");
   }, [department, mode, isOpen, organizationsData]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,6 +74,7 @@ export function DepartmentModal({
       name: "",
       organization: "",
     });
+    setOrgSearchTerm("");
     onClose();
   };
 
@@ -104,20 +109,49 @@ export function DepartmentModal({
               </Label>
               <Select
                 value={formData.organization}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, organization: value }))
-                }
+                onValueChange={(value) => {
+                  setFormData((prev) => ({ ...prev, organization: value }));
+                  setOrgSearchTerm(""); // Clear search after selection
+                }}
                 required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Tashkilot tanlang" />
                 </SelectTrigger>
                 <SelectContent>
-                  {organizationsData?.results?.map((opt) => (
-                    <SelectItem key={opt.id} value={opt.id}>
-                      {opt.name}
-                    </SelectItem>
-                  ))}
+                  <div className="p-2 border-b border-[var(--border)]">
+                    <input
+                      type="text"
+                      placeholder="Qidirish..."
+                      value={orgSearchTerm}
+                      onChange={(e) => setOrgSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                    />
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {organizationsData?.results
+                      ?.filter((org) =>
+                        org.name
+                          .toLowerCase()
+                          .includes(orgSearchTerm.toLowerCase())
+                      )
+                      ?.map((opt) => (
+                        <SelectItem key={opt.id} value={opt.id}>
+                          <span className="truncate block" title={opt.name}>
+                            {opt.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    {organizationsData?.results?.filter((org) =>
+                      org.name
+                        .toLowerCase()
+                        .includes(orgSearchTerm.toLowerCase())
+                    )?.length === 0 && (
+                      <div className="px-3 py-2 text-sm text-[var(--muted-foreground)]">
+                        Tashkilot topilmadi
+                      </div>
+                    )}
+                  </div>
                 </SelectContent>
               </Select>
             </div>

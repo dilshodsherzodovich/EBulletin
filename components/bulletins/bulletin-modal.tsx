@@ -357,7 +357,10 @@ export function BulletinModal({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 pt-4 w-full overflow-hidden"
+        >
           {/* Bulletin Name */}
           <div className="space-y-3">
             <Label
