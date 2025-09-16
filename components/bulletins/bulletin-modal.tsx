@@ -348,7 +348,7 @@ export function BulletinModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-[var(--foreground)]">
             {mode === "create"
@@ -506,7 +506,7 @@ export function BulletinModal({
               </h4>
 
               {/* Step 1: Select Main Organization */}
-              <div className="space-y-3 mb-4">
+              <div className="space-y-3 mb-4 w-[100%]">
                 <Label className="text-sm font-medium text-[var(--foreground)]">
                   1. Asosiy tashkilotni tanlang
                 </Label>
@@ -522,6 +522,15 @@ export function BulletinModal({
                     <SelectValue placeholder="Asosiy tashkilotni tanlang" />
                   </SelectTrigger>
                   <SelectContent>
+                    <div className="p-2 border-b border-[var(--border)]">
+                      <input
+                        type="text"
+                        placeholder="Qidirish..."
+                        value={mainOrgSearchTerm}
+                        onChange={(e) => setMainOrgSearchTerm(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                      />
+                    </div>
                     <div className="max-h-60 overflow-y-auto">
                       {getAvailableMainOrgs()
                         .filter((org) =>
