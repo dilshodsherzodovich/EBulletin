@@ -38,7 +38,9 @@ export function DepartmentModal({
     organization: "",
   });
 
-  const { data: organizationsData, isPending } = useOrganizations({ page: 1 });
+  const { data: organizationsData, isPending } = useOrganizations({
+    no_page: true,
+  });
 
   // Initialize form data when modal opens, department changes, or organizations load
   useEffect(() => {
