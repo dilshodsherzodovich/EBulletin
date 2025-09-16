@@ -169,6 +169,7 @@ export default function DepartmentsPage() {
           totalPages={departmentsList?.count || 1}
           currentPage={page}
           onPageChange={setPage}
+          totalItems={departmentsList?.count || 0}
         />
       </Card>
 

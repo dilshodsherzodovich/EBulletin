@@ -17,7 +17,7 @@ export const authService = {
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
     localStorage.removeItem("auth_expiry");
-    window.location.reload();
+    window.location.href = "/login";
   },
 
   isAuthenticated: (): boolean => {

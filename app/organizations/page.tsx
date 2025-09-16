@@ -192,6 +192,7 @@ export default function OrganizationsPage() {
         totalPages={organizationsList?.count || 1}
         currentPage={page}
         onPageChange={setPage}
+        totalItems={organizationsList?.count || 0}
       />
 
       <OrganizationModal

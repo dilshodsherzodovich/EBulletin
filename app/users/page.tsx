@@ -144,6 +144,7 @@ export default function UsersPage() {
         totalPages={usersList?.count || 1}
         currentPage={page}
         onPageChange={setPage}
+        totalItems={usersList?.count || 0}
       />
 
       <UserModal

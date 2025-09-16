@@ -214,6 +214,7 @@ export default function BulletinsPage() {
         periodTypeFilter={periodTypeFilter}
         onPeriodTypeChange={setPeriodTypeFilter}
         onClearFilters={handleClearFilters}
+        totalItems={bulletins?.count || 0}
       />
 
       <BulletinModal

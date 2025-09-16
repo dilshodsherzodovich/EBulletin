@@ -36,6 +36,7 @@ interface UserTableProps {
   totalPages: number;
   currentPage: number;
   onPageChange: (page: number) => void;
+  totalItems?: number;
 }
 
 export function UserTable({
@@ -50,6 +51,7 @@ export function UserTable({
   totalPages,
   currentPage,
   onPageChange,
+  totalItems,
 }: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState(""); // Added search state
   const [roleFilter, setRoleFilter] = useState("all");
@@ -242,6 +244,7 @@ export function UserTable({
                 currentPage={currentPage}
                 totalPages={getPageCount(totalPages, 10)}
                 onPageChange={onPageChange}
+                totalItems={totalItems}
               />
             </div>
           )}

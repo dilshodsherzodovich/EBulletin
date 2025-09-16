@@ -2,6 +2,7 @@ import { User, LogOut, Bell, Settings } from "lucide-react";
 import { Button } from "@/ui/button";
 import { AccountPopover } from "./account-popover";
 import { UserData } from "@/api/types/auth";
+import { authService } from "@/api/services/auth.service";
 
 interface HeaderProps {
   user: UserData;
@@ -32,7 +33,7 @@ export function Header({ user }: HeaderProps) {
         </Button> */}
 
         {/* User avatar and name popover */}
-        <AccountPopover user={user!} />
+        <AccountPopover user={user!} onLogout={authService.logout} />
         {/* 
         <Button
           variant="ghost"

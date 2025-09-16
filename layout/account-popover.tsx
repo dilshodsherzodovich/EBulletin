@@ -9,7 +9,6 @@ import {
   DropdownMenuSeparator,
 } from "@/ui/dropdown-menu";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { UserData } from "@/api/types/auth";
 
 interface AccountPopoverProps {
@@ -25,25 +24,11 @@ export function AccountPopover({
   onSettings,
   onLogout,
 }: AccountPopoverProps) {
-  const router = useRouter();
-
   const handleLogout = () => {
-    // Clear any stored authentication data
-    localStorage.removeItem("auth_expiry");
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user");
-
-    // Call the onLogout callback if provided
     if (onLogout) {
       onLogout();
     }
-
-    // Redirect to login page
-    router.push("/login");
   };
-
-  console.log(user);
 
   return (
     <DropdownMenu>

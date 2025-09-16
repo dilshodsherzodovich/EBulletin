@@ -36,6 +36,7 @@ interface OrganizationTableProps {
   totalPages: number;
   currentPage: number;
   onPageChange: (page: number) => void;
+  totalItems?: number;
 }
 
 export function OrganizationTable({
@@ -50,6 +51,7 @@ export function OrganizationTable({
   totalPages,
   currentPage,
   onPageChange,
+  totalItems,
 }: OrganizationTableProps) {
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -173,6 +175,7 @@ export function OrganizationTable({
               currentPage={currentPage}
               totalPages={getPageCount(totalPages, 10)}
               onPageChange={onPageChange}
+              totalItems={totalItems}
             />
           </div>
         )}

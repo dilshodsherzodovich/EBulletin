@@ -44,6 +44,7 @@ interface BulletinTableProps {
   periodTypeFilter: string;
   onPeriodTypeChange: (value: string) => void;
   onClearFilters: () => void;
+  totalItems?: number;
 }
 
 // Deadline type mapping to Uzbek labels
@@ -83,6 +84,7 @@ export function BulletinTable({
   onOrganizationChange,
   onPeriodTypeChange,
   onClearFilters,
+  totalItems,
 }: BulletinTableProps) {
   const filteredBulletins = bulletins.filter((bulletin) => {
     const matchesSearch = bulletin.name
@@ -364,6 +366,7 @@ export function BulletinTable({
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={onPageChange}
+            totalItems={totalItems}
           />
         </div>
       )}

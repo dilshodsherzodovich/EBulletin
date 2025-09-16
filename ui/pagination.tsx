@@ -21,6 +21,7 @@ interface PaginationProps {
   lastLabel?: string;
   className?: string;
   disabled?: boolean;
+  totalItems?: number;
 }
 
 function Pagination({
@@ -31,8 +32,15 @@ function Pagination({
   maxVisiblePages = 5,
   className,
   disabled = false,
+  totalItems,
 }: PaginationProps) {
   if (totalPages <= 1) return null;
+
+  const getResultsRange = () => {
+    const start = currentPage * 10 - 9;
+    const end = totalItems ? Math.min(start + 9, totalItems) : start + 9;
+    return `${start} - ${end}`;
+  };
 
   const getVisiblePages = () => {
     const pages: (number | string)[] = [];
@@ -80,8 +88,19 @@ function Pagination({
       role="navigation"
       aria-label="pagination"
       data-slot="pagination"
-      className={cn("mx-auto flex w-full justify-center mt-4", className)}
+      className={cn(
+        "mx-auto flex w-full justify-between items-center mt-4",
+        className
+      )}
     >
+      <div className="text-sm text-gray-500">
+        {totalItems && (
+          <span>
+            {totalItems} ta natijadan{" "}
+            <span className="font-bold text-primary">{getResultsRange()}</span>
+          </span>
+        )}
+      </div>
       <ul className="flex flex-row items-center gap-1">
         {/* Previous button */}
         {showPreviousNext && currentPage > 1 && (

@@ -33,6 +33,7 @@ interface DepartmentTableProps {
   totalPages: number;
   currentPage: number;
   onPageChange: (page: number) => void;
+  totalItems?: number;
 }
 
 export function DepartmentTable({
@@ -45,6 +46,7 @@ export function DepartmentTable({
   totalPages,
   currentPage,
   onPageChange,
+  totalItems,
 }: DepartmentTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -172,6 +174,7 @@ export function DepartmentTable({
                 currentPage={currentPage}
                 totalPages={getPageCount(totalPages, 10)}
                 onPageChange={onPageChange}
+                totalItems={totalItems}
               />
             </div>
           )}
