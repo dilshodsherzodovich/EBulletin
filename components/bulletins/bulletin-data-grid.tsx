@@ -157,7 +157,7 @@ export function BulletinDataGrid({
 }: BulletinDataGridProps) {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [rowToDelete, setRowToDelete] = useState<string | null>(null);
-  const [editingRows, setEditingRows] = useState<Set<string>>(new Set());
+  const [editingRow, setEditingRow] = useState<string | null>(null);
   const [tempRowData, setTempRowData] = useState<
     Record<string, Record<string, string>>
   >({});
@@ -168,8 +168,7 @@ export function BulletinDataGrid({
     [columns]
   );
 
-  // Check if any row is currently being edited
-  const hasActiveEditingRow = editingRows.size > 0;
+  console.log(editingRow);
 
   // Memoize handleEditRow to prevent infinite loops
   const handleEditRow = useCallback(
@@ -188,20 +187,35 @@ export function BulletinDataGrid({
         ...prev,
         [rowId]: initialTempData,
       }));
-      setEditingRows((prev) => new Set(prev).add(rowId));
+      setEditingRow(rowId);
     },
     [rows, sortedColumns]
   );
 
-  // Auto-edit newly added rows (temp rows) - Fixed dependency issue
+  // Remove the auto-edit useEffect completely
+  // useEffect(() => {
+  //   const tempRows = rows.filter((row) => row.id.startsWith("temp-"));
+  //   tempRows.forEach((tempRow) => {
+  //     if (editingRow !== tempRow.id) {
+  //       handleEditRow(tempRow.id);
+  //     }
+  //   });
+  // }, [rows, editingRow, handleEditRow]);
+
+  // Track previous rows length to detect new additions
+  const [prevRowsLength, setPrevRowsLength] = useState(rows.length);
+
+  // Auto-edit newly added temp rows
   useEffect(() => {
-    const tempRows = rows.filter((row) => row.id.startsWith("temp-"));
-    tempRows.forEach((tempRow) => {
-      if (!editingRows.has(tempRow.id)) {
-        handleEditRow(tempRow.id);
+    if (rows.length > prevRowsLength) {
+      const tempRows = rows.filter((row) => row.id.startsWith("temp-"));
+      if (tempRows.length > 0 && !editingRow) {
+        const lastTempRow = tempRows[tempRows.length - 1];
+        handleEditRow(lastTempRow.id);
       }
-    });
-  }, [rows, editingRows, handleEditRow]);
+    }
+    setPrevRowsLength(rows.length);
+  }, [rows.length, editingRow, handleEditRow, prevRowsLength]);
 
   // Get cell value for a specific row and column
   const getCellValue = (row: BulletinRow, columnId: string) => {
@@ -213,13 +227,6 @@ export function BulletinDataGrid({
     return tempRowData[rowId]?.[columnId] || "";
   };
 
-  // Check if row has any values (for save button state)
-  const hasRowData = (row: BulletinRow) => {
-    return Object.values(row.values || {}).some(
-      (value) => value !== "" && value !== null && value !== undefined
-    );
-  };
-
   // Check if row is loading
   const isRowLoading = (rowId: string) => {
     return loadingRows.has(rowId);
@@ -227,7 +234,7 @@ export function BulletinDataGrid({
 
   // Check if row is in edit mode
   const isRowEditing = (rowId: string) => {
-    return editingRows.has(rowId);
+    return editingRow === rowId;
   };
 
   const handleTempValueChange = (
@@ -267,26 +274,22 @@ export function BulletinDataGrid({
     // Then save with the updated values
     onSaveRow(rowId, updatedValues);
 
-    // Clear states immediately after save action
-    clearRowStates(rowId);
-  };
-
-  // Function to clear row states
-  const clearRowStates = useCallback((rowId: string) => {
+    // Clear editing state
+    setEditingRow(null);
     setTempRowData((prev) => {
       const newData = { ...prev };
       delete newData[rowId];
       return newData;
     });
-    setEditingRows((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(rowId);
-      return newSet;
-    });
-  }, []);
+  };
 
   const handleCancelEdit = (rowId: string) => {
-    clearRowStates(rowId);
+    setEditingRow(null);
+    setTempRowData((prev) => {
+      const newData = { ...prev };
+      delete newData[rowId];
+      return newData;
+    });
   };
 
   const handleDeleteClick = (rowId: string) => {
@@ -297,8 +300,15 @@ export function BulletinDataGrid({
   const confirmDelete = () => {
     if (rowToDelete) {
       onDeleteRow(rowToDelete);
-      // Clear states after delete
-      clearRowStates(rowToDelete);
+      // Clear editing state if the deleted row was being edited
+      if (editingRow === rowToDelete) {
+        setEditingRow(null);
+        setTempRowData((prev) => {
+          const newData = { ...prev };
+          delete newData[rowToDelete];
+          return newData;
+        });
+      }
       setRowToDelete(null);
       setShowDeleteConfirmation(false);
     }
@@ -430,8 +440,8 @@ export function BulletinDataGrid({
                 </TableRow>
               ))
             )}
-            {/* Add Row Button Row - Only show when no rows are being edited */}
-            {!hasActiveEditingRow && (
+            {/* Add Row Button Row - Only show when no row is being edited */}
+            {!editingRow && (
               <TableRow className="border-t-2 border-dashed border-gray-300">
                 <TableCell className="sticky left-0 bg-white z-10">
                   <PermissionGuard permission="create_journal_row">
