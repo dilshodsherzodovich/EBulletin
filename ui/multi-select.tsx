@@ -104,11 +104,13 @@ export function MultiSelect({
         disabled={disabled}
         onClick={handleTriggerClick}
         onKeyDown={(e) => {
+          e.stopPropagation();
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             setOpen(!open);
           }
         }}
+        onKeyUp={(e) => e.stopPropagation()}
       >
         <div className="flex flex-wrap gap-1 flex-1 min-w-0">
           {selectedOptions.length === 0 ? (

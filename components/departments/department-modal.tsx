@@ -124,6 +124,8 @@ export function DepartmentModal({
                       type="text"
                       placeholder="Qidirish..."
                       value={orgSearchTerm}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      onKeyUp={(e) => e.stopPropagation()}
                       onChange={(e) => setOrgSearchTerm(e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                     />

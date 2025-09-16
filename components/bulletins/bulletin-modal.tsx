@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Plus, Check } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
@@ -307,10 +307,10 @@ export function BulletinModal({
     );
   };
 
-  const getAvailableMainOrgs = () => {
+  const availableMainOrgs = useMemo(() => {
     const selectedIds = selectedMainOrgs.map((org) => org.mainOrgId);
     return organizations?.filter((org) => !selectedIds.includes(org.id)) || [];
-  };
+  }, [selectedMainOrgs, organizations]);
 
   const getCurrentSecondaryOrgs = () => {
     if (!currentMainOrgId) return [];
@@ -517,8 +517,8 @@ export function BulletinModal({
                   value={currentMainOrgId}
                   onValueChange={(value) => {
                     setCurrentMainOrgId(value);
-                    setCurrentSecondaryOrgs([]); // Reset secondary orgs when main org changes
-                    setMainOrgSearchTerm(""); // Clear search after selection
+                    setCurrentSecondaryOrgs([]);
+                    setMainOrgSearchTerm("");
                   }}
                 >
                   <SelectTrigger className="w-full border-[var(--border)]">
@@ -531,11 +531,13 @@ export function BulletinModal({
                         placeholder="Qidirish..."
                         value={mainOrgSearchTerm}
                         onChange={(e) => setMainOrgSearchTerm(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        onKeyUp={(e) => e.stopPropagation()}
                         className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                       />
                     </div>
                     <div className="max-h-60 overflow-y-auto">
-                      {getAvailableMainOrgs()
+                      {availableMainOrgs
                         .filter((org) =>
                           org.name
                             .toLowerCase()
@@ -546,7 +548,7 @@ export function BulletinModal({
                             {org.name}
                           </SelectItem>
                         ))}
-                      {getAvailableMainOrgs().filter((org) =>
+                      {availableMainOrgs.filter((org) =>
                         org.name
                           .toLowerCase()
                           .includes(mainOrgSearchTerm.toLowerCase())
