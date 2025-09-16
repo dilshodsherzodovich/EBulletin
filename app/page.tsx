@@ -40,6 +40,7 @@ import {
 } from "recharts";
 import { useMonitoring } from "@/api/hooks/use-monitoring";
 import { MonitoringOrganization } from "@/api/types/monitoring";
+import { Table, TableBody, TableHead } from "@/ui/table";
 
 interface StatusData {
   onTime: number;
@@ -126,52 +127,6 @@ export default function MonitoringPage() {
       overdue: org.missed_count,
       updatedAfterDeadline: org.late_count,
     })) || [];
-
-  const [chancelleryData] = useState<ChancelleryData[]>([
-    {
-      organization:
-        "Makroiqtisodiy ko'rsatkichlar va milliy hisoblar boshqarmasi",
-      total: 5,
-      totalOrganizations: 12,
-      sentToOrganizations: 10,
-      percentage: 83,
-      bulletins: [
-        { name: "Byulleten 1", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 2", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 3", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 4", total: 2, sent: 0, percentage: 0 },
-        { name: "Byulleten 5", total: 1, sent: 1, percentage: 100 },
-      ],
-    },
-    {
-      organization: "Sanoat va energetika statistikasi boshqarmasi",
-      total: 5,
-      totalOrganizations: 12,
-      sentToOrganizations: 10,
-      percentage: 83,
-      bulletins: [
-        { name: "Byulleten 1", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 2", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 3", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 4", total: 2, sent: 0, percentage: 0 },
-        { name: "Byulleten 5", total: 1, sent: 1, percentage: 100 },
-      ],
-    },
-    {
-      organization: "Qishloq xo'jaligi va atrof-muhit statistikasi boshqarmasi",
-      total: 5,
-      totalOrganizations: 12,
-      sentToOrganizations: 10,
-      percentage: 83,
-      bulletins: [
-        { name: "Byulleten 1", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 2", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 3", total: 3, sent: 3, percentage: 100 },
-        { name: "Byulleten 4", total: 2, sent: 0, percentage: 0 },
-        { name: "Byulleten 5", total: 1, sent: 1, percentage: 100 },
-      ],
-    },
-  ]);
 
   // Chart data preparation
   const pieChartData = [
@@ -611,22 +566,22 @@ export default function MonitoringPage() {
           <table className="w-full">
             <thead className="bg-[var(--muted)]/50">
               <tr>
-                <th className="text-left p-4 font-semibold text-[var(--foreground)]">
+                <th className="text-left text-lg text-primary p-4 font-semibold uppercase">
                   Tashkilot nomi
                 </th>
-                <th className="text-center p-4 font-semibold text-[var(--foreground)]">
+                <th className="text-center text-lg text-primary p-4 font-semibold">
                   Jami
                 </th>
-                <th className="text-center p-4 font-semibold text-[var(--foreground)]">
+                <th className="text-center text-lg text-primary p-4 font-semibold">
                   Yangilangan
                 </th>
-                <th className="text-center p-4 font-semibold text-[var(--foreground)]">
+                <th className="text-center text-lg text-primary p-4 font-semibold">
                   Kutilmoqda
                 </th>
-                <th className="text-center p-4 font-semibold text-[var(--foreground)]">
+                <th className="text-center text-lg text-primary p-4 font-semibold">
                   Muddati o'tgan
                 </th>
-                <th className="text-center p-4 font-semibold text-[var(--foreground)]">
+                <th className="text-center text-lg text-primary p-4 font-semibold">
                   Muddati o'tib yangilangan
                 </th>
               </tr>
@@ -637,7 +592,7 @@ export default function MonitoringPage() {
                   key={index}
                   className="border-b border-[var(--border)] hover:bg-[var(--muted)]/20 transition-colors"
                 >
-                  <td className="p-4 font-medium text-[var(--foreground)]">
+                  <td className="p-4 font-medium text-[var(--foreground)] text-[14px]">
                     {item.organization}
                   </td>
                   <td className="text-center p-4">
