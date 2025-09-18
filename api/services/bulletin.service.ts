@@ -3,6 +3,7 @@ import {
   BulletinCreateBody,
   BulletinCreateRow,
   BulletinFile,
+  BulletinFileUpdateRequest,
   BulletinRow,
 } from "../types/bulleten";
 import api from "@/api/axios";
@@ -99,6 +100,28 @@ export const bulletinService = {
       throw error;
     }
   },
+
+  updateBulletinFile: async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: BulletinFileUpdateRequest;
+  }): Promise<void> => {
+    try {
+      const formData = new FormData();
+      if (data.upload_file) {
+        formData.append("upload_file", data.upload_file as File);
+      }
+      formData.append("editable", data.editable.toString());
+      await api.patch(`/journal-upload/only-permitted/${id}/`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    } catch (error) {
+      console.error("Error updating bulletin file:", error);
+      throw error;
+    }
+  },
 };
 
 export const bulletinRowService = {
@@ -124,6 +147,7 @@ export const bulletinRowService = {
         `/journal/row/${id}/`,
         body
       );
+
       return response.data;
     } catch (error) {
       console.error("Error updating bulletin row:", error);

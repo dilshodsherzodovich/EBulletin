@@ -4,7 +4,11 @@ import {
   bulletinService,
 } from "../services/bulletin.service";
 import { queryKeys } from "../querykey";
-import { BulletinCreateBody, BulletinCreateRow } from "../types/bulleten";
+import {
+  BulletinCreateBody,
+  BulletinCreateRow,
+  BulletinFileUpdateRequest,
+} from "../types/bulleten";
 
 export const useBulletin = (params: { page: number }) => {
   return useQuery({
@@ -104,6 +108,26 @@ export const useCreateBulletinFile = () => {
   return useMutation({
     mutationFn: ({ id, upload_file }: { id: string; upload_file: File }) => {
       return bulletinService.createBulletinFile(id, upload_file);
+    },
+  });
+};
+
+export const useUpdateBulletinFile = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: BulletinFileUpdateRequest;
+    }) => {
+      return bulletinService.updateBulletinFile({ id, data });
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.bulletins.detail(id)],
+      });
     },
   });
 };

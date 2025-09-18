@@ -9,6 +9,7 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Edit,
 } from "lucide-react";
 import { Badge } from "@/ui/badge";
 import {
@@ -21,10 +22,15 @@ import {
 } from "@/ui/table";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
-import { BulletinFile } from "@/api/types/bulleten";
+import { BulletinFile, BulletinFileUpdateRequest } from "@/api/types/bulleten";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { PermissionGuard } from "../permission-guard";
 import { getFileName } from "@/lib/utils";
+import { useUpdateBulletinFile } from "@/api/hooks/use-bulletin";
+import { useToast } from "@/hooks/use-toast";
+import { useSnackbar } from "@/providers/snackbar-provider";
+import { LoadingButton } from "@/ui/loading-button";
+import { BulletinFileUploadModal } from "./bulletin-file-upload-modal";
 
 interface BulletinFileHistoryProps {
   files: BulletinFile[];
@@ -115,6 +121,14 @@ export function BulletinFileHistory({
   isLoading,
   onDownload,
 }: BulletinFileHistoryProps) {
+  const { mutate: updateBulletinFile, isPending } = useUpdateBulletinFile();
+  const { showSuccess, showError } = useSnackbar();
+
+  // Modal state
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedFileForEdit, setSelectedFileForEdit] =
+    useState<BulletinFile | null>(null);
+
   if (isLoading) {
     return (
       <Card className="p-4">
@@ -129,111 +143,219 @@ export function BulletinFileHistory({
     );
   }
 
-  return (
-    <Card className="p-4">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Yuklangan fayllar</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Bulletin uchun yuklangan fayllar tarixi
-        </p>
-      </div>
+  const handleGiveAccessToEditBulletinFile = (
+    id: string,
+    editable: boolean
+  ) => {
+    updateBulletinFile(
+      {
+        id,
+        data: { editable },
+      },
+      {
+        onSuccess: () => {
+          showSuccess("Fayl tahrirlash ruxsat berildi");
+        },
+        onError: () => {
+          showError("Fayl tahrirlash ruxsat berishda xatolik");
+        },
+      }
+    );
+  };
 
-      <div className="overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50 text-[var(--table-header-fg)]">
-              <TableHead className="w-16 p-3">№</TableHead>
-              <TableHead className="p-3">Fayl nomi</TableHead>
-              <TableHead className="p-3">Foydalanuvchi</TableHead>
-              <TableHead className="p-3">Yuklangan sana</TableHead>
-              <TableHead className="p-3">Muddat</TableHead>
-              <TableHead className="p-3">Holat</TableHead>
-              <TableHead className="w-24 p-3">Amallar</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {files.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <div className="text-sm text-[var(--muted-foreground)]">
-                    Hali hech qanday fayl yuklanmagan
-                  </div>
-                </TableCell>
+  const handleUpdateBulletinFile = (id: string, upload_file: File) => {
+    updateBulletinFile(
+      { id, data: { editable: false, upload_file } },
+      {
+        onSuccess: () => {
+          showSuccess("Yangi fayl muvaffaqiyatli yuklandi");
+          setIsUploadModalOpen(false);
+          setSelectedFileForEdit(null);
+        },
+        onError: () => {
+          showError("Yangi fayl yuklashda xatolik");
+        },
+      }
+    );
+  };
+
+  const handleEditFileClick = (file: BulletinFile) => {
+    setSelectedFileForEdit(file);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsUploadModalOpen(false);
+    setSelectedFileForEdit(null);
+  };
+
+  const handleFileUpload = (file: File) => {
+    if (selectedFileForEdit) {
+      handleUpdateBulletinFile(selectedFileForEdit.id, file);
+    }
+  };
+
+  return (
+    <>
+      <Card className="p-4">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Yuklangan fayllar</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Bulletin uchun yuklangan fayllar tarixi
+          </p>
+        </div>
+
+        <PermissionGuard permission="give_access_to_edit_bulletin_file">
+          <Button variant="outline" size="icon">
+            <Edit className="h-4 w-4 text-[var(--primary)]" />
+            Faylni tahrirlash
+          </Button>
+        </PermissionGuard>
+
+        <div className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 text-[var(--table-header-fg)]">
+                <TableHead className="w-16 p-3">№</TableHead>
+                <TableHead className="p-3">Fayl nomi</TableHead>
+                <TableHead className="p-3">Foydalanuvchi</TableHead>
+                <TableHead className="p-3">Yuklangan sana</TableHead>
+                <TableHead className="p-3">Muddat</TableHead>
+                <TableHead className="p-3">Holat</TableHead>
+                <TableHead className="p-3">Tahrir holati</TableHead>
+                <TableHead className="w-24 p-3">Amallar</TableHead>
               </TableRow>
-            ) : (
-              files.map((file, index) => (
-                <TableRow
-                  key={file.id}
-                  className="transition-colors hover:bg-muted/50"
-                >
-                  <TableCell className="font-semibold text-[var(--primary)] p-3">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center space-x-3">
-                      {getFileIcon(file.upload_file || "unknown")}
-                      <div>
-                        <div className="font-medium text-[var(--foreground)]">
-                          {getFileName(file.upload_file || "")}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div>
-                      <div className="font-medium text-[var(--foreground)]">
-                        {file.user_info.full_name}
-                      </div>
-                      <div className="text-sm text-[var(--muted-foreground)]">
-                        @{file.user_info.username}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {formatDate(file.upload_at)}
-                  </TableCell>
-                  <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {formatDate(file.deadline)}
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <Badge
-                      variant={getStatusVariant(file.status)}
-                      className={`${getStatusColor(file.status)} border-none`}
-                    >
-                      <div className="flex items-center space-x-1">
-                        {file.status === "on_time" && (
-                          <CheckCircle className="h-3 w-3" />
-                        )}
-                        {file.status === "late" && (
-                          <AlertCircle className="h-3 w-3" />
-                        )}
-                        {file.status === "not_submitted" && (
-                          <Clock className="h-3 w-3" />
-                        )}
-                        <span>{getStatusLabel(file.status)}</span>
-                      </div>
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="p-3">
-                    <div className="flex items-center justify-center">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => onDownload(file)}
-                        disabled={!file.upload_file}
-                        className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10 disabled:opacity-50"
-                        aria-label="Yuklab olish"
-                      >
-                        <Download className="h-4 w-4 text-[var(--primary)]" />
-                      </Button>
+            </TableHeader>
+            <TableBody>
+              {files.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <div className="text-sm text-[var(--muted-foreground)]">
+                      Hali hech qanday fayl yuklanmagan
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </Card>
+              ) : (
+                files.map((file, index) => (
+                  <TableRow
+                    key={file.id}
+                    className="transition-colors hover:bg-muted/50"
+                  >
+                    <TableCell className="font-semibold text-[var(--primary)] p-3">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center space-x-3">
+                        {getFileIcon(file.upload_file || "unknown")}
+                        <div>
+                          <div className="font-medium text-[var(--foreground)]">
+                            {getFileName(file.upload_file || "")}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div>
+                        <div className="font-medium text-[var(--foreground)]">
+                          {file.user_info.full_name}
+                        </div>
+                        <div className="text-sm text-[var(--muted-foreground)]">
+                          @{file.user_info.username}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="p-3 text-[var(--muted-foreground)]">
+                      {formatDate(file.upload_at)}
+                    </TableCell>
+                    <TableCell className="p-3 text-[var(--muted-foreground)]">
+                      {formatDate(file.deadline)}
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <Badge
+                        variant={getStatusVariant(file.status)}
+                        className={`${getStatusColor(file.status)} border-none`}
+                      >
+                        <div className="flex items-center space-x-1">
+                          {file.status === "on_time" && (
+                            <CheckCircle className="h-3 w-3" />
+                          )}
+                          {file.status === "late" && (
+                            <AlertCircle className="h-3 w-3" />
+                          )}
+                          {file.status === "not_submitted" && (
+                            <Clock className="h-3 w-3" />
+                          )}
+                          <span>{getStatusLabel(file.status)}</span>
+                        </div>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <Badge variant="outline" className="border-none">
+                        <span>
+                          {file.editable ? "Tahrirlash" : "Tahrirlash yo'q"}
+                        </span>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <div className="flex items-center justify-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onDownload(file)}
+                          disabled={!file.upload_file}
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10 disabled:opacity-50"
+                          aria-label="Yuklab olish"
+                        >
+                          <Download className="h-4 w-4 text-[var(--primary)]" />
+                        </Button>
+
+                        <PermissionGuard permission="give_access_to_edit_bulletin_file">
+                          <LoadingButton
+                            isPending={isPending}
+                            onClick={() => {
+                              handleGiveAccessToEditBulletinFile(
+                                file.id,
+                                !file.editable
+                              );
+                            }}
+                            disabled={!file.upload_file}
+                            variant={file.editable ? "destructive" : "default"}
+                            size="sm"
+                          >
+                            {!file.editable
+                              ? "Tahrirlash ruxsat berish"
+                              : "Tahrirlashni bekor qilish"}
+                          </LoadingButton>
+                        </PermissionGuard>
+
+                        {file.editable && (
+                          <PermissionGuard permission="edit_bulletin_file">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEditFileClick(file)}
+                            >
+                              <Edit className="h-4 w-4 text-[var(--primary)]" />
+                            </Button>
+                          </PermissionGuard>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
+
+      <BulletinFileUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={handleModalClose}
+        onUpload={handleFileUpload}
+        file={selectedFileForEdit}
+        isUploading={isPending}
+      />
+    </>
   );
 }

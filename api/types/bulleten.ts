@@ -80,9 +80,16 @@ export interface BulletinFile {
   upload_file: string | null;
   upload_at: string;
   deadline: string;
+  editable: boolean;
   user_info: {
     id: string;
     username: string;
     full_name: string;
   };
+}
+
+export interface BulletinFileUpdateRequest {
+  editable: boolean;
+  journal?: string;
+  upload_file?: File;
 }

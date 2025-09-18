@@ -29,6 +29,8 @@ export type Permission =
   | "view_bulletin_main_info"
   | "view_bulletin_file_dropbox"
   | "view_bulletin_files"
+  | "give_access_to_edit_bulletin_file"
+  | "edit_bulletin_file"
   | "view_journal_structure"
   | "create_journal_structure"
   | "edit_journal_structure"
@@ -73,6 +75,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "view_bulletin_table",
     "view_bulletin_files",
     "view_bulletin_main_info",
+    "give_access_to_edit_bulletin_file",
   ],
   MODERATOR: [
     "view_dashboard",
@@ -81,6 +84,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "create_bulletin_file",
     "view_bulletin_files",
     "delete_bulletin_file",
+    "edit_bulletin_file",
     "view_bulletin_file_dropbox",
     "view_bulletin_main_info",
   ],
