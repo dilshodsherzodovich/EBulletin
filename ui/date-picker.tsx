@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { uz } from "date-fns/locale";
 import { CalendarIcon, AlertCircle, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
@@ -21,6 +21,7 @@ export interface DatePickerProps {
   className?: string;
   minDate?: Date;
   maxDate?: Date;
+  size?: "sm" | "md" | "lg";
 }
 
 const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
@@ -37,6 +38,7 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
       className,
       minDate,
       maxDate,
+      size = "md",
       ...props
     },
     ref
@@ -56,21 +58,22 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <Button
+              size={size}
               variant="outline"
               className={cn(
-                "w-full h-12 justify-start text-left font-normal",
+                "w-full justify-start text-left font-normal",
                 !value && "text-[#9ca3af]",
                 hasError
                   ? "border-[#ff5959] focus:ring-2 focus:ring-[#ff5959]/20"
                   : hasSuccess
                   ? "border-[#10b981] focus:ring-2 focus:ring-[#10b981]/20"
-                  : "border-[#d1d5db] focus:ring-2 focus:ring-[#2354bf]/20"
+                  : "border-[#d1d5db]"
               )}
               disabled={disabled}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {value
-                ? format(value, "dd MMMM yyyy", { locale: ru })
+                ? format(value, "dd.MM.yyyy", { locale: uz })
                 : placeholder}
               <div className="ml-auto flex items-center space-x-1">
                 {hasError && <AlertCircle className="h-4 w-4 text-[#ff5959]" />}
@@ -80,7 +83,11 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
               </div>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent
+            className="w-auto p-0 focus:outline-none focus:ring-0"
+            align="start"
+            sideOffset={4}
+          >
             <Calendar
               mode="single"
               selected={value}

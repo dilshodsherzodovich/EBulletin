@@ -54,6 +54,7 @@ export interface BulletinCreateBody {
   organizations: string[];
   main_organizations: string[];
   responsible_employees: string[];
+  type_of_journal_display?: string;
 }
 
 // Updated to match the actual bulletinDetail API response

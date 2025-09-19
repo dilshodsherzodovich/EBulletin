@@ -120,13 +120,14 @@ export const useUpdateBulletinFile = () => {
       data,
     }: {
       id: string;
+      journal: string;
       data: BulletinFileUpdateRequest;
     }) => {
       return bulletinService.updateBulletinFile({ id, data });
     },
-    onSuccess: (_, { id }) => {
+    onSuccess: (_, { journal }) => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.bulletins.detail(id)],
+        queryKey: [queryKeys.bulletins.detail(journal)],
       });
     },
   });

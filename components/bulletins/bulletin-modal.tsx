@@ -14,12 +14,12 @@ import {
 } from "@/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
 import { MultiSelect } from "@/ui/multi-select";
+import { DatePicker } from "@/ui/date-picker";
 import React from "react";
 import {
   Bulletin,
   BulletinCreateBody,
   BulletinDeadline,
-  BulletinColumn,
 } from "@/api/types/bulleten";
 import { useOrganizations } from "@/api/hooks/use-organizations";
 import { useDepartments } from "@/api/hooks/use-departmants";
@@ -40,9 +40,11 @@ interface BulletinFormData {
   name: string;
   description: string;
   deadline: string;
+  currentDeadline: Date | undefined;
   mainOrganizations: string[];
   secondaryOrganizations: string[];
   responsibleEmployees: string[];
+  type_of_journal_display?: string;
 }
 
 interface SelectedMainOrg {
@@ -58,6 +60,11 @@ const deadlineOptions = [
   { value: "yearly", label: "Yillik" },
 ];
 
+const docTypeOptions = [
+  { value: "bulleten", label: "Byulleten" },
+  { value: "table", label: "Jadval" },
+];
+
 export function BulletinModal({
   isOpen,
   onClose,
@@ -70,9 +77,11 @@ export function BulletinModal({
     name: "",
     description: "",
     deadline: "",
+    currentDeadline: undefined,
     mainOrganizations: [],
     secondaryOrganizations: [],
     responsibleEmployees: [],
+    type_of_journal_display: "",
   });
 
   const [selectedMainOrgs, setSelectedMainOrgs] = useState<SelectedMainOrg[]>(
@@ -139,6 +148,9 @@ export function BulletinModal({
           name: bulletin.name || "",
           description: bulletin.description || "",
           deadline: bulletin.deadline?.period_type || "",
+          currentDeadline: bulletin.deadline?.current_deadline
+            ? new Date(bulletin.deadline.current_deadline)
+            : undefined,
           mainOrganizations:
             bulletin.main_organizations_list?.map((org) => org.id) || [],
           secondaryOrganizations: reconstructedMainOrgs.flatMap(
@@ -154,6 +166,7 @@ export function BulletinModal({
           name: "",
           description: "",
           deadline: "",
+          currentDeadline: undefined,
           mainOrganizations: [],
           secondaryOrganizations: [],
           responsibleEmployees: [],
@@ -179,17 +192,19 @@ export function BulletinModal({
       month: null,
       interval: 1,
       period_start: new Date().toISOString(),
-      current_deadline: new Date().toISOString(),
+      current_deadline:
+        formData.currentDeadline?.toISOString() || new Date().toISOString(),
     };
 
     return {
       name: formData.name,
       description: formData.description,
       deadline: defaultDeadline,
-      columns: [], // Empty array as requested
-      organizations: formData.secondaryOrganizations, // Secondary organizations (departments)
-      main_organizations: formData.mainOrganizations, // Main organizations
+      columns: [],
+      organizations: formData.secondaryOrganizations,
+      main_organizations: formData.mainOrganizations,
       responsible_employees: formData.responsibleEmployees,
+      type_of_journal_display: formData.type_of_journal_display,
     };
   };
 
@@ -220,7 +235,6 @@ export function BulletinModal({
           secondaryOrganizations: allSecondaryOrgs,
         });
 
-        // Reset current selection
         setCurrentMainOrgId("");
         setCurrentSecondaryOrgs([]);
       }
@@ -259,15 +273,18 @@ export function BulletinModal({
     if (!formData.deadline) {
       newErrors.deadline = "Muddat turini tanlang";
     }
+    if (!formData.currentDeadline) {
+      newErrors.currentDeadline = "Joriy muddatni tanlang";
+    }
+    if (!formData.type_of_journal_display) {
+      newErrors.type_of_journal_display = "Hujjat turini tanlang";
+    }
     if (formData.mainOrganizations.length === 0) {
       newErrors.mainOrganizations = "Kamida bitta asosiy tashkilotni tanlang";
     }
     if (formData.secondaryOrganizations.length === 0) {
       newErrors.secondaryOrganizations =
         "Kamida bitta quyi tashkilotni tanlang";
-    }
-    if (formData.responsibleEmployees.length === 0) {
-      newErrors.responsibleEmployees = "Kamida bitta mas'ul shaxsni tanlang";
     }
 
     setErrors(newErrors);
@@ -301,6 +318,7 @@ export function BulletinModal({
       formData.name.trim() &&
       formData.description.trim() &&
       formData.deadline &&
+      formData.currentDeadline &&
       formData.mainOrganizations.length > 0 &&
       formData.secondaryOrganizations.length > 0 &&
       formData.responsibleEmployees.length > 0
@@ -454,6 +472,66 @@ export function BulletinModal({
             </Select>
             {errors.deadline && (
               <p className="text-red-500 text-xs mt-1">{errors.deadline}</p>
+            )}
+          </div>
+
+          {/* Current Deadline Date Picker */}
+          <div className="space-y-3">
+            <DatePicker
+              label="Joriy muddatni tanlang"
+              placeholder="Joriy muddatni tanlang"
+              value={formData.currentDeadline}
+              onValueChange={(date) => {
+                setFormData({ ...formData, currentDeadline: date });
+                // Clear error when user makes selection
+                if (date && errors.currentDeadline) {
+                  setErrors((prev) => ({ ...prev, currentDeadline: "" }));
+                }
+              }}
+              error={errors.currentDeadline}
+              minDate={new Date(new Date().setHours(0, 0, 0, 0))}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label
+              htmlFor="doc_type"
+              className="text-sm font-medium text-[var(--foreground)]"
+            >
+              Hujjat turini tanlang
+            </Label>
+            <Select
+              value={formData.type_of_journal_display}
+              onValueChange={(value) => {
+                setFormData({ ...formData, type_of_journal_display: value });
+                // Clear error when user makes selection
+                if (value && errors.type_of_journal_display) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    type_of_journal_display: "",
+                  }));
+                }
+              }}
+            >
+              <SelectTrigger
+                className={`w-full border-[var(--border)] ${
+                  errors.type_of_journal_display ? "border-red-500" : ""
+                }`}
+              >
+                <SelectValue placeholder="Hujjat turini tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {docTypeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.type_of_journal_display && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.type_of_journal_display}
+              </p>
             )}
           </div>
 
@@ -614,7 +692,6 @@ export function BulletinModal({
             )}
           </div>
 
-          {/* Responsible Employees */}
           <div className="space-y-3">
             <Label className="text-sm font-medium text-[var(--foreground)]">
               Mas'ul shaxslarni tanlang

@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { LoadingButton } from "@/ui/loading-button";
 import { BulletinFileUploadModal } from "./bulletin-file-upload-modal";
+import { useParams } from "next/navigation";
 
 interface BulletinFileHistoryProps {
   files: BulletinFile[];
@@ -123,6 +124,7 @@ export function BulletinFileHistory({
 }: BulletinFileHistoryProps) {
   const { mutate: updateBulletinFile, isPending } = useUpdateBulletinFile();
   const { showSuccess, showError } = useSnackbar();
+  const { id: journalId } = useParams();
 
   // Modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -150,6 +152,7 @@ export function BulletinFileHistory({
     updateBulletinFile(
       {
         id,
+        journal: journalId as string,
         data: { editable },
       },
       {
@@ -165,7 +168,11 @@ export function BulletinFileHistory({
 
   const handleUpdateBulletinFile = (id: string, upload_file: File) => {
     updateBulletinFile(
-      { id, data: { editable: false, upload_file } },
+      {
+        id,
+        journal: journalId as string,
+        data: { editable: false, upload_file },
+      },
       {
         onSuccess: () => {
           showSuccess("Yangi fayl muvaffaqiyatli yuklandi");
@@ -204,13 +211,6 @@ export function BulletinFileHistory({
             Bulletin uchun yuklangan fayllar tarixi
           </p>
         </div>
-
-        <PermissionGuard permission="give_access_to_edit_bulletin_file">
-          <Button variant="outline" size="icon">
-            <Edit className="h-4 w-4 text-[var(--primary)]" />
-            Faylni tahrirlash
-          </Button>
-        </PermissionGuard>
 
         <div className="overflow-hidden">
           <Table>
@@ -292,7 +292,9 @@ export function BulletinFileHistory({
                     <TableCell className="p-3">
                       <Badge variant="outline" className="border-none">
                         <span>
-                          {file.editable ? "Tahrirlash" : "Tahrirlash yo'q"}
+                          {file.editable
+                            ? "Tahrirlashga ruxsat berilgan"
+                            : "Tahrirlashga ruxsat berilmagan"}
                         </span>
                       </Badge>
                     </TableCell>

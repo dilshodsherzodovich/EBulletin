@@ -205,6 +205,7 @@ export function UserModal({
             username: formData.username,
             role: formData.role,
             is_active: formData.status === "active",
+            password: formData.password,
             profile: {
               secondary_organization_id: formData.secondary_organization_id,
             },
@@ -217,7 +218,6 @@ export function UserModal({
       ? "Yangi foydalanuvchi yaratish"
       : "Foydalanuvchi ma'lumotlarini tahrirlash";
   const submitText = mode === "create" ? "Saqlash" : "Yangilash";
-  const loadingText = mode === "create" ? "Yaratilmoqda" : "Yangilanmoqda";
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
@@ -388,25 +388,25 @@ export function UserModal({
                 <p className="text-red-500 text-xs mt-1">{errors.login}</p>
               )}
             </div>
-            {mode === "create" && (
-              <div>
-                <Label className="text-sm text-[var(--muted-foreground)]">
-                  Parol *
-                </Label>
-                <Input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  className={errors.password ? "border-red-500" : ""}
-                  autoComplete="off"
-                />
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-                )}
-              </div>
-            )}
+
+            <div>
+              <Label className="text-sm text-[var(--muted-foreground)]">
+                Parol *
+              </Label>
+              <Input
+                type="password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className={errors.password ? "border-red-500" : ""}
+                autoComplete="off"
+              />
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
+            </div>
+
             <div>
               <Label className="text-sm text-[var(--muted-foreground)]">
                 Rol *

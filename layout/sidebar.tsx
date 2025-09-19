@@ -11,13 +11,13 @@ import {
   Folder,
   Monitor,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
+  Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canAccessSection } from "@/lib/permissions";
 import { LoginResponse } from "@/api/types/auth";
 import { UserData } from "@/api/types/user";
+import { Button } from "@/ui/button";
 
 const navigationItems = [
   {
@@ -88,7 +88,7 @@ export function Sidebar() {
               </div>
               <div>
                 <div className="font-semibold text-[var(--foreground)] text-sm">
-                  {/* Milliy Statistika */}
+                  Milliy Statistika
                 </div>
                 <div className="text-xs text-[var(--muted-foreground)]">
                   Qo'mitasi
@@ -98,26 +98,24 @@ export function Sidebar() {
           )}
 
           {isCollapsed && (
-            <div className="w-10 h-10 bg-[var(--primary)] rounded-lg flex items-center justify-center mx-auto">
-              <BarChart3 className="h-6 w-6 text-white" />
-            </div>
+            <Button
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-lg mt-2 bg-transparent shadow-none hover:bg-[var(--primary)]/10 transition-colors flex-shrink-0"
+              aria-label="Collapse sidebar"
+            >
+              <Menu className="h-4 w-4 text-primary" />
+            </Button>
           )}
 
-          {/* Toggle Button */}
-          <button
-            onClick={toggleSidebar}
-            className={cn(
-              "p-1.5 rounded-lg hover:bg-[var(--primary)]/10 transition-colors flex-shrink-0",
-              isCollapsed ? "absolute top-3 right-1.5" : "relative"
-            )}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)]" />
-            ) : (
-              <ChevronLeft className="h-4 w-4 text-[var(--muted-foreground)]" />
-            )}
-          </button>
+          {!isCollapsed && (
+            <Button
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-lg bg-transparent hover:bg-[var(--primary)]/10 transition-colors flex-shrink-0 shadow-none"
+              aria-label="Collapse sidebar"
+            >
+              <Menu className="h-4 w-4 text-primary" />
+            </Button>
+          )}
         </div>
 
         {/* Navigation */}
@@ -156,6 +154,19 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {/* Hamburger menu button when collapsed */}
+        {isCollapsed && (
+          <div className="mt-auto">
+            <button
+              onClick={toggleSidebar}
+              className="w-full p-3 rounded-lg hover:bg-[var(--primary)]/10 transition-colors flex items-center justify-center"
+              aria-label="Expand sidebar"
+            >
+              <Menu className="h-5 w-5 text-[var(--muted-foreground)]" />
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );
