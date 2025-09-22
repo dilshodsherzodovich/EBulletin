@@ -226,7 +226,7 @@ export function BulletinTable({
                     </div>
                   </TableCell>
                   <PermissionGuard permission="view_bulletin_main_info">
-                    <TableCell className="p-3 max-w-md">
+                    <TableCell className="p-3 min-w-[350px]">
                       <div className="space-y-2">
                         {(bulletin.main_organizations_list || []).map(
                           (mainOrg) => (
@@ -236,7 +236,10 @@ export function BulletinTable({
                             >
                               <div className="text-xs font-medium text-[var(--foreground)] mb-1">
                                 <div className="break-words leading-tight">
-                                  {mainOrg.name}:
+                                  <span className="break-words whitespace-break-spaces">
+                                    {mainOrg.name}
+                                  </span>
+                                  :
                                 </div>
                                 {mainOrg.secondary_organizations &&
                                 mainOrg.secondary_organizations.length > 0 ? (

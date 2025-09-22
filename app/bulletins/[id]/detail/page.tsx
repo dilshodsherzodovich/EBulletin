@@ -164,26 +164,6 @@ export default function BulletinDetailPage() {
     setUploadedFiles([]);
   };
 
-  const handleFileDownload = (file: BulletinFile) => {
-    if (!file.upload_file) {
-      showError("Fayl topilmadi");
-      return;
-    }
-
-    try {
-      // Create a download link
-      const link = document.createElement("a");
-      link.href = file.upload_file; // Assuming this is a URL to the file
-      link.download = file.upload_file.split("/").pop() || "download";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      showError("Fayl yuklab olishda xatolik yuz berdi");
-      console.error(error);
-    }
-  };
-
   const handleSaveRow = (
     rowId: string,
     updatedValues?: Record<string, string | number>
@@ -351,7 +331,6 @@ export default function BulletinDetailPage() {
       <BulletinFileHistory
         files={bulletin.upload_history || []}
         isLoading={isLoading}
-        onDownload={handleFileDownload}
       />
     </div>
   );

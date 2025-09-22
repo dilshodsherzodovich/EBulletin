@@ -3,6 +3,7 @@ import {
   BulletinCreateBody,
   BulletinCreateRow,
   BulletinFile,
+  BulletinFileStatusHistoryCreateRequest,
   BulletinFileUpdateRequest,
   BulletinRow,
 } from "../types/bulleten";
@@ -90,7 +91,7 @@ export const bulletinService = {
       formData.append("upload_file", upload_file);
 
       const response = await api.post<BulletinFile>(
-        "/journal/upload-history/",
+        "/journal-history/create/",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -114,11 +115,42 @@ export const bulletinService = {
         formData.append("upload_file", data.upload_file as File);
       }
       formData.append("editable", data.editable.toString());
-      await api.patch(`/journal-upload/only-permitted/${id}/`, formData, {
+      await api.patch(`/journal/only-permitted/${id}/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
     } catch (error) {
       console.error("Error updating bulletin file:", error);
+      throw error;
+    }
+  },
+
+  createBulletinFileStatusHistory: async ({
+    j_upload_history_id,
+    upload_file,
+    description,
+    journal_id,
+  }: {
+    j_upload_history_id: string;
+    upload_file: File;
+    description: string;
+    journal_id: string;
+  }) => {
+    try {
+      const formData = new FormData();
+      formData.append("j_upload_history_id", j_upload_history_id);
+      formData.append("upload_file", upload_file);
+      formData.append("description", description);
+
+      const response = await api.post<BulletinFileStatusHistoryCreateRequest>(
+        `/upload-file/journal-history/`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating bulletin file status history:", error);
       throw error;
     }
   },

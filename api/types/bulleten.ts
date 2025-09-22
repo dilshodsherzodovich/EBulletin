@@ -44,6 +44,7 @@ export interface Bulletin {
   };
   rows: BulletinRow[];
   upload_history: BulletinFile[];
+  type_of_journal_display?: string;
 }
 
 export interface BulletinCreateBody {
@@ -75,13 +76,21 @@ export interface BulletinCreateRow {
   values: BulletinRowCell[];
 }
 
+export interface BulletinFileStatus {
+  id: string;
+  status_display: "Actual" | "Not Actual";
+  created: string;
+  description: string;
+  upload_file: string;
+}
+
 export interface BulletinFile {
   id: string;
   status: "on_time" | "late" | "not_submitted";
-  upload_file: string | null;
-  upload_at: string;
+  created: string;
   deadline: string;
   editable: boolean;
+  uploaded_files: BulletinFileStatus[];
   user_info: {
     id: string;
     username: string;
@@ -93,4 +102,10 @@ export interface BulletinFileUpdateRequest {
   editable: boolean;
   journal?: string;
   upload_file?: File;
+}
+
+export interface BulletinFileStatusHistoryCreateRequest {
+  j_upload_history_id: string;
+  upload_file: File;
+  description: string;
 }

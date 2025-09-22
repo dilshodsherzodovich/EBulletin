@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canAccessSection } from "@/lib/permissions";
-import { LoginResponse } from "@/api/types/auth";
 import { UserData } from "@/api/types/user";
 import { Button } from "@/ui/button";
 

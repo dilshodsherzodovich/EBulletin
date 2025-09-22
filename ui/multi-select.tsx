@@ -1,11 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { X, ChevronsUpDown, Check, Search } from "lucide-react";
+import { X, ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
 import { Badge } from "@/ui/badge";
-import { Input } from "@/ui/input";
 
 interface MultiSelectProps {
   options: { value: string; label: string }[];
@@ -30,7 +29,10 @@ export function MultiSelect({
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = React.useState<
+    "bottom" | "top"
+  >("bottom");
+  const triggerRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const handleSelect = (value: string) => {
@@ -45,16 +47,23 @@ export function MultiSelect({
     onSelectionChange(selectedValues.filter((v) => v !== value));
   };
 
-  const handleClose = () => {
-    setOpen(false);
-    setSearchValue("");
-  };
+  // Calculate dropdown position when opening
+  React.useEffect(() => {
+    if (open && triggerRef.current) {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownHeight = 300; // max-h-[300px] from the dropdown
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
 
-  const handleTriggerClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setOpen(!open);
-  };
+      // If there's not enough space below but enough space above, show on top
+      if (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight) {
+        setDropdownPosition("top");
+      } else {
+        setDropdownPosition("bottom");
+      }
+    }
+  }, [open]);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -91,26 +100,15 @@ export function MultiSelect({
 
   return (
     <div className="relative w-full">
-      <Button
+      {/* Custom Trigger */}
+      <div
         ref={triggerRef}
-        variant="outline"
-        role="combobox"
-        aria-expanded={open}
         className={cn(
-          "w-full justify-between border-[var(--border)] min-h-[40px] h-auto p-2 bg-white hover:bg-[var(--muted)]/20 focus:bg-white focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-1 transition-all duration-150",
+          "w-full justify-between border-[var(--border)] min-h-[40px] h-auto p-2 bg-white hover:bg-[var(--muted)]/20 focus:bg-white focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-1 transition-all duration-150 border rounded-md cursor-pointer flex items-center",
           disabled && "opacity-50 cursor-not-allowed",
           className
         )}
-        disabled={disabled}
-        onClick={handleTriggerClick}
-        onKeyDown={(e) => {
-          e.stopPropagation();
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setOpen(!open);
-          }
-        }}
-        onKeyUp={(e) => e.stopPropagation()}
+        onClick={() => !disabled && setOpen(!open)}
       >
         <div className="flex flex-wrap gap-1 flex-1 min-w-0">
           {selectedOptions.length === 0 ? (
@@ -130,6 +128,7 @@ export function MultiSelect({
                   variant="ghost"
                   size="sm"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     handleRemove(option.value);
                   }}
@@ -142,13 +141,19 @@ export function MultiSelect({
           )}
         </div>
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-      </Button>
+      </div>
 
-      {/* Custom Dropdown */}
+      {/* Custom Dropdown with Smart Positioning and Animations */}
       {open && (
         <div
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-[var(--border)] rounded-lg shadow-xl z-[999999] max-h-[300px] overflow-hidden"
+          className={cn(
+            "absolute left-0 right-0 bg-white border border-[var(--border)] rounded-lg z-[999999] max-h-[300px] overflow-hidden",
+            "animate-in fade-in-0 zoom-in-95",
+            dropdownPosition === "top"
+              ? "bottom-full mb-1 slide-in-from-bottom-2"
+              : "top-full mt-1 slide-in-from-top-2"
+          )}
           style={{ zIndex: 999999 }}
         >
           {/* Search Input */}
@@ -161,9 +166,8 @@ export function MultiSelect({
               className="w-full px-3 py-2 text-sm border border-[var(--border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
             />
           </div>
-
           {/* Options List */}
-          <div className="max-h-[200px] overflow-y-auto bg-white">
+          <div className="max-h-[200px] overflow-y-auto">
             {filteredOptions.length === 0 ? (
               <div className="py-3 text-center text-sm text-[var(--muted-foreground)] bg-[var(--muted)]/10">
                 {emptyMessage}
@@ -184,6 +188,7 @@ export function MultiSelect({
               </div>
             )}
           </div>
+          t
         </div>
       )}
     </div>

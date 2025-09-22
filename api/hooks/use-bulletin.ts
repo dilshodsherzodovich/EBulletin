@@ -132,3 +132,32 @@ export const useUpdateBulletinFile = () => {
     },
   });
 };
+
+export const useCreateBulletinFileStatusHistory = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      j_upload_history_id,
+      upload_file,
+      description,
+      journal_id,
+    }: {
+      j_upload_history_id: string;
+      upload_file: File;
+      description: string;
+      journal_id: string;
+    }) => {
+      return bulletinService.createBulletinFileStatusHistory({
+        j_upload_history_id,
+        upload_file,
+        description,
+        journal_id,
+      });
+    },
+    onSuccess: (_, { journal_id }) => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.bulletins.detail(journal_id)],
+      });
+    },
+  });
+};

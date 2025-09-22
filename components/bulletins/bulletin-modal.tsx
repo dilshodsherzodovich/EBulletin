@@ -158,6 +158,7 @@ export function BulletinModal({
           ),
           responsibleEmployees:
             bulletin.employees_list?.map((emp) => emp.id) || [],
+          type_of_journal_display: bulletin.type_of_journal_display || "",
         });
 
         setSelectedMainOrgs(reconstructedMainOrgs);

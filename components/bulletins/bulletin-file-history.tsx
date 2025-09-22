@@ -10,6 +10,8 @@ import {
   CheckCircle,
   Clock,
   Edit,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/ui/badge";
 import {
@@ -22,21 +24,23 @@ import {
 } from "@/ui/table";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
-import { BulletinFile, BulletinFileUpdateRequest } from "@/api/types/bulleten";
+import { BulletinFile } from "@/api/types/bulleten";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { PermissionGuard } from "../permission-guard";
 import { getFileName } from "@/lib/utils";
-import { useUpdateBulletinFile } from "@/api/hooks/use-bulletin";
-import { useToast } from "@/hooks/use-toast";
+import {
+  useCreateBulletinFileStatusHistory,
+  useUpdateBulletinFile,
+} from "@/api/hooks/use-bulletin";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { LoadingButton } from "@/ui/loading-button";
 import { BulletinFileUploadModal } from "./bulletin-file-upload-modal";
 import { useParams } from "next/navigation";
+import React from "react";
 
 interface BulletinFileHistoryProps {
   files: BulletinFile[];
   isLoading: boolean;
-  onDownload: (file: BulletinFile) => void;
 }
 
 // Status mapping to Uzbek labels
@@ -120,9 +124,12 @@ const formatDate = (dateString: string): string => {
 export function BulletinFileHistory({
   files,
   isLoading,
-  onDownload,
 }: BulletinFileHistoryProps) {
   const { mutate: updateBulletinFile, isPending } = useUpdateBulletinFile();
+  const {
+    mutate: createBulletinFileStatusHistory,
+    isPending: isCreatingBulletinFileStatusHistory,
+  } = useCreateBulletinFileStatusHistory();
   const { showSuccess, showError } = useSnackbar();
   const { id: journalId } = useParams();
 
@@ -130,6 +137,21 @@ export function BulletinFileHistory({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedFileForEdit, setSelectedFileForEdit] =
     useState<BulletinFile | null>(null);
+
+  // Expanded rows state
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRowExpansion = (fileId: string) => {
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(fileId)) {
+        newSet.delete(fileId);
+      } else {
+        newSet.add(fileId);
+      }
+      return newSet;
+    });
+  };
 
   if (isLoading) {
     return (
@@ -166,21 +188,27 @@ export function BulletinFileHistory({
     );
   };
 
-  const handleUpdateBulletinFile = (id: string, upload_file: File) => {
-    updateBulletinFile(
+  const handleUpdateBulletinFile = (
+    id: string,
+    upload_file: File,
+    description: string,
+    journal_id: string
+  ) => {
+    createBulletinFileStatusHistory(
       {
-        id,
-        journal: journalId as string,
-        data: { editable: false, upload_file },
+        j_upload_history_id: id,
+        upload_file,
+        description,
+        journal_id,
       },
       {
         onSuccess: () => {
-          showSuccess("Yangi fayl muvaffaqiyatli yuklandi");
+          showSuccess("Fayl muvaffaqiyatli tahrirlendi");
           setIsUploadModalOpen(false);
           setSelectedFileForEdit(null);
         },
         onError: () => {
-          showError("Yangi fayl yuklashda xatolik");
+          showError("Fayl tahrirlashda xatolik");
         },
       }
     );
@@ -196,10 +224,28 @@ export function BulletinFileHistory({
     setSelectedFileForEdit(null);
   };
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = (file: File, description: string) => {
     if (selectedFileForEdit) {
-      handleUpdateBulletinFile(selectedFileForEdit.id, file);
+      handleUpdateBulletinFile(
+        selectedFileForEdit.id,
+        file,
+        description,
+        journalId as string
+      );
     }
+  };
+
+  const getActualFile = (file: BulletinFile) => {
+    if (!file.uploaded_files || file.uploaded_files.length === 0) {
+      return null;
+    }
+    return file.uploaded_files.find(
+      (upload_file) => upload_file.status_display === "Actual"
+    );
+  };
+
+  const hasUploadFiles = (file: BulletinFile) => {
+    return file.uploaded_files && file.uploaded_files.length > 0;
   };
 
   return (
@@ -229,122 +275,233 @@ export function BulletinFileHistory({
             <TableBody>
               {files.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     <div className="text-sm text-[var(--muted-foreground)]">
                       Hali hech qanday fayl yuklanmagan
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                files.map((file, index) => (
-                  <TableRow
-                    key={file.id}
-                    className="transition-colors hover:bg-muted/50"
-                  >
-                    <TableCell className="font-semibold text-[var(--primary)] p-3">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell className="p-3">
-                      <div className="flex items-center space-x-3">
-                        {getFileIcon(file.upload_file || "unknown")}
-                        <div>
-                          <div className="font-medium text-[var(--foreground)]">
-                            {getFileName(file.upload_file || "")}
+                files.map((file, index) => {
+                  const actualFile = getActualFile(file);
+                  const isExpanded = expandedRows.has(file.id);
+                  const hasHistory =
+                    hasUploadFiles(file) &&
+                    file.uploaded_files &&
+                    file.uploaded_files.length > 1;
+
+                  return (
+                    <React.Fragment key={file.id}>
+                      {/* Main Row */}
+                      <TableRow className="transition-colors hover:bg-muted/50">
+                        <TableCell className="font-semibold text-[var(--primary)] p-3">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="p-3">
+                          <div className="flex items-center space-x-3">
+                            {getFileIcon(actualFile?.upload_file || "unknown")}
+                            <div>
+                              <div className="font-medium text-[var(--foreground)]">
+                                {actualFile
+                                  ? getFileName(actualFile.upload_file)
+                                  : "Fayl topilmadi"}
+                              </div>
+                              {hasHistory && (
+                                <button
+                                  onClick={() => toggleRowExpansion(file.id)}
+                                  className="flex items-center text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                                >
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-3 w-3 mr-1" />
+                                  ) : (
+                                    <ChevronRight className="h-3 w-3 mr-1" />
+                                  )}
+                                  {isExpanded
+                                    ? "Tarixni yashirish"
+                                    : "Tarixni ko'rsatish"}
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="p-3">
-                      <div>
-                        <div className="font-medium text-[var(--foreground)]">
-                          {file.user_info.full_name}
-                        </div>
-                        <div className="text-sm text-[var(--muted-foreground)]">
-                          @{file.user_info.username}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="p-3 text-[var(--muted-foreground)]">
-                      {formatDate(file.upload_at)}
-                    </TableCell>
-                    <TableCell className="p-3 text-[var(--muted-foreground)]">
-                      {formatDate(file.deadline)}
-                    </TableCell>
-                    <TableCell className="p-3">
-                      <Badge
-                        variant={getStatusVariant(file.status)}
-                        className={`${getStatusColor(file.status)} border-none`}
-                      >
-                        <div className="flex items-center space-x-1">
-                          {file.status === "on_time" && (
-                            <CheckCircle className="h-3 w-3" />
-                          )}
-                          {file.status === "late" && (
-                            <AlertCircle className="h-3 w-3" />
-                          )}
-                          {file.status === "not_submitted" && (
-                            <Clock className="h-3 w-3" />
-                          )}
-                          <span>{getStatusLabel(file.status)}</span>
-                        </div>
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="p-3">
-                      <Badge variant="outline" className="border-none">
-                        <span>
-                          {file.editable
-                            ? "Tahrirlashga ruxsat berilgan"
-                            : "Tahrirlashga ruxsat berilmagan"}
-                        </span>
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="p-3">
-                      <div className="flex items-center justify-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => onDownload(file)}
-                          disabled={!file.upload_file}
-                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10 disabled:opacity-50"
-                          aria-label="Yuklab olish"
-                        >
-                          <Download className="h-4 w-4 text-[var(--primary)]" />
-                        </Button>
-
-                        <PermissionGuard permission="give_access_to_edit_bulletin_file">
-                          <LoadingButton
-                            isPending={isPending}
-                            onClick={() => {
-                              handleGiveAccessToEditBulletinFile(
-                                file.id,
-                                !file.editable
-                              );
-                            }}
-                            disabled={!file.upload_file}
-                            variant={file.editable ? "destructive" : "default"}
-                            size="sm"
+                        </TableCell>
+                        <TableCell className="p-3">
+                          <div>
+                            <div className="font-medium text-[var(--foreground)]">
+                              {file.user_info.full_name}
+                            </div>
+                            <div className="text-sm text-[var(--muted-foreground)]">
+                              @{file.user_info.username}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-3 text-[var(--muted-foreground)]">
+                          {formatDate(file.created)}
+                        </TableCell>
+                        <TableCell className="p-3 text-[var(--muted-foreground)]">
+                          {formatDate(file.deadline)}
+                        </TableCell>
+                        <TableCell className="p-3">
+                          <Badge
+                            variant={getStatusVariant(file.status)}
+                            className={`${getStatusColor(
+                              file.status
+                            )} border-none`}
                           >
-                            {!file.editable
-                              ? "Tahrirlash ruxsat berish"
-                              : "Tahrirlashni bekor qilish"}
-                          </LoadingButton>
-                        </PermissionGuard>
-
-                        {file.editable && (
-                          <PermissionGuard permission="edit_bulletin_file">
+                            <div className="flex items-center space-x-1">
+                              {file.status === "on_time" && (
+                                <CheckCircle className="h-3 w-3" />
+                              )}
+                              {file.status === "late" && (
+                                <AlertCircle className="h-3 w-3" />
+                              )}
+                              {file.status === "not_submitted" && (
+                                <Clock className="h-3 w-3" />
+                              )}
+                              <span>{getStatusLabel(file.status)}</span>
+                            </div>
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="p-3">
+                          <Badge variant="outline" className="border-none">
+                            <span>
+                              {file.editable
+                                ? "Tahrirlashga ruxsat berilgan"
+                                : "Tahrirlashga ruxsat berilmagan"}
+                            </span>
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="p-3">
+                          <div className="flex items-center justify-center gap-1">
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => handleEditFileClick(file)}
+                              disabled={!actualFile}
+                              className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10 disabled:opacity-50"
+                              aria-label="Yuklab olish"
                             >
-                              <Edit className="h-4 w-4 text-[var(--primary)]" />
+                              <Download className="h-4 w-4 text-[var(--primary)]" />
                             </Button>
-                          </PermissionGuard>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+
+                            <PermissionGuard permission="give_access_to_edit_bulletin_file">
+                              <LoadingButton
+                                isPending={isPending}
+                                onClick={() => {
+                                  handleGiveAccessToEditBulletinFile(
+                                    file.id,
+                                    !file.editable
+                                  );
+                                }}
+                                disabled={!actualFile}
+                                variant={
+                                  file.editable ? "destructive" : "default"
+                                }
+                                size="sm"
+                              >
+                                {!file.editable
+                                  ? "Tahrirlash ruxsat berish"
+                                  : "Tahrirlashni bekor qilish"}
+                              </LoadingButton>
+                            </PermissionGuard>
+
+                            {file.editable && (
+                              <PermissionGuard permission="edit_bulletin_file">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => handleEditFileClick(file)}
+                                >
+                                  <Edit className="h-4 w-4 text-[var(--primary)]" />
+                                </Button>
+                              </PermissionGuard>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* Expanded History Rows */}
+                      {isExpanded && hasHistory && file.uploaded_files && (
+                        <>
+                          {file.uploaded_files.map(
+                            (uploadFile, historyIndex) => (
+                              <TableRow
+                                key={`${file.id}-${uploadFile.id}`}
+                                className="bg-muted/20 border-l-4 border-l-[var(--primary)]/30"
+                              >
+                                <TableCell className="p-3 pl-8">
+                                  <div className="text-xs text-[var(--muted-foreground)]">
+                                    {historyIndex + 1}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="p-3">
+                                  <div className="flex items-center space-x-3">
+                                    {getFileIcon(uploadFile.upload_file)}
+                                    <div>
+                                      <div className="font-medium text-[var(--foreground)] text-sm">
+                                        {getFileName(uploadFile.upload_file)}
+                                      </div>
+                                      <div className="text-xs text-[var(--muted-foreground)]">
+                                        {uploadFile.description ||
+                                          "Tavsif yo'q"}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="p-3">
+                                  <div className="text-sm text-[var(--muted-foreground)]">
+                                    -
+                                  </div>
+                                </TableCell>
+                                <TableCell className="p-3 text-[var(--muted-foreground)] text-sm">
+                                  {formatDate(uploadFile.created)}
+                                </TableCell>
+                                <TableCell className="p-3">
+                                  <div className="text-sm text-[var(--muted-foreground)]">
+                                    -
+                                  </div>
+                                </TableCell>
+                                <TableCell className="p-3">
+                                  <Badge
+                                    variant={
+                                      uploadFile.status_display === "Actual"
+                                        ? "default"
+                                        : "secondary"
+                                    }
+                                    className={`${
+                                      uploadFile.status_display === "Actual"
+                                        ? "bg-green-100 text-green-800 border-green-200"
+                                        : "bg-gray-100 text-gray-800 border-gray-200"
+                                    } border-none`}
+                                  >
+                                    {uploadFile.status_display === "Actual"
+                                      ? "Joriy"
+                                      : "Eski"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="p-3">
+                                  <div className="text-sm text-[var(--muted-foreground)]">
+                                    -
+                                  </div>
+                                </TableCell>
+                                <TableCell className="p-3">
+                                  <div className="flex items-center justify-center">
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-6 w-6 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                                      aria-label="Yuklab olish"
+                                    >
+                                      <Download className="h-3 w-3 text-[var(--primary)]" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          )}
+                        </>
+                      )}
+                    </React.Fragment>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -356,7 +513,7 @@ export function BulletinFileHistory({
         onClose={handleModalClose}
         onUpload={handleFileUpload}
         file={selectedFileForEdit}
-        isUploading={isPending}
+        isUploading={isPending || isCreatingBulletinFileStatusHistory}
       />
     </>
   );
