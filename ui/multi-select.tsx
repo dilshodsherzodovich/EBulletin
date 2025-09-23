@@ -188,7 +188,6 @@ export function MultiSelect({
               </div>
             )}
           </div>
-          t
         </div>
       )}
     </div>

@@ -37,16 +37,16 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground",
+        "data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground cursor-pointer",
         "flex w-full items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-4 py-2",
         "text-sm whitespace-nowrap transition-colors outline-none",
         "focus:border-primary hover:border-gray-400",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50",
         "aria-invalid:border-red-500 aria-invalid:focus:border-red-500",
-        "data-[size=default]:h-10 data-[size=sm]:h-8", // Increased height for better usability
-        "mb-4", // Added margin bottom for spacing between form elements
+        "data-[size=default]:h-10 data-[size=sm]:h-8",
+        "mb-4",
         "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 ",
         className
       )}
       {...props}

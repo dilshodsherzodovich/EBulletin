@@ -1,16 +1,20 @@
 import { Organization } from "./organizations";
 import { UserData } from "./user";
 
+export interface QuarterlyDeadline {
+  quarter: number;
+  month: number;
+  day: number;
+}
+
 export interface BulletinDeadline {
-  id: number;
+  id?: number;
   period_type: string;
-  custom_deadline: string | null;
-  day_of_month: number | null;
   day_of_week: number | null;
-  month: number | null;
-  interval: number;
-  period_start: string;
-  current_deadline: string;
+  day_of_month: number | null;
+  quarterly_deadlines: QuarterlyDeadline[] | null;
+  year_interval?: number | null;
+  current_deadline: string | null;
 }
 
 export interface BulletinColumn {
