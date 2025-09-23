@@ -178,8 +178,14 @@ export function BulletinFileHistory({
         data: { editable },
       },
       {
-        onSuccess: () => {
-          showSuccess("Fayl tahrirlash ruxsat berildi");
+        onSuccess: (_, { data }) => {
+          showSuccess(
+            ` ${
+              data.editable
+                ? "Tahrirlashga ruxsat berildi"
+                : "Tahrirlashga ruxsat bekor qilindi"
+            }`
+          );
         },
         onError: () => {
           showError("Fayl tahrirlash ruxsat berishda xatolik");
@@ -262,7 +268,7 @@ export function BulletinFileHistory({
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 text-[var(--table-header-fg)]">
-                <TableHead className="w-16 p-3">№</TableHead>
+                <TableHead className="w-16 p-3"></TableHead>
                 <TableHead className="p-3">Fayl nomi</TableHead>
                 <TableHead className="p-3">Foydalanuvchi</TableHead>
                 <TableHead className="p-3">Yuklangan sana</TableHead>
@@ -282,7 +288,7 @@ export function BulletinFileHistory({
                   </TableCell>
                 </TableRow>
               ) : (
-                files.map((file, index) => {
+                files.map((file) => {
                   const actualFile = getActualFile(file);
                   const isExpanded = expandedRows.has(file.id);
                   const hasHistory =
@@ -293,9 +299,20 @@ export function BulletinFileHistory({
                   return (
                     <React.Fragment key={file.id}>
                       {/* Main Row */}
-                      <TableRow className="transition-colors hover:bg-muted/50">
+                      <TableRow
+                        className="transition-colors hover:bg-muted/50 cursor-pointer"
+                        onClick={() => toggleRowExpansion(file.id)}
+                      >
                         <TableCell className="font-semibold text-[var(--primary)] p-3">
-                          {index + 1}
+                          {hasHistory && (
+                            <button className="flex items-center text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
+                              {isExpanded ? (
+                                <ChevronDown className="h-5 w-5 mr-1" />
+                              ) : (
+                                <ChevronRight className="h-5 w-5 mr-1" />
+                              )}
+                            </button>
+                          )}
                         </TableCell>
                         <TableCell className="p-3">
                           <div className="flex items-center space-x-3">
@@ -304,23 +321,8 @@ export function BulletinFileHistory({
                               <div className="font-medium text-[var(--foreground)]">
                                 {actualFile
                                   ? getFileName(actualFile.upload_file)
-                                  : "Fayl topilmadi"}
+                                  : "-"}
                               </div>
-                              {hasHistory && (
-                                <button
-                                  onClick={() => toggleRowExpansion(file.id)}
-                                  className="flex items-center text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-                                >
-                                  {isExpanded ? (
-                                    <ChevronDown className="h-3 w-3 mr-1" />
-                                  ) : (
-                                    <ChevronRight className="h-3 w-3 mr-1" />
-                                  )}
-                                  {isExpanded
-                                    ? "Tarixni yashirish"
-                                    : "Tarixni ko'rsatish"}
-                                </button>
-                              )}
                             </div>
                           </div>
                         </TableCell>
@@ -372,20 +374,25 @@ export function BulletinFileHistory({
                         </TableCell>
                         <TableCell className="p-3">
                           <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              disabled={!actualFile}
-                              className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10 disabled:opacity-50"
-                              aria-label="Yuklab olish"
-                            >
-                              <Download className="h-4 w-4 text-[var(--primary)]" />
-                            </Button>
+                            <a href={actualFile?.upload_file || ""}>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                disabled={!actualFile}
+                                className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10 disabled:opacity-50"
+                                aria-label="Yuklab olish"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Download className="h-4 w-4 text-[var(--primary)]" />
+                              </Button>
+                            </a>
 
                             <PermissionGuard permission="give_access_to_edit_bulletin_file">
                               <LoadingButton
+                                className="min-w-[160px]"
                                 isPending={isPending}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   handleGiveAccessToEditBulletinFile(
                                     file.id,
                                     !file.editable
@@ -408,7 +415,10 @@ export function BulletinFileHistory({
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  onClick={() => handleEditFileClick(file)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditFileClick(file);
+                                  }}
                                 >
                                   <Edit className="h-4 w-4 text-[var(--primary)]" />
                                 </Button>
@@ -420,84 +430,114 @@ export function BulletinFileHistory({
 
                       {/* Expanded History Rows */}
                       {isExpanded && hasHistory && file.uploaded_files && (
-                        <>
-                          {file.uploaded_files.map(
-                            (uploadFile, historyIndex) => (
-                              <TableRow
-                                key={`${file.id}-${uploadFile.id}`}
-                                className="bg-muted/20 border-l-4 border-l-[var(--primary)]/30"
-                              >
-                                <TableCell className="p-3 pl-8">
-                                  <div className="text-xs text-[var(--muted-foreground)]">
-                                    {historyIndex + 1}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="p-3">
-                                  <div className="flex items-center space-x-3">
-                                    {getFileIcon(uploadFile.upload_file)}
-                                    <div>
-                                      <div className="font-medium text-[var(--foreground)] text-sm">
-                                        {getFileName(uploadFile.upload_file)}
-                                      </div>
-                                      <div className="text-xs text-[var(--muted-foreground)]">
-                                        {uploadFile.description ||
-                                          "Tavsif yo'q"}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="p-3">
-                                  <div className="text-sm text-[var(--muted-foreground)]">
-                                    -
-                                  </div>
-                                </TableCell>
-                                <TableCell className="p-3 text-[var(--muted-foreground)] text-sm">
-                                  {formatDate(uploadFile.created)}
-                                </TableCell>
-                                <TableCell className="p-3">
-                                  <div className="text-sm text-[var(--muted-foreground)]">
-                                    -
-                                  </div>
-                                </TableCell>
-                                <TableCell className="p-3">
-                                  <Badge
-                                    variant={
-                                      uploadFile.status_display === "Actual"
-                                        ? "default"
-                                        : "secondary"
-                                    }
-                                    className={`${
-                                      uploadFile.status_display === "Actual"
-                                        ? "bg-green-100 text-green-800 border-green-200"
-                                        : "bg-gray-100 text-gray-800 border-gray-200"
-                                    } border-none`}
-                                  >
-                                    {uploadFile.status_display === "Actual"
-                                      ? "Joriy"
-                                      : "Eski"}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="p-3">
-                                  <div className="text-sm text-[var(--muted-foreground)]">
-                                    -
-                                  </div>
-                                </TableCell>
-                                <TableCell className="p-3">
-                                  <div className="flex items-center justify-center">
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-6 w-6 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                                      aria-label="Yuklab olish"
-                                    >
-                                      <Download className="h-3 w-3 text-[var(--primary)]" />
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            )
-                          )}
-                        </>
+                        <TableRow className="hover:bg-transparent">
+                          <TableCell colSpan={8} className="p-0">
+                            <div className="bg-muted/10 border-l-4 border-l-[var(--primary)]/30">
+                              <div className="p-4">
+                                <div className="mb-3">
+                                  <h3 className="text-sm font-medium text-[var(--foreground)] mb-2">
+                                    Fayl tarixi
+                                  </h3>
+                                  <p className="text-xs text-[var(--muted-foreground)]">
+                                    Bu faylning barcha versiyalari
+                                  </p>
+                                </div>
+
+                                <div className="overflow-hidden">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow className="bg-muted/30 text-[var(--table-header-fg)]">
+                                        <TableHead className="p-2 text-xs">
+                                          Fayl nomi
+                                        </TableHead>
+                                        <TableHead className="p-2 text-xs">
+                                          Tavsif
+                                        </TableHead>
+                                        <TableHead className="p-2 text-xs">
+                                          Holat
+                                        </TableHead>
+                                        <TableHead className="p-2 text-xs">
+                                          Yuklangan sana
+                                        </TableHead>
+                                        <TableHead className="p-2 text-xs text-center">
+                                          Yuklab olish
+                                        </TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {file.uploaded_files.map((uploadFile) => (
+                                        <TableRow
+                                          key={`${file.id}-${uploadFile.id}`}
+                                          className="hover:bg-muted/20"
+                                        >
+                                          <TableCell className="p-2">
+                                            <div className="flex items-center space-x-2">
+                                              {getFileIcon(
+                                                uploadFile.upload_file
+                                              )}
+                                              <span className="text-xs font-medium text-[var(--foreground)]">
+                                                {getFileName(
+                                                  uploadFile.upload_file
+                                                )}
+                                              </span>
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="p-2">
+                                            <div className="text-xs text-[var(--foreground)]">
+                                              {uploadFile.description || "-"}
+                                            </div>
+                                          </TableCell>
+
+                                          <TableCell className="p-2">
+                                            <Badge
+                                              variant={
+                                                uploadFile.status_display ===
+                                                "Actual"
+                                                  ? "default"
+                                                  : "secondary"
+                                              }
+                                              className={`text-xs ${
+                                                uploadFile.status_display ===
+                                                "Actual"
+                                                  ? "bg-green-100 text-green-800 border-green-200"
+                                                  : "bg-gray-100 text-gray-800 border-gray-200"
+                                              } border-none`}
+                                            >
+                                              {uploadFile.status_display ===
+                                              "Actual"
+                                                ? "Joriy"
+                                                : "Eski"}
+                                            </Badge>
+                                          </TableCell>
+
+                                          <TableCell className="p-2 text-xs text-[var(--muted-foreground)]">
+                                            {formatDate(uploadFile.created)}
+                                          </TableCell>
+                                          <TableCell className="p-2 text-center">
+                                            <a
+                                              href={
+                                                uploadFile.upload_file || ""
+                                              }
+                                            >
+                                              <Button
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-6 w-6 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                                                aria-label="Yuklab olish"
+                                              >
+                                                <Download className="h-3 w-3 text-[var(--primary)]" />
+                                              </Button>
+                                            </a>
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
                       )}
                     </React.Fragment>
                   );

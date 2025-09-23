@@ -130,7 +130,7 @@ export function BulletinDetailsCard({ bulletin }: BulletinDetailsCardProps) {
         <Button
           variant="outline"
           size="icon"
-          className="absolute right-0 top-0 bg-transparent text-primary hover:text-white"
+          className="absolute right-0 top-0 bg-white text-primary hover:text-white"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? (

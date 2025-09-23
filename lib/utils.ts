@@ -32,9 +32,6 @@ export const getRoleName = (roleName: UserRole): string => {
     case "OBSERVER": {
       return "Kuzatuvchi";
     }
-    case "OPERATOR": {
-      return "Operator";
-    }
     default: {
       return "";
     }
@@ -51,5 +48,5 @@ export const getFileName = (url: string) => {
   if (!url) return "Fayl topilmadi";
   const fileName = url.split("/").pop() || "download";
 
-  return truncate(fileName, { length: 20 });
+  return truncate(fileName, { length: 100 });
 };

@@ -13,8 +13,8 @@ export function LoadingButton({
       {...props}
       disabled={isPending}
       className={cn(
-        props.className,
-        "flex items-center justify-center min-w-24"
+        "flex items-center justify-center min-w-24",
+        props.className
       )}
     >
       {isPending ? <Loader2 className="size-4 animate-spin" /> : children}
