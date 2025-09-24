@@ -271,37 +271,6 @@ const FileUpload = React.forwardRef<HTMLDivElement, FileUploadProps>(
             </div>
           )}
         </div>
-        {hasFiles && (
-          <div className="flex justify-center gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={disabled || isUploadingFile}
-              className="px-4"
-            >
-              Bekor qilish
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={disabled || isUploadingFile || files.length === 0}
-              className="px-4 bg-[var(--primary)] hover:bg-[var(--primary)]/90"
-            >
-              {isUploadingFile ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Yuklanmoqda...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Yuklash
-                </>
-              )}
-            </Button>
-          </div>
-        )}
 
         {hint && !hasError && !hasSuccess && !hasFiles && (
           <p className="text-xs text-[#6b7280]">{hint}</p>

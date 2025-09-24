@@ -302,31 +302,6 @@ export default function BulletinDetailPage() {
         </Card>
       </PermissionGuard>
 
-      {/* File Upload */}
-      <PermissionGuard permission="create_bulletin_file">
-        <Card className="p-4">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold">Fayllar</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Bulletin bilan bog'liq fayllar (maksimal 200MB)
-            </p>
-          </div>
-          <FileUpload
-            label="Fayllarni yuklang"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
-            multiple={true}
-            maxSize={200}
-            maxFiles={10}
-            onFilesChange={handleFileUpload}
-            onSubmit={handleFileSubmit}
-            onCancel={handleFileCancel}
-            filesUploaded={uploadedFiles}
-            isUploadingFile={isUploadingFile}
-            hint="PDF, Word, Excel, PowerPoint, rasm va arxiv fayllari qo'llab-quvvatlanadi"
-          />
-        </Card>
-      </PermissionGuard>
-
       {/* File History */}
       <BulletinFileHistory
         files={bulletin.upload_history || []}

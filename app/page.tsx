@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
@@ -41,6 +41,8 @@ import {
 import { useMonitoring } from "@/api/hooks/use-monitoring";
 import { MonitoringOrganization } from "@/api/types/monitoring";
 import { Table, TableBody, TableHead } from "@/ui/table";
+import { authService } from "@/api/services/auth.service";
+import router from "next/router";
 
 interface StatusData {
   onTime: number;

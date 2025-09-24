@@ -10,6 +10,8 @@ import {
 } from "@/ui/dropdown-menu";
 import Link from "next/link";
 import { UserData } from "@/api/types/auth";
+import { getRoleName } from "@/lib/utils";
+import { UserRole } from "@/api/types/user";
 
 interface AccountPopoverProps {
   user: UserData;
@@ -43,7 +45,7 @@ export function AccountPopover({
           <span className="text-[var(--foreground)] font-medium">
             {user.first_name} {user.last_name}
             <div className="text-xs text-[var(--muted-foreground)]">
-              {user.role}
+              {getRoleName(user.role as UserRole)}
             </div>
           </span>
         </Button>

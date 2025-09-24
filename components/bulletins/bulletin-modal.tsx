@@ -331,7 +331,6 @@ export function BulletinModal({
   ): BulletinCreateBody => {
     // Create the deadline object based on period_type - only include relevant fields
     let deadline: BulletinDeadline;
-
     if (formData.deadline.period_type === "weekly") {
       deadline = {
         period_type: "weekly",
