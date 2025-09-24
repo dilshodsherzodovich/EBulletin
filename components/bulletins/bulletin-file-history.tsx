@@ -42,6 +42,8 @@ import React from "react";
 import { FileUpload } from "@/ui/file-upload";
 import { Input } from "@/ui/input";
 import { Modal } from "@/ui/modal";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/api/querykey";
 
 interface BulletinFileHistoryProps {
   files: BulletinFile[];
@@ -139,6 +141,7 @@ export function BulletinFileHistory({
     useCreateBulletinFile();
   const { showSuccess, showError } = useSnackbar();
   const { id: journalId } = useParams();
+  const queryClient = useQueryClient();
 
   // Modal state - simplified to use one modal for both cases
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -276,6 +279,9 @@ export function BulletinFileHistory({
       {
         onSuccess: () => {
           showSuccess("Yangi fayl muvaffaqiyatli yuklandi");
+          queryClient.invalidateQueries({
+            queryKey: [queryKeys.bulletins.detail(journalId as string)],
+          });
           setIsUploadModalOpen(false);
           setIsNewFileMode(false);
         },

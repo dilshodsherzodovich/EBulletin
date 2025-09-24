@@ -131,10 +131,6 @@ export default function BulletinDetailPage() {
     });
   };
 
-  const handleFileUpload = (files: File[]) => {
-    setUploadedFiles(files);
-  };
-
   const handleFileSubmit = (files: File[]) => {
     if (files.length === 0) return;
 
@@ -158,10 +154,6 @@ export default function BulletinDetailPage() {
         },
       }
     );
-  };
-
-  const handleFileCancel = () => {
-    setUploadedFiles([]);
   };
 
   const handleSaveRow = (
