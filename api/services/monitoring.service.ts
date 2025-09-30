@@ -1,5 +1,8 @@
 import api from "../axios";
-import { MonitoringApiResponse } from "../types/monitoring";
+import {
+  MonitoringApiResponse,
+  MonitoringNearDeadlineRes,
+} from "../types/monitoring";
 
 export const monitoringService = {
   getMonitoring: async (params: {
@@ -20,7 +23,7 @@ export const monitoringService = {
     id,
   }: {
     id: string;
-  }): Promise<MonitoringApiResponse> => {
+  }): Promise<MonitoringNearDeadlineRes> => {
     try {
       const response = await api.get(`/near-to-deadline/${id}/`);
       return response.data;

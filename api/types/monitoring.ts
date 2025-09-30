@@ -1,3 +1,6 @@
+import { Bulletin } from "./bulleten";
+import { UserData } from "./user";
+
 export interface MonitoringOrganization {
   id: string;
   name: string;
@@ -31,4 +34,15 @@ export interface MonitoringApiResponse {
   next: string | null;
   previous: string | null;
   results: MonitoringResults;
+}
+
+export interface MonitoringNearDeadlineRes {
+  id: string;
+  name: string;
+  sec_org_journals: {
+    id: string;
+    type_of_journal: "journal" | "bulleten";
+    name: string;
+    employees_list: UserData[];
+  }[];
 }

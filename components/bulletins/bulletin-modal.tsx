@@ -250,7 +250,9 @@ export function BulletinModal({
   const filteredUsers = useMemo(() => {
     if (!formData.statisticsOrganizations?.length) return [];
     return users.filter((user: any) =>
-      formData.statisticsOrganizations.includes(user?.organization_id)
+      formData.statisticsOrganizations.includes(
+        user?.profile.secondary_organization?.id
+      )
     );
   }, [users, formData.statisticsOrganizations]);
 

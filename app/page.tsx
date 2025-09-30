@@ -98,14 +98,10 @@ export default function MonitoringPage() {
 
   const { data: nearDeadlineData, isLoading: nearLoading } =
     useGetNearDeadlineMonitoring(selectedOrgId || "");
-
-  const nearDeadlineItems = useMemo(() => {
+  const nearDeadlineJournals = useMemo(() => {
     const data: any = nearDeadlineData as any;
-    const list = data?.results ?? data ?? [];
-    if (Array.isArray(list)) return list;
-    if (Array.isArray(list?.items)) return list.items;
-    if (Array.isArray(list?.bulletins)) return list.bulletins;
-    return [] as any[];
+    const list = data?.sec_org_journals;
+    return Array.isArray(list) ? list : [];
   }, [nearDeadlineData]);
 
   // Transform API data to match component interfaces
@@ -741,7 +737,7 @@ export default function MonitoringPage() {
                       }}
                     >
                       <Clock className="w-4 h-4 mr-2" />
-                      Yaquin muddatlar
+                      Yaqin muddatlar
                     </Button>
                   </td>
                 </tr>
@@ -775,44 +771,56 @@ export default function MonitoringPage() {
               <div className="p-6 text-center text-[var(--muted-foreground)]">
                 Ma'lumotlar yuklanmoqda...
               </div>
-            ) : nearDeadlineItems.length === 0 ? (
+            ) : nearDeadlineJournals.length === 0 ? (
               <div className="p-6 text-center text-[var(--muted-foreground)]">
                 Yaqin muddatli byulletenlar topilmadi
               </div>
             ) : (
               <div className="space-y-2">
-                {nearDeadlineItems.map((b: any) => (
+                {nearDeadlineJournals.map((j: any) => (
                   <div
-                    key={b.id}
+                    key={j.id}
                     className="p-3 border border-[var(--border)] rounded-lg bg-white flex items-center justify-between"
                   >
-                    <div>
-                      <div className="font-medium text-[var(--foreground)]">
-                        {b.name}
-                      </div>
-                      {b.deadline_date && (
-                        <div className="text-sm text-[var(--muted-foreground)]">
-                          Muddat:{" "}
-                          {new Date(b.deadline_date).toLocaleDateString(
-                            "uz-UZ"
-                          )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-[var(--foreground)] truncate">
+                          {j.name}
                         </div>
-                      )}
+                        <Badge
+                          variant="secondary"
+                          className={
+                            j.type_of_journal === "bulleten"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-purple-100 text-purple-800"
+                          }
+                        >
+                          {j.type_of_journal === "bulleten"
+                            ? "Byulleten"
+                            : "Jurnal"}
+                        </Badge>
+                      </div>
+                      {Array.isArray(j.employees_list) &&
+                        j.employees_list.length > 0 && (
+                          <div className="mt-1 text-xs text-[var(--muted-foreground)] truncate">
+                            Mas'ullar:{" "}
+                            {j.employees_list
+                              .map((e: any) => `${e.first_name} ${e.last_name}`)
+                              .join(", ")}
+                          </div>
+                        )}
                     </div>
-                    {typeof b.days_left === "number" && (
+                    <div className="ml-4">
                       <Badge
                         variant="secondary"
-                        className={`${
-                          b.days_left <= 2
-                            ? "bg-red-100 text-red-800"
-                            : b.days_left <= 7
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
+                        className="bg-gray-100 text-gray-800"
                       >
-                        {b.days_left} kun qoldi
+                        {Array.isArray(j.employees_list)
+                          ? j.employees_list.length
+                          : 0}{" "}
+                        ta mas'ul
                       </Badge>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
