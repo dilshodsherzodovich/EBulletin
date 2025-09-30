@@ -11,6 +11,8 @@ export type OrganizationType =
 export interface Organization {
   id: string;
   name: string;
+  legal_basis: string;
+  attachment_file: string;
   type?: OrganizationType;
   parent: Organization;
   children: string[];
@@ -26,6 +28,8 @@ export interface OrganizationsGetParams {
 
 export interface OrganizationCreateParams {
   name: string;
+  legal_basis: string;
+  attachment_file: File;
   parent_id?: string;
   children?: string[];
   is_active?: boolean;
@@ -35,6 +39,8 @@ export interface OrganizationCreateParams {
 export interface OrganizationUpdateParams {
   id: string;
   name?: string;
+  legal_basis?: string;
+  attachment_file?: File;
   parent_id?: string;
   children?: string[];
   is_active?: boolean;

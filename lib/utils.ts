@@ -30,7 +30,7 @@ export const getRoleName = (roleName: UserRole): string => {
       return "Moderator";
     }
     case "OBSERVER": {
-      return "Kuzatuvchi";
+      return "Foydalanuvchi";
     }
     default: {
       return "";

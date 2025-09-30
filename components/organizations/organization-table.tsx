@@ -12,7 +12,7 @@ import {
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Badge } from "@/ui/badge";
-import { Edit, Trash2, Building2 } from "lucide-react";
+import { Edit, Trash2, Building2, Download } from "lucide-react";
 import { OrganizationsFilters } from "@/components/organizations/organization-filters";
 import { Card } from "@/ui/card";
 import { PaginatedData } from "@/api/types/general";
@@ -22,7 +22,7 @@ import { TableSkeleton } from "@/ui/table-skeleton";
 import { format } from "date-fns";
 import { PermissionGuard } from "../permission-guard";
 import { Pagination } from "@/ui/pagination";
-import { getPageCount } from "@/lib/utils";
+import { getFileName, getPageCount } from "@/lib/utils";
 
 interface OrganizationTableProps {
   organizations: PaginatedData<Organization>;
@@ -97,6 +97,8 @@ export function OrganizationTable({
               </TableHead>
               <TableHead className="w-16 p-3 ">#</TableHead>
               <TableHead className="p-3">Tashkilot</TableHead>
+              <TableHead className="p-3">Huquqiy asos</TableHead>
+              <TableHead className="p-3">Asos fayl</TableHead>
               <TableHead className="p-3">Yaratilgan sana</TableHead>
               <TableHead className="w-32 p-3">Amallar</TableHead>
             </TableRow>
@@ -135,6 +137,21 @@ export function OrganizationTable({
                       <span className="font-medium">{organization.name}</span>
                     </div>
                   </TableCell>
+                  <TableCell className="p-3">
+                    <span className="font-medium">
+                      {organization.legal_basis}
+                    </span>
+                  </TableCell>
+                  <TableCell className="p-3">
+                    <a
+                      href={organization.attachment_file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium"
+                    >
+                      {getFileName(organization.attachment_file)}
+                    </a>
+                  </TableCell>
                   <TableCell className="p-3 text-[var(--muted-foreground)]">
                     {format(organization.created, "dd.MM.yyyy HH:mm")}
                   </TableCell>
@@ -162,6 +179,19 @@ export function OrganizationTable({
                           <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
                         </Button>
                       </PermissionGuard>
+                      <a
+                        href={organization.attachment_file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                        >
+                          <Download className="h-4 w-4 text-[var(--primary)]" />
+                        </Button>
+                      </a>
                     </div>
                   </TableCell>
                 </TableRow>

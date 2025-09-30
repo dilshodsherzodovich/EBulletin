@@ -43,6 +43,7 @@ import { MonitoringOrganization } from "@/api/types/monitoring";
 import { Table, TableBody, TableHead } from "@/ui/table";
 import { authService } from "@/api/services/auth.service";
 import router from "next/router";
+import * as XLSX from "xlsx";
 
 interface StatusData {
   onTime: number;
@@ -219,6 +220,58 @@ export default function MonitoringPage() {
       );
     }
     return null;
+  };
+
+  const exportOrganizationsStatusToExcel = () => {
+    const rows = organizations.map((org) => ({
+      Tashkilot: org.name,
+      Holat: getStatusLabel(org.status),
+      Bajarilgan: org.completed,
+      Jami: org.total,
+      "%": org.percentage,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+
+    // Auto width
+    const colWidths = Object.keys(rows[0] || { A: "" }).map((key) => ({
+      wch:
+        Math.max(
+          key.length,
+          ...rows.map((r) => String((r as any)[key] ?? "").length)
+        ) + 2,
+    }));
+    (worksheet["!cols"] as any) = colWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tashkilotlar");
+    XLSX.writeFile(workbook, "tashkilotlar_holatlari.xlsx");
+  };
+
+  const exportMonitoringTableToExcel = () => {
+    const rows = monitoringTableData.map((m) => ({
+      Tashkilot: m.organization,
+      Jami: m.total,
+      Yangilangan: m.updated,
+      Kutilmoqda: m.pending,
+      "Muddati o'tgan": m.overdue,
+      "Muddati o'tib yangilangan": m.updatedAfterDeadline,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+
+    const colWidths = Object.keys(rows[0] || { A: "" }).map((key) => ({
+      wch:
+        Math.max(
+          key.length,
+          ...rows.map((r) => String((r as any)[key] ?? "").length)
+        ) + 2,
+    }));
+    (worksheet["!cols"] as any) = colWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Monitoring");
+    XLSX.writeFile(workbook, "monitoring_jadvali.xlsx");
   };
 
   // Handle loading state
@@ -493,7 +546,11 @@ export default function MonitoringPage() {
               Tashkilotlar kesimida
             </h2>
           </div>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportOrganizationsStatusToExcel}
+          >
             <Download className="w-4 h-4 mr-2" />
             Excel
           </Button>
@@ -559,7 +616,11 @@ export default function MonitoringPage() {
               Monitoring
             </h2>
           </div>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportMonitoringTableToExcel}
+          >
             <Download className="w-4 h-4 mr-2" />
             Excel
           </Button>

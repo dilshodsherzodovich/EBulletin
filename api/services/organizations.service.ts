@@ -29,7 +29,12 @@ export const organizationsService = {
     try {
       const response = await api.post<Organization>(
         "/organizations/create/",
-        params
+        params,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       return response.data;
     } catch (error) {
@@ -44,7 +49,12 @@ export const organizationsService = {
     try {
       const response = await api.patch<Organization>(
         `/organizations/${params.id}/`,
-        params
+        params,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       return response.data;
     } catch (error) {
