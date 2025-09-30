@@ -39,3 +39,14 @@ export const useDeleteOrganization = () => {
     mutationFn: (id: string) => organizationsService.deleteOrganization(id),
   });
 };
+
+export const useStatisticsOrganizations = ({
+  no_page,
+}: {
+  no_page?: boolean;
+}) => {
+  return useQuery({
+    queryKey: [queryKeys.organizations.statistics],
+    queryFn: () => organizationsService.getStatisticsOrganizations({ no_page }),
+  });
+};

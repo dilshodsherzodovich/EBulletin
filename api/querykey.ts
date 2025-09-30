@@ -7,12 +7,14 @@ export const queryKeys = {
   users: {
     all: "users-all",
     detail: (id: string) => `users-detail-${id}`,
+    statistics: "users-statistics",
   },
   organizations: {
     list: "organizations",
     create: "create-organization",
     edit: "edit-organization",
     delete: "delete-organization",
+    statistics: "organizations-statistics",
   },
 
   monitoring: {

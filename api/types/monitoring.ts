@@ -5,6 +5,7 @@ export interface MonitoringOrganization {
   on_time_count: number;
   late_count: number;
   missed_count: number;
+  near_due_date_count: number;
   on_time_percentage: number;
   late_percentage: number;
   missed_percentage: number;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card } from "@/ui/card";
 import { Badge } from "@/ui/badge";
 import { Button } from "@/ui/button";
@@ -38,12 +38,16 @@ import {
   AreaChart as RechartsAreaChart,
   Area,
 } from "recharts";
-import { useMonitoring } from "@/api/hooks/use-monitoring";
+import {
+  useMonitoring,
+  useGetNearDeadlineMonitoring,
+} from "@/api/hooks/use-monitoring";
 import { MonitoringOrganization } from "@/api/types/monitoring";
 import { Table, TableBody, TableHead } from "@/ui/table";
 import { authService } from "@/api/services/auth.service";
 import router from "next/router";
 import * as XLSX from "xlsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/ui/dialog";
 
 interface StatusData {
   onTime: number;
@@ -87,6 +91,23 @@ interface ChancelleryData {
 export default function MonitoringPage() {
   const { data: monitoring, isLoading, error, refetch } = useMonitoring();
 
+  // Modal state for near-deadline bulletins
+  const [nearDeadlineOpen, setNearDeadlineOpen] = useState(false);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
+  const [selectedOrgName, setSelectedOrgName] = useState<string>("");
+
+  const { data: nearDeadlineData, isLoading: nearLoading } =
+    useGetNearDeadlineMonitoring(selectedOrgId || "");
+
+  const nearDeadlineItems = useMemo(() => {
+    const data: any = nearDeadlineData as any;
+    const list = data?.results ?? data ?? [];
+    if (Array.isArray(list)) return list;
+    if (Array.isArray(list?.items)) return list.items;
+    if (Array.isArray(list?.bulletins)) return list.bulletins;
+    return [] as any[];
+  }, [nearDeadlineData]);
+
   // Transform API data to match component interfaces
   const statusData: StatusData = {
     onTime: monitoring?.results.total_stats.on_time_percentage || 0,
@@ -120,13 +141,18 @@ export default function MonitoringPage() {
       percentage: org.on_time_percentage,
     })) || [];
 
+  // Safe array for organizations list used in table rendering
+  const orgRows = useMemo(() => {
+    const list: any = (monitoring as any)?.results?.organizations;
+    return Array.isArray(list) ? list : [];
+  }, [monitoring]);
+
   const monitoringTableData: MonitoringData[] =
     monitoring?.results.organizations.map((org) => ({
       organization: org.name,
       total: org.total_count,
       updated: org.on_time_count,
-      pending:
-        org.total_count - org.on_time_count - org.late_count - org.missed_count,
+      pending: org.near_due_date_count,
       overdue: org.missed_count,
       updatedAfterDeadline: org.late_count,
     })) || [];
@@ -647,23 +673,26 @@ export default function MonitoringPage() {
                 <th className="text-center text-lg text-primary p-4 font-semibold">
                   Muddati o'tib yangilangan
                 </th>
+                <th className="text-center text-lg text-primary p-4 font-semibold">
+                  Amal
+                </th>
               </tr>
             </thead>
             <tbody>
-              {monitoringTableData.map((item, index) => (
+              {orgRows.map((org: any, index: number) => (
                 <tr
-                  key={index}
+                  key={org.id}
                   className="border-b border-[var(--border)] hover:bg-[var(--muted)]/20 transition-colors"
                 >
                   <td className="p-4 font-medium text-[var(--foreground)] text-[14px]">
-                    {item.organization}
+                    {org.name}
                   </td>
                   <td className="text-center p-4">
                     <Badge
                       variant="secondary"
                       className="bg-[var(--primary)]/10 text-[var(--primary)]"
                     >
-                      {item.total}
+                      {org.total_count}
                     </Badge>
                   </td>
                   <td className="text-center p-4">
@@ -671,7 +700,7 @@ export default function MonitoringPage() {
                       variant="secondary"
                       className="bg-green-100 text-green-800"
                     >
-                      {item.updated}
+                      {org.on_time_count}
                     </Badge>
                   </td>
                   <td className="text-center p-4">
@@ -679,7 +708,10 @@ export default function MonitoringPage() {
                       variant="secondary"
                       className="bg-yellow-100 text-yellow-800"
                     >
-                      {item.pending}
+                      {org.total_count -
+                        org.on_time_count -
+                        org.late_count -
+                        org.missed_count}
                     </Badge>
                   </td>
                   <td className="text-center p-4">
@@ -687,7 +719,7 @@ export default function MonitoringPage() {
                       variant="secondary"
                       className="bg-red-100 text-red-800"
                     >
-                      {item.overdue}
+                      {org.missed_count}
                     </Badge>
                   </td>
                   <td className="text-center p-4">
@@ -695,8 +727,22 @@ export default function MonitoringPage() {
                       variant="secondary"
                       className="bg-orange-100 text-orange-800"
                     >
-                      {item.updatedAfterDeadline}
+                      {org.late_count}
                     </Badge>
+                  </td>
+                  <td className="text-center p-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedOrgId(org.id);
+                        setSelectedOrgName(org.name);
+                        setNearDeadlineOpen(true);
+                      }}
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      Yaquin muddatlar
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -705,93 +751,75 @@ export default function MonitoringPage() {
         </div>
       </Card>
 
-      {/* Chancellery Section */}
-      {/* <Card className="border-[var(--border)] rounded-xl">
-        <div className="flex items-center justify-between p-6 border-b border-[var(--border)]">
-          <div className="flex items-center gap-3">
-            <Target className="w-6 h-6 text-[var(--primary)]" />
-            <h2 className="text-xl font-semibold text-[var(--foreground)]">
-              Kantselyariya
-            </h2>
-          </div>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Excel
-          </Button>
-        </div>
-        <div className="p-6">
-          <div className="space-y-6">
-            {chancelleryData.map((org, index) => (
-              <div
-                key={index}
-                className="border border-[var(--border)] rounded-lg overflow-hidden"
-              >
-                <div className="bg-[var(--muted)]/30 p-4 border-b border-[var(--border)]">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-semibold text-[var(--foreground)]">
-                      {org.organization}
-                    </h4>
-                    <div className="flex items-center gap-6">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-[var(--foreground)]">
-                          {org.total}
-                        </div>
-                        <div className="text-sm text-[var(--muted-foreground)]">
-                          Jami
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-[var(--foreground)]">
-                          {org.totalOrganizations}
-                        </div>
-                        <div className="text-sm text-[var(--muted-foreground)]">
-                          Jami tashkilotlar
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-[var(--foreground)]">
-                          {org.sentToOrganizations}
-                        </div>
-                        <div className="text-sm text-[var(--muted-foreground)]">
-                          Yuborilgan
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-[var(--primary)]">
-                          {org.percentage}%
-                        </div>
-                        <div className="text-sm text-[var(--muted-foreground)]">
-                          Ulushi
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-5 gap-4">
-                    {org.bulletins.map((bulletin, bIndex) => (
-                      <div
-                        key={bIndex}
-                        className="text-center p-3 border border-[var(--border)] rounded-lg bg-white"
-                      >
-                        <div className="text-sm font-medium text-[var(--foreground)] mb-2">
-                          {bulletin.name}
-                        </div>
-                        <div className="text-lg font-semibold text-[var(--primary)] mb-1">
-                          {bulletin.sent}/{bulletin.total}
-                        </div>
-                        <div className="text-sm text-[var(--muted-foreground)]">
-                          {bulletin.percentage}%
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+      {/* Near Deadline Modal */}
+      <Dialog
+        open={nearDeadlineOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setNearDeadlineOpen(false);
+            setSelectedOrgId("");
+            setSelectedOrgName("");
+          } else {
+            setNearDeadlineOpen(true);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-[var(--foreground)]">
+              {selectedOrgName || "Tashkilot"}: yaqin muddatli byulletenlar
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {nearLoading ? (
+              <div className="p-6 text-center text-[var(--muted-foreground)]">
+                Ma'lumotlar yuklanmoqda...
               </div>
-            ))}
+            ) : nearDeadlineItems.length === 0 ? (
+              <div className="p-6 text-center text-[var(--muted-foreground)]">
+                Yaqin muddatli byulletenlar topilmadi
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {nearDeadlineItems.map((b: any) => (
+                  <div
+                    key={b.id}
+                    className="p-3 border border-[var(--border)] rounded-lg bg-white flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="font-medium text-[var(--foreground)]">
+                        {b.name}
+                      </div>
+                      {b.deadline_date && (
+                        <div className="text-sm text-[var(--muted-foreground)]">
+                          Muddat:{" "}
+                          {new Date(b.deadline_date).toLocaleDateString(
+                            "uz-UZ"
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {typeof b.days_left === "number" && (
+                      <Badge
+                        variant="secondary"
+                        className={`${
+                          b.days_left <= 2
+                            ? "bg-red-100 text-red-800"
+                            : b.days_left <= 7
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {b.days_left} kun qoldi
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      </Card> */}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

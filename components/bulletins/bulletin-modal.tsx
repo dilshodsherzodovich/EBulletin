@@ -21,9 +21,12 @@ import {
   BulletinCreateBody,
   BulletinDeadline,
 } from "@/api/types/bulleten";
-import { useOrganizations } from "@/api/hooks/use-organizations";
+import {
+  useOrganizations,
+  useStatisticsOrganizations,
+} from "@/api/hooks/use-organizations";
 import { useDepartments } from "@/api/hooks/use-departmants";
-import { useUsers } from "@/api/hooks/use-user";
+import { useStatisticsUsers, useUsers } from "@/api/hooks/use-user";
 import { Badge } from "@/ui/badge";
 import { LoadingButton } from "@/ui/loading-button";
 
@@ -44,6 +47,7 @@ interface BulletinFormData {
   mainOrganizations: string[];
   secondaryOrganizations: string[];
   responsibleEmployees: string[];
+  statisticsOrganizations: string[];
   type_of_journal_display?: string;
 }
 
@@ -212,6 +216,7 @@ export function BulletinModal({
     mainOrganizations: [],
     secondaryOrganizations: [],
     responsibleEmployees: [],
+    statisticsOrganizations: [],
     type_of_journal_display: "",
   });
 
@@ -232,13 +237,22 @@ export function BulletinModal({
   const { data: departmentsData, isLoading: deptsLoading } = useDepartments({
     no_page: true,
   });
-  const { data: usersData, isLoading: usersLoading } = useUsers({
-    no_page: true,
-  });
+  const { data: usersData, isLoading: usersLoading } = useStatisticsUsers();
+  const { data: statsOrgsData, isLoading: statsOrgsLoading } =
+    useStatisticsOrganizations({ no_page: true });
 
   const organizations = organizationsData?.results || [];
   const departments = departmentsData?.results || [];
   const users = usersData?.results || [];
+  const statisticsOrganizations = statsOrgsData || [];
+
+  // Users filtered by selected statistics organizations
+  const filteredUsers = useMemo(() => {
+    if (!formData.statisticsOrganizations?.length) return [];
+    return users.filter((user: any) =>
+      formData.statisticsOrganizations.includes(user?.organization_id)
+    );
+  }, [users, formData.statisticsOrganizations]);
 
   // Helper function to reconstruct selectedMainOrgs from bulletin data
   const reconstructSelectedMainOrgs = (bulletin: Bulletin) => {
@@ -294,6 +308,7 @@ export function BulletinModal({
           ),
           responsibleEmployees:
             bulletin.employees_list?.map((emp) => emp.id) || [],
+          statisticsOrganizations: [],
           type_of_journal_display: bulletin.type_of_journal_display || "",
         });
 
@@ -315,6 +330,7 @@ export function BulletinModal({
           mainOrganizations: [],
           secondaryOrganizations: [],
           responsibleEmployees: [],
+          statisticsOrganizations: [],
           type_of_journal_display: "",
         });
         setSelectedMainOrgs([]);
@@ -490,6 +506,20 @@ export function BulletinModal({
     }
   };
 
+  const handleStatisticsOrganizationsChange = (values: string[]) => {
+    // When orgs filter changes, prune previously selected employees that no longer match
+    const prunedEmployees = formData.responsibleEmployees.filter((empId) =>
+      users.some(
+        (u: any) => u.id === empId && values.includes(u?.organization_id)
+      )
+    );
+    setFormData({
+      ...formData,
+      statisticsOrganizations: values,
+      responsibleEmployees: prunedEmployees,
+    });
+  };
+
   const isFormValid = () => {
     return (
       formData.name.trim() &&
@@ -520,7 +550,7 @@ export function BulletinModal({
     return secOrg?.name || secOrgId;
   };
 
-  if (orgsLoading || deptsLoading || usersLoading) {
+  if (orgsLoading || deptsLoading || usersLoading || statsOrgsLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -820,22 +850,47 @@ export function BulletinModal({
               )}
             </div>
 
+            {/* Statistics Organizations Filter for Users - Full Width */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium text-[var(--foreground)]">
+                Statistika tashkilotlarini tanlang
+              </Label>
+              <MultiSelect
+                options={statisticsOrganizations?.map((org: any) => ({
+                  value: org.id,
+                  label: org.name,
+                }))}
+                selectedValues={formData.statisticsOrganizations}
+                onSelectionChange={handleStatisticsOrganizationsChange}
+                placeholder="Tashkilotlarni tanlang"
+                searchPlaceholder="Tashkilotlarni qidirish..."
+                emptyMessage="Tashkilot topilmadi"
+              />
+            </div>
+
             {/* Responsible Employees - Full Width */}
             <div className="space-y-3">
               <Label className="text-sm font-medium text-[var(--foreground)]">
                 Mas'ul shaxslarni tanlang
               </Label>
-              <MultiSelect
-                options={users.map((user) => ({
-                  value: user.id,
-                  label: `${user.first_name} ${user.last_name}`,
-                }))}
-                selectedValues={formData.responsibleEmployees}
-                onSelectionChange={handleResponsibleEmployeeChange}
-                placeholder="Mas'ul shaxslarni tanlang"
-                searchPlaceholder="Mas'ul shaxslarni qidirish..."
-                emptyMessage="Mas'ul shaxs topilmadi"
-              />
+              {formData.statisticsOrganizations.length === 0 ? (
+                <div className="text-sm text-[var(--muted-foreground)] p-3 border border-[var(--border)] rounded-md">
+                  Avval statistika tashkilotlarini tanlang. Shundan so'ng, faqat
+                  shu tashkilotlarga tegishli foydalanuvchilar ko'rsatiladi.
+                </div>
+              ) : (
+                <MultiSelect
+                  options={filteredUsers.map((user: any) => ({
+                    value: user.id,
+                    label: `${user.first_name} ${user.last_name}`,
+                  }))}
+                  selectedValues={formData.responsibleEmployees}
+                  onSelectionChange={handleResponsibleEmployeeChange}
+                  placeholder="Mas'ul shaxslarni tanlang"
+                  searchPlaceholder="Mas'ul shaxslarni qidirish..."
+                  emptyMessage="Mas'ul shaxs topilmadi"
+                />
+              )}
               {errors.responsibleEmployees && (
                 <p className="text-red-500 text-xs mt-1">
                   {errors.responsibleEmployees}

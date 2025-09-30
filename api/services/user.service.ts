@@ -45,6 +45,18 @@ export const userService = {
     }
   },
 
+  getStatisticsUsers: async () => {
+    try {
+      const response = await api.get<PaginatedData<UserData>>(
+        "/user/statics/all/"
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Get statistics users error:", error);
+      throw error;
+    }
+  },
+
   updateUser: async (
     id: string,
     userData: Partial<CreateUserRequest>

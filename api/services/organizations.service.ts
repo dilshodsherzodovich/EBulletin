@@ -1,4 +1,5 @@
 import api from "../axios";
+import { Department } from "../types/deparments";
 import { PaginatedData } from "../types/general";
 import {
   Organization,
@@ -19,6 +20,22 @@ export const organizationsService = {
       return response.data;
     } catch (error) {
       console.error("Error fetching organizations:", error);
+      throw error;
+    }
+  },
+
+  getStatisticsOrganizations: async ({
+    no_page,
+  }: {
+    no_page?: boolean;
+  }): Promise<Department[]> => {
+    try {
+      const response = await api.get<Department[]>(
+        "/statistic-organization-list/"
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching statistics organizations:", error);
       throw error;
     }
   },

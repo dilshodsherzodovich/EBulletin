@@ -15,4 +15,18 @@ export const monitoringService = {
       throw error;
     }
   },
+
+  getOrganizationNearDeadlineBulletins: async ({
+    id,
+  }: {
+    id: string;
+  }): Promise<MonitoringApiResponse> => {
+    try {
+      const response = await api.get(`/near-to-deadline/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching monitoring:", error);
+      throw error;
+    }
+  },
 };

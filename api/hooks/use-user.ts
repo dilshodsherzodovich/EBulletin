@@ -55,6 +55,13 @@ export function useUser(id: string) {
   });
 }
 
+export function useStatisticsUsers() {
+  return useQuery({
+    queryKey: [queryKeys.users.statistics],
+    queryFn: () => userService.getStatisticsUsers(),
+  });
+}
+
 export function useUpdateUser() {
   const queryClient = useQueryClient();
 

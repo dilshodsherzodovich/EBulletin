@@ -12,3 +12,12 @@ export const useMonitoring = (
     },
   });
 };
+
+export const useGetNearDeadlineMonitoring = (id: string) => {
+  return useQuery({
+    queryKey: [queryKeys.monitoring.get],
+    queryFn: () => {
+      return monitoringService.getOrganizationNearDeadlineBulletins({ id });
+    },
+  });
+};
