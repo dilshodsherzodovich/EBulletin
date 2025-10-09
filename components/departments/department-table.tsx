@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { PermissionGuard } from "../permission-guard";
 import { Pagination } from "@/ui/pagination";
 import { getPageCount } from "@/lib/utils";
+import PageFilters from "@/ui/filters";
 
 interface DepartmentTableProps {
   departments: PaginatedData<Department>;
@@ -49,9 +50,6 @@ export function DepartmentTable({
   totalItems,
 }: DepartmentTableProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [orgFilter, setOrgFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -79,10 +77,16 @@ export function DepartmentTable({
   return (
     <div className="space-y-4">
       <Card>
-        <DepartmentsFilters
+        <PageFilters
+          filters={[]}
+          hasSearch={true}
+          searchPlaceholder="Quyi tashkilot nomi"
+          onAdd={onCreateNew}
+          addButtonText="Yangi Quyi Tashkilot"
+          addButtonPermittion="create_user"
           selectedCount={selectedIds.length}
           onBulkDelete={handleBulkDelete}
-          onAdd={onCreateNew}
+          bulkDeleteText="O'chirish"
         />
         <div className="overflow-hidden">
           <Table>

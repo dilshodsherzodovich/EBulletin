@@ -17,9 +17,12 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
 import { canAccessSection } from "@/lib/permissions";
-import { redirect } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 
 export default function DepartmentsPage() {
+  const searchParams = useSearchParams();
+  const { q } = Object.fromEntries(searchParams.entries());
+
   const user = JSON.parse(localStorage.getItem("user")!);
 
   if (!user || !canAccessSection(user, "departments")) {
@@ -45,7 +48,7 @@ export default function DepartmentsPage() {
     data: departmentsList,
     isPending: isPendingDepartments,
     isFetching,
-  } = useDepartments({ page });
+  } = useDepartments({ page, name: q });
   const { mutate: createDepartment, isPending: isCreatingDep } =
     useCreateDepartment();
   const { mutate: editDepartment, isPending: isEditingDep } =
