@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import { Badge } from "@/ui/badge";
 
 import { Edit, Trash2, User, Shield, Building } from "lucide-react";
 
-import { UserFilters } from "@/components/users/user-filters";
+import PageFilters from "@/ui/filters";
 import { Card } from "@/ui/card";
 import { PaginatedData } from "@/api/types/general";
 import { UserData, UserRole } from "@/api/types/user";
@@ -23,6 +23,10 @@ import { getPageCount, getRoleName } from "@/lib/utils";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { PermissionGuard } from "../permission-guard";
 import { Pagination } from "@/ui/pagination";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { userRoles } from "@/lib/users";
+import { useOrganizations } from "@/api/hooks/use-organizations";
+import { useDepartments } from "@/api/hooks/use-departmants";
 
 interface UserTableProps {
   users: PaginatedData<UserData>;
@@ -34,11 +38,8 @@ interface UserTableProps {
   onCreateNew: () => void;
   isLoading: boolean;
   totalPages: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
   totalItems?: number;
 }
-
 export function UserTable({
   users,
   selectedIds = [],
@@ -49,20 +50,35 @@ export function UserTable({
   onCreateNew,
   isLoading,
   totalPages,
-  currentPage,
-  onPageChange,
   totalItems,
 }: UserTableProps) {
-  const [searchTerm, setSearchTerm] = useState(""); // Added search state
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [orgFilter, setOrgFilter] = useState("all");
-  const [deptFilter, setDeptFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  // Example options (replace with real data as needed)
-  const roleOptions = ["", "Administrator", "Operator", "Tahlilchi"];
-  const orgOptions = ["", "Statistika", "Analitika", "Rejalashtirish"];
-  const deptOptions = ["", "Statistika", "Analitika", "Rejalashtirish"];
+  // Data hooks
+  const { data: organizations, isPending: isOrgsPending } = useOrganizations({
+    no_page: true,
+  });
+  const { data: departments, isPending: isDepsPending } = useDepartments({
+    no_page: true,
+  });
+
+  const queryOrg = searchParams.get("org");
+  const queryPage = parseInt(searchParams.get("page") || "1", 10);
+
+  // Helper to update the query string (only for pagination now)
+  const updateQuery = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -86,27 +102,82 @@ export function UserTable({
     }
   };
 
+  const deptOptions = useMemo(() => {
+    if (queryOrg) {
+      return departments?.results
+        ?.filter((dept) => dept.organization_id === queryOrg)
+        .map((dept) => ({
+          label: dept.name,
+          value: dept.id,
+        }));
+    }
+    return departments?.results?.map((dept) => ({
+      label: dept.name,
+      value: dept.id,
+    }));
+  }, [queryOrg, departments?.results]);
+
+  const userFilters = useMemo(() => {
+    return [
+      {
+        name: "role",
+        label: "Rol",
+        isSelect: true,
+        options: [
+          { label: "Barcha rollar", value: "" },
+          ...userRoles.slice(1).map((role) => ({ label: role, value: role })),
+        ],
+        placeholder: "Barcha rollar",
+        searchable: true,
+        clearable: true,
+        minWidth: "160px",
+      },
+      {
+        name: "org",
+        label: "Tashkilot",
+        isSelect: true,
+        options: [
+          { label: "Barcha tashkilotlar", value: "" },
+          ...(organizations?.results?.map((org) => ({
+            label: org.name,
+            value: org.id,
+          })) || []),
+        ],
+        placeholder: "Barcha tashkilotlar",
+        searchable: true,
+        clearable: true,
+        loading: isOrgsPending,
+        minWidth: "200px",
+      },
+      {
+        name: "dept",
+        label: "Quyi tashkilot",
+        isSelect: true,
+        options: deptOptions,
+        placeholder: "Barcha Quyi tashkilotlar",
+        searchable: true,
+        clearable: true,
+        loading: isDepsPending,
+        minWidth: "220px",
+      },
+    ];
+  }, [organizations, departments, deptOptions]);
+
   return (
     <div className="space-y-4">
       <Card className="rounded-xl">
-        <UserFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          selectedCount={selectedIds.length}
-          onBulkDelete={handleBulkDelete}
-          roleFilter={roleFilter}
-          onRoleChange={setRoleFilter}
-          orgFilter={orgFilter}
-          onOrgChange={setOrgFilter}
-          deptFilter={deptFilter}
-          onDeptChange={setDeptFilter}
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-          roleOptions={roleOptions}
-          orgOptions={orgOptions}
-          deptOptions={deptOptions}
-          onAdd={onCreateNew}
-        />
+        <PermissionGuard permission="create_user">
+          <PageFilters
+            filters={userFilters}
+            hasSearch={true}
+            searchPlaceholder="Foydalanuvchi nomi yoki login..."
+            onAdd={onCreateNew}
+            addButtonText="Yangi foydalanuvchi"
+            selectedCount={selectedIds.length}
+            onBulkDelete={handleBulkDelete}
+            bulkDeleteText="O'chirish"
+          />
+        </PermissionGuard>
 
         <div className="overflow-hidden">
           <Table>
@@ -241,9 +312,11 @@ export function UserTable({
           {totalPages > 1 && (
             <div className="p-4 border-t border-[var(--border)]">
               <Pagination
-                currentPage={currentPage}
+                currentPage={queryPage || 1}
                 totalPages={getPageCount(totalPages, 10)}
-                onPageChange={onPageChange}
+                onPageChange={(p) => {
+                  updateQuery({ page: String(p) });
+                }}
                 totalItems={totalItems}
               />
             </div>

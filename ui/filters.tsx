@@ -1,0 +1,423 @@
+"use client";
+
+import * as React from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Input } from "@/ui/input";
+import { Button } from "@/ui/button";
+import { DatePicker } from "@/ui/date-picker";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/ui/select";
+import { Trash2, Plus, Search } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+interface Option {
+  label: string;
+  value: string;
+  disabled?: boolean;
+}
+
+interface FiltersQuery {
+  name: string;
+  label: string;
+  isSelect: boolean;
+  options?: Option[];
+  placeholder?: string;
+  searchable?: boolean;
+  clearable?: boolean;
+  loading?: boolean;
+  minWidth?: string;
+}
+
+interface PageFiltersProps {
+  filters: FiltersQuery[];
+  hasSearch?: boolean;
+  hasDatePicker?: boolean;
+  hasDateRangePicker?: boolean;
+  searchPlaceholder?: string;
+  datePickerLabel?: string;
+  dateRangePickerLabel?: string;
+  onAdd?: () => void;
+  addButtonText?: string;
+  addButtonIcon?: React.ReactNode;
+  selectedCount?: number;
+  onBulkDelete?: () => void;
+  bulkDeleteText?: string;
+  className?: string;
+}
+
+export default function PageFilters({
+  filters,
+  hasSearch = true,
+  hasDatePicker = false,
+  hasDateRangePicker = false,
+  searchPlaceholder = "Qidirish...",
+  datePickerLabel = "Sana",
+  dateRangePickerLabel = "Sana oralig'i",
+  onAdd,
+  addButtonText = "Yangi qo'shish",
+  addButtonIcon = (
+    <svg
+      className="w-4 h-4 mr-2"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+    </svg>
+  ),
+  selectedCount = 0,
+  onBulkDelete,
+  bulkDeleteText = "O'chirish",
+  className,
+}: PageFiltersProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const debounceMs = 400;
+  const timersRef = React.useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {}
+  );
+
+  // Helper to update the query string
+  const updateQuery = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+
+    // Reset page when filters change
+    if (updates.page === undefined) {
+      params.delete("page");
+    }
+
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  // Get current values from query params
+  const getQueryValue = (name: string) => searchParams.get(name) || "";
+
+  // Debounced updater per key
+  const scheduleDebounce = (key: string, value: string) => {
+    if (timersRef.current[key]) clearTimeout(timersRef.current[key]);
+    timersRef.current[key] = setTimeout(() => {
+      updateQuery({ [key]: value });
+      delete timersRef.current[key];
+    }, debounceMs);
+  };
+
+  // Local state for search input (q)
+  const [searchLocal, setSearchLocal] = React.useState<string>(() =>
+    getQueryValue("q")
+  );
+  React.useEffect(() => {
+    setSearchLocal(getQueryValue("q"));
+  }, [searchParams]);
+
+  // Handle search input
+  const handleSearchChange = (value: string) => {
+    setSearchLocal(value);
+    scheduleDebounce("q", value);
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (name: string, value: string) => {
+    updateQuery({ [name]: value });
+  };
+
+  // Local state for text filter inputs (non-select filters)
+  const getInitialTextValues = () => {
+    const map: Record<string, string> = {};
+    filters.forEach((f) => {
+      if (!f.isSelect) {
+        map[f.name] = getQueryValue(f.name);
+      }
+    });
+    return map;
+  };
+  const [textValues, setTextValues] =
+    React.useState<Record<string, string>>(getInitialTextValues);
+
+  // Sync text inputs with URL and filters list changes
+  React.useEffect(() => {
+    setTextValues(getInitialTextValues());
+  }, [filters, searchParams]);
+
+  // Handle date picker changes
+  const handleDateChange = (date: Date | undefined) => {
+    const dateString = date ? format(date, "yyyy-MM-dd") : "";
+    updateQuery({ date: dateString });
+  };
+
+  // Handle date range picker changes
+  const handleDateRangeChange = (
+    startDate: Date | undefined,
+    endDate: Date | undefined
+  ) => {
+    const startString = startDate ? format(startDate, "yyyy-MM-dd") : "";
+    const endString = endDate ? format(endDate, "yyyy-MM-dd") : "";
+    updateQuery({
+      start_date: startString,
+      end_date: endString,
+    });
+  };
+
+  // Get current date values
+  const currentDate = getQueryValue("date")
+    ? new Date(getQueryValue("date"))
+    : undefined;
+  const currentStartDate = getQueryValue("start_date")
+    ? new Date(getQueryValue("start_date"))
+    : undefined;
+  const currentEndDate = getQueryValue("end_date")
+    ? new Date(getQueryValue("end_date"))
+    : undefined;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap md:flex-nowrap items-stretch gap-3 md:gap-4 mb-4",
+        className
+      )}
+    >
+      {/* Search Input */}
+      {hasSearch && (
+        <div className="basis-full md:basis-0 md:flex-1 min-w-0">
+          <Input
+            placeholder={searchPlaceholder}
+            className="w-full h-10 mb-0"
+            value={searchLocal}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+        </div>
+      )}
+
+      {/* Dynamic Filters */}
+      {filters.map((filter) => (
+        <div
+          key={filter.name}
+          className="basis-full md:basis-0 md:flex-1 min-w-0"
+        >
+          {filter.isSelect ? (
+            <SelectWithSearch
+              placeholder={filter.placeholder || `Tanlang...`}
+              searchable={filter.searchable !== false}
+              loading={filter.loading}
+              options={filter.options || []}
+              value={getQueryValue(filter.name)}
+              onValueChange={(value) => handleFilterChange(filter.name, value)}
+              triggerClassName="w-full h-10 mb-0"
+            />
+          ) : (
+            <Input
+              placeholder={filter.placeholder || filter.label}
+              className="w-full h-10 mb-0"
+              value={textValues[filter.name] ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setTextValues((prev) => ({ ...prev, [filter.name]: v }));
+                scheduleDebounce(filter.name, v);
+              }}
+            />
+          )}
+        </div>
+      ))}
+
+      {/* Date Picker */}
+      {hasDatePicker && (
+        <div className="basis-full md:basis-0 md:flex-1 min-w-0">
+          <DatePicker
+            placeholder={datePickerLabel}
+            value={currentDate}
+            onValueChange={handleDateChange}
+            className="w-full"
+            size="sm"
+          />
+        </div>
+      )}
+
+      {/* Date Range Picker */}
+      {hasDateRangePicker && (
+        <div className="basis-full md:basis-0 md:flex-1 min-w-0">
+          <div className="grid grid-cols-2 gap-2">
+            <DatePicker
+              placeholder={`${dateRangePickerLabel} dan`}
+              value={currentStartDate}
+              onValueChange={(date) =>
+                handleDateRangeChange(date, currentEndDate)
+              }
+              className="w-full"
+              size="sm"
+            />
+            <DatePicker
+              placeholder={`${dateRangePickerLabel} gacha`}
+              value={currentEndDate}
+              onValueChange={(date) =>
+                handleDateRangeChange(currentStartDate, date)
+              }
+              className="w-full"
+              size="sm"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Add Button */}
+      {onAdd && (
+        <div className="ms-auto shrink-0 flex items-center gap-2">
+          <Button
+            onClick={onAdd}
+            className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap"
+          >
+            <span className="flex items-center">
+              {addButtonIcon || <Plus className="w-4 h-4 mr-2" />}
+              {addButtonText}
+            </span>
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk Actions */}
+      {selectedCount > 0 && onBulkDelete && (
+        <div className="ms-auto shrink-0 flex items-center gap-2">
+          <span className="text-sm text-[#6b7280]">
+            {selectedCount} ta tanlangan
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-[#dc2626] border-[#dc2626] hover:bg-[#dc2626] hover:text-white bg-transparent"
+            onClick={onBulkDelete}
+          >
+            <Trash2 className="w-4 h-4 mr-1" />
+            {bulkDeleteText}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Local Select component with built-in search using shadcn/ui Select
+function SelectWithSearch({
+  placeholder,
+  options,
+  value,
+  onValueChange,
+  searchable = true,
+  loading,
+  triggerClassName,
+}: {
+  placeholder?: string;
+  options: { label: string; value: string; disabled?: boolean }[];
+  value: string;
+  onValueChange: (v: string) => void;
+  searchable?: boolean;
+  loading?: boolean;
+  triggerClassName?: string;
+}) {
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  // Map empty string option value to a non-empty sentinel for shadcn Select
+  const EMPTY_SENTINEL = "__empty__";
+  const hasEmptyOption = React.useMemo(
+    () => options.some((o) => o.value === ""),
+    [options]
+  );
+
+  const internalOptions = React.useMemo(
+    () =>
+      options.map((o) => ({
+        ...o,
+        value: o.value === "" ? EMPTY_SENTINEL : o.value,
+      })),
+    [options]
+  );
+
+  const filteredOptions = React.useMemo(() => {
+    const source = internalOptions;
+    if (!searchable || !searchTerm) return source;
+    return source.filter((o) =>
+      o.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [internalOptions, searchTerm, searchable]);
+
+  // When there are no options (overall or filtered), or when value is empty without an explicit empty option,
+  // use undefined to display the placeholder and avoid value becoming null.
+  const noOverallOptions = internalOptions.length === 0;
+  const noFilteredOptions = filteredOptions.length === 0;
+  const mappedExternal =
+    hasEmptyOption && value === "" ? EMPTY_SENTINEL : value;
+  const valueForSelect =
+    noOverallOptions || noFilteredOptions || (!hasEmptyOption && value === "")
+      ? undefined
+      : mappedExternal;
+  const handleChange = (v: string) => {
+    onValueChange(v === EMPTY_SENTINEL ? "" : v);
+  };
+
+  return (
+    <Select value={valueForSelect} onValueChange={handleChange}>
+      <SelectTrigger className={cn("h-10", triggerClassName)}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {searchable && (
+          <div className="p-2 border-b">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]" />
+              <input
+                type="text"
+                placeholder="Qidirish..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-8 pr-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-[#2354bf]/20"
+              />
+            </div>
+          </div>
+        )}
+        {loading ? (
+          <div className="p-4 text-center text-sm text-[#6b7280]">
+            Yuklanmoqda...
+          </div>
+        ) : (
+          <>
+            {/* Keep hidden current item only when there are some results, to preserve focus and value */}
+            {!noFilteredOptions &&
+              valueForSelect &&
+              !filteredOptions.some((o) => o.value === mappedExternal) && (
+                <SelectItem
+                  className="hidden"
+                  value={mappedExternal}
+                ></SelectItem>
+              )}
+            {filteredOptions.map((opt) => (
+              <SelectItem
+                key={opt.value}
+                value={opt.value}
+                disabled={opt.disabled}
+              >
+                {opt.label}
+              </SelectItem>
+            ))}
+            {noFilteredOptions && (
+              <div className="p-4 text-center text-sm text-[#6b7280]">
+                Natijalar yo'q
+              </div>
+            )}
+          </>
+        )}
+      </SelectContent>
+    </Select>
+  );
+}

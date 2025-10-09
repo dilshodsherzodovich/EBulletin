@@ -27,9 +27,6 @@ interface UserFiltersProps {
   onDeptChange: (value: string) => void;
   statusFilter: string;
   onStatusChange: (value: string) => void;
-  roleOptions: string[];
-  orgOptions: string[];
-  deptOptions: string[];
   onAdd: () => void;
 }
 
@@ -46,25 +43,33 @@ export function UserFilters({
   onDeptChange,
   statusFilter,
   onStatusChange,
-  roleOptions,
-  orgOptions,
-  deptOptions,
   onAdd,
 }: UserFiltersProps) {
   const { data: organizations, isPending: isOrgsPending } = useOrganizations({
-    page: 1,
+    no_page: true,
   });
   const { data: departments, isPending: isDepsPending } = useDepartments({
-    page: 1,
+    no_page: true,
   });
+
+  const mapOut = (v: string) => (v === "all" ? "" : v);
+  const mapIn = (v: string) => (v === "" ? "all" : v);
 
   return (
     <div className="flex gap-2 mb-4 items-center justify-between">
       <Input
         placeholder="Foydalanuvchi nomi yoki login..."
         className="min-w-[180px] h-10 mb-0"
+        value={searchTerm}
+        onChange={(e) => {
+          console.log(e.target.value);
+          onSearchChange(e.target.value);
+        }}
       />
-      <Select>
+      <Select
+        value={mapIn(roleFilter)}
+        onValueChange={(v) => onRoleChange(mapOut(v))}
+      >
         <SelectTrigger className="min-w-[160px] h-10 mb-0">
           <SelectValue placeholder="Barcha rollar" />
         </SelectTrigger>
@@ -77,8 +82,11 @@ export function UserFilters({
           ))}
         </SelectContent>
       </Select>
-      <Select>
-        <SelectTrigger className="min-w-[160px] h-10 mb-0">
+      <Select
+        value={mapIn(orgFilter)}
+        onValueChange={(v) => onOrgChange(mapOut(v))}
+      >
+        <SelectTrigger className="min-w-[200px] h-10 mb-0">
           <SelectValue placeholder="Barcha tashkilotlar" />
         </SelectTrigger>
         <SelectContent>
@@ -90,8 +98,11 @@ export function UserFilters({
           ))}
         </SelectContent>
       </Select>
-      <Select>
-        <SelectTrigger className="min-w-[160px] h-10 mb-0">
+      <Select
+        value={mapIn(deptFilter)}
+        onValueChange={(v) => onDeptChange(mapOut(v))}
+      >
+        <SelectTrigger className="min-w-[220px] h-10 mb-0">
           <SelectValue placeholder="Barcha Quyi tashkilotlar" />
         </SelectTrigger>
         <SelectContent>
@@ -103,8 +114,11 @@ export function UserFilters({
           ))}
         </SelectContent>
       </Select>
-      <Select>
-        <SelectTrigger className="min-w-[140px] h-10 mb-0">
+      <Select
+        value={mapIn(statusFilter)}
+        onValueChange={(v) => onStatusChange(mapOut(v))}
+      >
+        <SelectTrigger className="min-w-[160px] h-10 mb-0">
           <SelectValue placeholder="Barcha holatlar" />
         </SelectTrigger>
         <SelectContent>
