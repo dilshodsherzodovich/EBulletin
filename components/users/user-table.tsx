@@ -27,6 +27,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { userRoles } from "@/lib/users";
 import { useOrganizations } from "@/api/hooks/use-organizations";
 import { useDepartments } from "@/api/hooks/use-departmants";
+import { useFilterParams } from "@/lib/hooks/useFilterParams";
 
 interface UserTableProps {
   users: PaginatedData<UserData>;
@@ -52,8 +53,7 @@ export function UserTable({
   totalPages,
   totalItems,
 }: UserTableProps) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const { updateQuery } = useFilterParams();
   const searchParams = useSearchParams();
 
   // Data hooks
@@ -68,17 +68,6 @@ export function UserTable({
   const queryPage = parseInt(searchParams.get("page") || "1", 10);
 
   // Helper to update the query string (only for pagination now)
-  const updateQuery = (updates: Record<string, string | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    });
-    router.push(`${pathname}?${params.toString()}`);
-  };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -130,54 +119,52 @@ export function UserTable({
         placeholder: "Barcha rollar",
         searchable: true,
         clearable: true,
-        minWidth: "160px",
       },
-      {
-        name: "org",
-        label: "Tashkilot",
-        isSelect: true,
-        options: [
-          { label: "Barcha tashkilotlar", value: "" },
-          ...(organizations?.results?.map((org) => ({
-            label: org.name,
-            value: org.id,
-          })) || []),
-        ],
-        placeholder: "Barcha tashkilotlar",
-        searchable: true,
-        clearable: true,
-        loading: isOrgsPending,
-        minWidth: "200px",
-      },
-      {
-        name: "dept",
-        label: "Quyi tashkilot",
-        isSelect: true,
-        options: deptOptions,
-        placeholder: "Barcha Quyi tashkilotlar",
-        searchable: true,
-        clearable: true,
-        loading: isDepsPending,
-        minWidth: "220px",
-      },
+      // {
+      //   name: "org",
+      //   label: "Tashkilot",
+      //   isSelect: true,
+      //   options: [
+      //     { label: "Barcha tashkilotlar", value: "" },
+      //     ...(organizations?.results?.map((org) => ({
+      //       label: org.name,
+      //       value: org.id,
+      //     })) || []),
+      //   ],
+      //   placeholder: "Barcha tashkilotlar",
+      //   searchable: true,
+      //   clearable: true,
+      //   loading: isOrgsPending,
+      //   minWidth: "200px",
+      // },
+      // {
+      //   name: "dept",
+      //   label: "Quyi tashkilot",
+      //   isSelect: true,
+      //   options: deptOptions,
+      //   placeholder: "Barcha Quyi tashkilotlar",
+      //   searchable: true,
+      //   clearable: true,
+      //   loading: isDepsPending,
+      //   minWidth: "220px",
+      // },
     ];
   }, [organizations, departments, deptOptions]);
 
   return (
     <div className="space-y-4">
       <Card className="rounded-xl">
-        <PermissionGuard permission="create_user">
-          <PageFilters
-            filters={userFilters}
-            hasSearch={true}
-            searchPlaceholder="Foydalanuvchi nomi yoki login..."
-            onAdd={onCreateNew}
-            addButtonText="Yangi foydalanuvchi"
-            selectedCount={selectedIds.length}
-            onBulkDelete={handleBulkDelete}
-            bulkDeleteText="O'chirish"
-          />
-        </PermissionGuard>
+        <PageFilters
+          filters={userFilters}
+          hasSearch={true}
+          searchPlaceholder="Foydalanuvchi nomi yoki login..."
+          onAdd={onCreateNew}
+          addButtonText="Yangi foydalanuvchi"
+          addButtonPermittion="create_user"
+          selectedCount={selectedIds.length}
+          onBulkDelete={handleBulkDelete}
+          bulkDeleteText="O'chirish"
+        />
 
         <div className="overflow-hidden">
           <Table>

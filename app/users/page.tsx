@@ -46,6 +46,8 @@ export default function UsersPage() {
 
   const { data: usersList, isPending } = useUsers({
     page: parseInt(page as string) || 1,
+    username: q,
+    role,
   });
   const { mutate: createUser, isPending: isCreatingUser } = useCreateUser();
   const { mutate: editUser, isPending: isEditingUser } = useUpdateUser();

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/ui/input";
 import { Button } from "@/ui/button";
 import { DatePicker } from "@/ui/date-picker";
@@ -15,6 +15,9 @@ import {
 import { Trash2, Plus, Search } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Permission } from "@/lib/permissions";
+import { PermissionGuard } from "@/components/permission-guard";
+import { useFilterParams } from "@/lib/hooks/useFilterParams";
 
 interface Option {
   label: string;
@@ -43,6 +46,7 @@ interface PageFiltersProps {
   datePickerLabel?: string;
   dateRangePickerLabel?: string;
   onAdd?: () => void;
+  addButtonPermittion?: Permission;
   addButtonText?: string;
   addButtonIcon?: React.ReactNode;
   selectedCount?: number;
@@ -61,51 +65,20 @@ export default function PageFilters({
   dateRangePickerLabel = "Sana oralig'i",
   onAdd,
   addButtonText = "Yangi qo'shish",
-  addButtonIcon = (
-    <svg
-      className="w-4 h-4 mr-2"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  ),
+  addButtonIcon,
+  addButtonPermittion,
   selectedCount = 0,
   onBulkDelete,
   bulkDeleteText = "O'chirish",
   className,
 }: PageFiltersProps) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const { updateQuery, getQueryValue } = useFilterParams();
+
   const searchParams = useSearchParams();
   const debounceMs = 400;
   const timersRef = React.useRef<Record<string, ReturnType<typeof setTimeout>>>(
     {}
   );
-
-  // Helper to update the query string
-  const updateQuery = (updates: Record<string, string | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    });
-
-    // Reset page when filters change
-    if (updates.page === undefined) {
-      params.delete("page");
-    }
-
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  // Get current values from query params
-  const getQueryValue = (name: string) => searchParams.get(name) || "";
 
   // Debounced updater per key
   const scheduleDebounce = (key: string, value: string) => {
@@ -216,7 +189,7 @@ export default function PageFilters({
               options={filter.options || []}
               value={getQueryValue(filter.name)}
               onValueChange={(value) => handleFilterChange(filter.name, value)}
-              triggerClassName="w-full h-10 mb-0"
+              triggerClassName="w-full h-10 mb-0 max-w-[250px]"
             />
           ) : (
             <Input
@@ -274,17 +247,19 @@ export default function PageFilters({
 
       {/* Add Button */}
       {onAdd && (
-        <div className="ms-auto shrink-0 flex items-center gap-2">
-          <Button
-            onClick={onAdd}
-            className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap"
-          >
-            <span className="flex items-center">
-              {addButtonIcon || <Plus className="w-4 h-4 mr-2" />}
-              {addButtonText}
-            </span>
-          </Button>
-        </div>
+        <PermissionGuard permission={addButtonPermittion}>
+          <div className="ms-auto shrink-0 flex items-center gap-2">
+            <Button
+              onClick={onAdd}
+              className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap"
+            >
+              <span className="flex items-center">
+                {addButtonIcon || <Plus className="w-4 h-4 mr-2" />}
+                {addButtonText}
+              </span>
+            </Button>
+          </div>
+        </PermissionGuard>
       )}
 
       {/* Bulk Actions */}
@@ -325,6 +300,7 @@ function SelectWithSearch({
   searchable?: boolean;
   loading?: boolean;
   triggerClassName?: string;
+  style?: Record<string, string>;
 }) {
   const [searchTerm, setSearchTerm] = React.useState("");
 
