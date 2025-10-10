@@ -13,13 +13,22 @@ import { PaginatedData } from "../types/general";
 export const bulletinService = {
   getBulletins: async ({
     page = 1,
+    name,
+    type_of_journal,
+    organization,
   }: {
     page: number;
+    name?: string;
+    type_of_journal?: string;
+    organization?: string;
   }): Promise<PaginatedData<Bulletin>> => {
     try {
       const response = await api.get("/journal/all/", {
         params: {
           page,
+          name,
+          type_of_journal,
+          organization,
         },
       });
       return response.data;

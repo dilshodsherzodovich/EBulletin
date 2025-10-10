@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BulletinTable } from "@/components/bulletins/bulletin-table";
 import { BulletinModal } from "@/components/bulletins/bulletin-modal";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
@@ -22,11 +22,13 @@ import { ErrorCard } from "@/ui/error-card";
 import { getPageCount } from "@/lib/utils";
 import { canAccessSection } from "@/lib/permissions";
 import { redirect, useSearchParams } from "next/navigation";
+import { useFilterParams } from "@/lib/hooks/useFilterParams";
 
 export default function BulletinsPage() {
   const searchParams = useSearchParams();
+  const { updateQuery } = useFilterParams();
 
-  const { q, journal_type, organization, fill_type, page } = Object.fromEntries(
+  const { q, journal_type, org, fill_type, page } = Object.fromEntries(
     searchParams.entries()
   );
 
@@ -48,20 +50,19 @@ export default function BulletinsPage() {
   );
 
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
-
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState("");
-  const [organizationFilter, setOrganizationFilter] = useState("all");
-  const [periodTypeFilter, setPeriodTypeFilter] = useState("all");
 
   // API calls
   const {
     data: bulletins,
     isPending,
     isError,
-  } = useBulletin({ page: currentPage });
+  } = useBulletin({
+    page: +page,
+    name: q,
+    type_of_journal: journal_type,
+    organization: org,
+  });
   const { data: organizationsData, isLoading: isLoadingOrganizations } =
     useOrganizations({ page: 1 });
   const { mutate: createBulletin, isPending: isCreating } = useCreateBulletin();
@@ -72,7 +73,12 @@ export default function BulletinsPage() {
 
   // Calculate pagination
   const totalPages = getPageCount(bulletins?.count || 0, pageSize) || 1;
-  const organizations = organizationsData?.results || [];
+
+  useEffect(() => {
+    if (!page) {
+      updateQuery({ page: "1" });
+    }
+  }, [page]);
 
   const handleSelectionChange = (ids: string[]) => {
     setSelectedIds(ids);
@@ -103,11 +109,6 @@ export default function BulletinsPage() {
     setSelectedBulletin(undefined);
     setModalMode("create");
     setShowModal(true);
-  };
-
-  const handleAssignResponsible = (bulletin: Bulletin) => {
-    console.log("Assign responsible for bulletin:", bulletin);
-    // TODO: Implement assign responsible functionality
   };
 
   const handleModalSubmit = (data: BulletinCreateBody) => {
@@ -161,16 +162,8 @@ export default function BulletinsPage() {
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    updateQuery({ page: page.toString() });
     setSelectedIds([]); // Clear selection when changing pages
-  };
-
-  const handleClearFilters = () => {
-    setSearchTerm("");
-    setOrganizationFilter("all");
-    setPeriodTypeFilter("all");
-    setCurrentPage(1);
-    setSelectedIds([]);
   };
 
   if (isError) {
@@ -208,7 +201,7 @@ export default function BulletinsPage() {
         onCreateNew={handleCreateNew}
         isLoading={isPending}
         isDeleting={isDeleting}
-        currentPage={currentPage}
+        currentPage={+page}
         totalPages={totalPages}
         onPageChange={handlePageChange}
         totalItems={bulletins?.count || 0}

@@ -10,12 +10,18 @@ import {
   BulletinFileUpdateRequest,
 } from "../types/bulleten";
 
-export const useBulletin = (params: { page: number }) => {
+export const useBulletin = (params: {
+  page: number;
+  type_of_journal?: string;
+  name?: string;
+  organization?: string;
+}) => {
   return useQuery({
     queryKey: [queryKeys.bulletins.list, { ...params }],
     queryFn: () => {
       return bulletinService.getBulletins(params);
     },
+    enabled: !!params.page,
   });
 };
 
