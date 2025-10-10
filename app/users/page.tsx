@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/ui/card";
 import { UserTable } from "@/components/users/user-table";
 import { UserModal } from "@/components/users/user-modal";
@@ -16,10 +16,12 @@ import { CreateUserRequest } from "@/api/types/user";
 import { UserData } from "@/api/types/auth";
 import { canAccessSection } from "@/lib/permissions";
 import { redirect, useSearchParams } from "next/navigation";
+import { useFilterParams } from "@/lib/hooks/useFilterParams";
 
 // Keep the mock data for now
 
 export default function UsersPage() {
+  const { updateQuery } = useFilterParams();
   const user = JSON.parse(localStorage.getItem("user")!);
 
   if (!user || !canAccessSection(user, "users")) {
@@ -52,6 +54,12 @@ export default function UsersPage() {
   const { mutate: createUser, isPending: isCreatingUser } = useCreateUser();
   const { mutate: editUser, isPending: isEditingUser } = useUpdateUser();
   const { mutate: deleteUser, isPending: isDeletingUser } = useDeleteUser();
+
+  useEffect(() => {
+    if (!page) {
+      updateQuery({ page: "1" });
+    }
+  }, [page]);
 
   const handleOpenCreateModal = () => {
     setModalMode("create");
@@ -125,6 +133,11 @@ export default function UsersPage() {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    updateQuery({ page: page.toString() });
+    setSelectedIds([]); // Clear selection when changing pages
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -151,6 +164,8 @@ export default function UsersPage() {
         isLoading={isPending}
         totalPages={usersList?.count || 1}
         totalItems={usersList?.count || 0}
+        page={+page}
+        onPageChange={handlePageChange}
       />
 
       <UserModal

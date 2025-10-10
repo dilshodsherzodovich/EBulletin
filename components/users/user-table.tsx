@@ -40,6 +40,8 @@ interface UserTableProps {
   isLoading: boolean;
   totalPages: number;
   totalItems?: number;
+  page: number;
+  onPageChange: (page: number) => void;
 }
 export function UserTable({
   users,
@@ -52,6 +54,8 @@ export function UserTable({
   isLoading,
   totalPages,
   totalItems,
+  page,
+  onPageChange,
 }: UserTableProps) {
   const { updateQuery } = useFilterParams();
   const searchParams = useSearchParams();
@@ -66,8 +70,6 @@ export function UserTable({
 
   const queryOrg = searchParams.get("org");
   const queryPage = parseInt(searchParams.get("page") || "1", 10);
-
-  // Helper to update the query string (only for pagination now)
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -299,11 +301,9 @@ export function UserTable({
           {totalPages > 1 && (
             <div className="p-4 border-t border-[var(--border)]">
               <Pagination
-                currentPage={queryPage || 1}
+                currentPage={page || 1}
                 totalPages={getPageCount(totalPages, 10)}
-                onPageChange={(p) => {
-                  updateQuery({ page: String(p) });
-                }}
+                onPageChange={onPageChange}
                 totalItems={totalItems}
               />
             </div>

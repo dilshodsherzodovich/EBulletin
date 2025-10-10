@@ -14,6 +14,7 @@ export const useOrganizations = (params: OrganizationsGetParams) => {
     queryFn: () => {
       return organizationsService.getOrganizations(params);
     },
+    enabled: !!params.page || !!params.no_page,
   });
 };
 
