@@ -26,17 +26,17 @@ export const userService = {
   getUsers: async ({
     page,
     no_page,
-    username,
     role,
+    search,
   }: {
     page?: number;
     no_page?: boolean;
-    username?: string;
+    search?: string;
     role?: string;
   }) => {
     try {
       const response = await api.get<PaginatedData<UserData>>(`/user/all/`, {
-        params: { page, no_page, username, role },
+        params: { page, no_page, search, role },
       });
       return response.data;
     } catch (error) {

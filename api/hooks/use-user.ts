@@ -24,23 +24,23 @@ export function useUsers({
   page,
   no_page,
   role,
-  username,
+  search,
   organization,
   secondary_organization,
 }: {
   page?: number;
   no_page?: boolean;
   role?: string;
-  username?: string;
+  search?: string;
   organization?: string;
   secondary_organization?: string;
 }) {
   return useQuery({
     queryKey: [
       queryKeys.users.all,
-      { page, role, username, organization, secondary_organization },
+      { page, role, search, organization, secondary_organization },
     ],
-    queryFn: () => userService.getUsers({ page, no_page, username, role }),
+    queryFn: () => userService.getUsers({ page, no_page, search, role }),
     staleTime: 5 * 60 * 1000,
     retry: (failureCount, error: any) => {
       if (error?.response?.status === 401 || error?.response?.status === 403) {
