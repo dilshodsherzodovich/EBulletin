@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { OrganizationTable } from "@/components/organizations/organization-table";
 import { OrganizationModal } from "@/components/organizations/organization-modal";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
@@ -20,10 +20,12 @@ import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
 import { canAccessSection } from "@/lib/permissions";
 import { redirect, useSearchParams } from "next/navigation";
+import { useFilterParams } from "@/lib/hooks/useFilterParams";
 
 export default function OrganizationsPage() {
+  const { updateQuery } = useFilterParams();
   const searchParams = useSearchParams();
-  const { q } = Object.fromEntries(searchParams.entries());
+  const { q, page } = Object.fromEntries(searchParams.entries());
 
   const user = JSON.parse(localStorage.getItem("user")!);
 
@@ -44,13 +46,12 @@ export default function OrganizationsPage() {
     organizationId?: string;
     isBulk?: boolean;
   }>({ isOpen: false });
-  const [page, setPage] = useState(1);
   const {
     data: organizationsList,
     isPending,
     isFetching,
     error,
-  } = useOrganizations({ page, name: q });
+  } = useOrganizations({ page: +page, name: q });
 
   const { mutate: createOrganization, isPending: isCreatingOrg } =
     useCreateOrganization();
@@ -60,6 +61,12 @@ export default function OrganizationsPage() {
     useDeleteOrganization();
 
   const { showSuccess, showError } = useSnackbar();
+
+  useEffect(() => {
+    if (!page) {
+      updateQuery({ page: "1" });
+    }
+  }, [page]);
 
   const handleOpenCreateModal = () => {
     setModalMode("create");
@@ -151,6 +158,11 @@ export default function OrganizationsPage() {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    updateQuery({ page: page.toString() });
+    setSelectedIds([]); // Clear selection when changing pages
+  };
+
   if (error) {
     return (
       <ErrorCard
@@ -193,8 +205,8 @@ export default function OrganizationsPage() {
         onCreateNew={handleOpenCreateModal}
         isLoading={isPending}
         totalPages={organizationsList?.count || 1}
-        currentPage={page}
-        onPageChange={setPage}
+        currentPage={+page}
+        onPageChange={handlePageChange}
         totalItems={organizationsList?.count || 0}
       />
 
