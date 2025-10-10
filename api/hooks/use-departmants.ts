@@ -19,6 +19,7 @@ export const useDepartments = (params: DepartmentGetParams) => {
     queryFn: () => {
       return departmentsService.getDepartments(params);
     },
+    enabled: !!params.page || !!params.no_page,
   });
 };
 

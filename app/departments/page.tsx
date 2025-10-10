@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EnhancedCard } from "@/ui/enhanced-card";
 import { DepartmentTable } from "@/components/departments/department-table";
 import { DepartmentModal } from "@/components/departments/department-modal";
@@ -18,10 +18,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
 import { canAccessSection } from "@/lib/permissions";
 import { redirect, useSearchParams } from "next/navigation";
+import { useFilterParams } from "@/lib/hooks/useFilterParams";
 
 export default function DepartmentsPage() {
+  const { updateQuery } = useFilterParams();
   const searchParams = useSearchParams();
-  const { q } = Object.fromEntries(searchParams.entries());
+
+  const { q, page } = Object.fromEntries(searchParams.entries());
 
   const user = JSON.parse(localStorage.getItem("user")!);
 
@@ -37,7 +40,6 @@ export default function DepartmentsPage() {
   const [editingDepartment, setEditingDepartment] = useState<
     Department | undefined
   >();
-  const [page, setPage] = useState(1);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     departmentId?: string;
@@ -48,13 +50,19 @@ export default function DepartmentsPage() {
     data: departmentsList,
     isPending: isPendingDepartments,
     isFetching,
-  } = useDepartments({ page, name: q });
+  } = useDepartments({ page: +page, name: q });
   const { mutate: createDepartment, isPending: isCreatingDep } =
     useCreateDepartment();
   const { mutate: editDepartment, isPending: isEditingDep } =
     useEditDepartment();
   const { mutate: deleteDepartment, isPending: isDeletingDep } =
     useDeleteDepartment();
+
+  useEffect(() => {
+    if (!page) {
+      updateQuery({ page: "1" });
+    }
+  }, [page]);
 
   const handleOpenCreateModal = () => {
     setModalMode("create");
@@ -146,6 +154,11 @@ export default function DepartmentsPage() {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    updateQuery({ page: page.toString() });
+    setSelectedIds([]); // Clear selection when changing pages
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -170,8 +183,8 @@ export default function DepartmentsPage() {
           onCreateNew={handleOpenCreateModal}
           isLoading={isPendingDepartments}
           totalPages={departmentsList?.count || 1}
-          currentPage={page}
-          onPageChange={setPage}
+          currentPage={+page}
+          onPageChange={handlePageChange}
           totalItems={departmentsList?.count || 0}
         />
       </Card>

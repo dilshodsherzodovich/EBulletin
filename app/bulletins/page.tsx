@@ -63,8 +63,6 @@ export default function BulletinsPage() {
     type_of_journal: journal_type,
     organization: org,
   });
-  const { data: organizationsData, isLoading: isLoadingOrganizations } =
-    useOrganizations({ page: 1 });
   const { mutate: createBulletin, isPending: isCreating } = useCreateBulletin();
   const { mutate: updateBulletin, isPending: isUpdating } = useUpdateBulletin();
   const { mutate: deleteBulletin, isPending: isDeleting } = useDeleteBulletin();
