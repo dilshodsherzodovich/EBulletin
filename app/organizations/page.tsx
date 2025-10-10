@@ -51,7 +51,7 @@ export default function OrganizationsPage() {
     isPending,
     isFetching,
     error,
-  } = useOrganizations({ page: +page, name: q });
+  } = useOrganizations({ page: +page, search: q });
 
   const { mutate: createOrganization, isPending: isCreatingOrg } =
     useCreateOrganization();

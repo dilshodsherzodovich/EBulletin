@@ -50,7 +50,7 @@ export default function DepartmentsPage() {
     data: departmentsList,
     isPending: isPendingDepartments,
     isFetching,
-  } = useDepartments({ page: +page, name: q });
+  } = useDepartments({ page: +page, search: q });
   const { mutate: createDepartment, isPending: isCreatingDep } =
     useCreateDepartment();
   const { mutate: editDepartment, isPending: isEditingDep } =

@@ -59,7 +59,7 @@ export default function BulletinsPage() {
     isError,
   } = useBulletin({
     page: +page,
-    name: q,
+    search: q,
     type_of_journal: journal_type,
     organization: org,
   });

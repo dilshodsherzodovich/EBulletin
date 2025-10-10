@@ -24,7 +24,7 @@ export interface Organization {
 export interface OrganizationsGetParams {
   page?: number;
   no_page?: boolean;
-  name?: string;
+  search?: string;
 }
 
 export interface OrganizationCreateParams {

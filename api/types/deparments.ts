@@ -10,7 +10,7 @@ export interface Department {
 export interface DepartmentGetParams {
   page?: number;
   no_page?: boolean;
-  name?: string;
+  search?: string;
 }
 
 export interface DepartmentCreateParams {

@@ -13,7 +13,7 @@ import {
 export const useBulletin = (params: {
   page: number;
   type_of_journal?: string;
-  name?: string;
+  search?: string;
   organization?: string;
 }) => {
   return useQuery({

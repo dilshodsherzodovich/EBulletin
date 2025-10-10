@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { organizationsService } from "../services/organizations.service";
 import {
-  Organization,
   OrganizationCreateParams,
   OrganizationsGetParams,
   OrganizationUpdateParams,
