@@ -165,7 +165,7 @@ export default function PageFilters({
     >
       {/* Search Input */}
       {hasSearch && (
-        <div className="basis-full md:basis-0 md:flex-1 min-w-0">
+        <div className="min-w-0 w-[320px] max-w-full">
           <Input
             placeholder={searchPlaceholder}
             className="w-full h-10 mb-0"
@@ -177,10 +177,7 @@ export default function PageFilters({
 
       {/* Dynamic Filters */}
       {filters.map((filter) => (
-        <div
-          key={filter.name}
-          className="basis-full md:basis-0 md:flex-1 min-w-0"
-        >
+        <div key={filter.name} className="min-w-0">
           {filter.isSelect ? (
             <SelectWithSearch
               placeholder={filter.placeholder || `Tanlang...`}
@@ -189,7 +186,7 @@ export default function PageFilters({
               options={filter.options || []}
               value={getQueryValue(filter.name)}
               onValueChange={(value) => handleFilterChange(filter.name, value)}
-              triggerClassName="w-full h-10 mb-0 max-w-[250px]"
+              triggerClassName="w-full h-10 mb-0 w-[300px] max-w-full"
             />
           ) : (
             <Input
@@ -208,7 +205,7 @@ export default function PageFilters({
 
       {/* Date Picker */}
       {hasDatePicker && (
-        <div className="basis-full md:basis-0 md:flex-1 min-w-0">
+        <div className="min-w-0">
           <DatePicker
             placeholder={datePickerLabel}
             value={currentDate}
@@ -221,7 +218,7 @@ export default function PageFilters({
 
       {/* Date Range Picker */}
       {hasDateRangePicker && (
-        <div className="basis-full md:basis-0 md:flex-1 min-w-0">
+        <div className="min-w-0">
           <div className="grid grid-cols-2 gap-2">
             <DatePicker
               placeholder={`${dateRangePickerLabel} dan`}

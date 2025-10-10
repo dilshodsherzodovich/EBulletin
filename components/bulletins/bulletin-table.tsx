@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Edit, Trash2, Eye, UserCheck, BarChart3 } from "lucide-react";
 import { Badge } from "@/ui/badge";
 import { Checkbox } from "@/ui/checkbox";
@@ -14,14 +14,14 @@ import {
 } from "@/ui/table";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
-import { BulletinFilters } from "./bulletin-filters";
 import { Pagination } from "@/ui/pagination";
 import Link from "next/link";
 import { Bulletin } from "@/api/types/bulleten";
-import { Organization } from "@/api/types/organizations";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { PermissionGuard } from "../permission-guard";
 import { format } from "date-fns";
+import PageFilters from "@/ui/filters";
+import { useOrganizations } from "@/api/hooks/use-organizations";
 
 interface BulletinTableProps {
   bulletins: Bulletin[];
@@ -33,18 +33,9 @@ interface BulletinTableProps {
   onCreateNew: () => void;
   isLoading: boolean;
   isDeleting: boolean;
-  organizations: Organization[];
-  isLoadingOrganizations?: boolean;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  organizationFilter: string;
-  onOrganizationChange: (value: string) => void;
-  periodTypeFilter: string;
-  onPeriodTypeChange: (value: string) => void;
-  onClearFilters: () => void;
   totalItems?: number;
 }
 
@@ -67,53 +58,23 @@ export function BulletinTable({
   bulletins,
   selectedIds = [],
   isLoading,
-  isDeleting,
-  organizations,
-  isLoadingOrganizations = false,
   currentPage,
   totalPages,
-  searchTerm,
-  organizationFilter,
-  periodTypeFilter,
   onSelectionChange,
   onEdit,
   onDelete,
   onBulkDelete,
   onCreateNew,
   onPageChange,
-  onSearchChange,
-  onOrganizationChange,
-  onPeriodTypeChange,
-  onClearFilters,
   totalItems,
 }: BulletinTableProps) {
-  const filteredBulletins = bulletins.filter((bulletin) => {
-    const matchesSearch = bulletin.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-
-    const matchesOrganization =
-      organizationFilter === "all" ||
-      (bulletin.main_organizations_list &&
-        bulletin.main_organizations_list.some(
-          (org) => org.id === organizationFilter
-        ));
-
-    const matchesPeriodType =
-      periodTypeFilter === "all" ||
-      bulletin.deadline?.period_type === periodTypeFilter;
-
-    return matchesSearch && matchesOrganization && matchesPeriodType;
+  const { data: organizations, isPending: isOrgsPending } = useOrganizations({
+    no_page: true,
   });
-
-  const hasActiveFilters =
-    searchTerm !== "" ||
-    organizationFilter !== "all" ||
-    periodTypeFilter !== "all";
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(filteredBulletins.map((b) => b.id));
+      onSelectionChange(bulletins.map((b) => b.id));
     } else {
       onSelectionChange([]);
     }
@@ -137,23 +98,61 @@ export function BulletinTable({
     onDelete(bulletin);
   };
 
+  const byulletenFilters = useMemo(() => {
+    return [
+      {
+        name: "org",
+        label: "Tashkilot",
+        isSelect: true,
+        options: [
+          { label: "Barcha tashkilotlar", value: "" },
+          ...(organizations?.results?.map((org) => ({
+            label: org.name,
+            value: org.id,
+          })) || []),
+        ],
+        placeholder: "Barcha tashkilotlar",
+        searchable: true,
+        clearable: true,
+        loading: isOrgsPending,
+        minWidth: "200px",
+      },
+      {
+        name: "journal_type",
+        label: "Byulleten turi",
+        isSelect: true,
+        options: [
+          { label: "Barcha turlar", value: "" },
+          {
+            label: "Byulleten",
+            value: "bulleten",
+          },
+          {
+            label: "Jurnal",
+            value: "journal",
+          },
+        ],
+        placeholder: "Barcha turlar",
+        loading: false,
+        minWidth: "200px",
+      },
+    ];
+  }, [organizations]);
+
   return (
     <Card className="rounded-xl">
-      <BulletinFilters
-        searchTerm={searchTerm}
-        onSearchChange={onSearchChange}
+      <PageFilters
+        filters={byulletenFilters}
+        hasSearch={true}
+        searchPlaceholder="Byulleten nomi"
+        onAdd={onCreateNew}
+        addButtonText="Yangi byulleten"
+        addButtonPermittion="create_journal"
         selectedCount={selectedIds.length}
         onBulkDelete={handleBulkDelete}
-        organizationFilter={organizationFilter}
-        onOrganizationChange={onOrganizationChange}
-        periodTypeFilter={periodTypeFilter}
-        onPeriodTypeChange={onPeriodTypeChange}
-        onAdd={onCreateNew}
-        organizations={organizations}
-        isLoadingOrganizations={isLoadingOrganizations}
-        onClearFilters={onClearFilters}
-        hasActiveFilters={hasActiveFilters}
+        bulkDeleteText="O'chirish"
       />
+
       <div className="overflow-hidden">
         <Table>
           <TableHeader>
@@ -162,8 +161,8 @@ export function BulletinTable({
                 <TableHead className="w-4 p-3 ">
                   <Checkbox
                     checked={
-                      selectedIds.length === filteredBulletins.length &&
-                      filteredBulletins.length > 0
+                      selectedIds.length === bulletins.length &&
+                      bulletins.length > 0
                     }
                     onCheckedChange={handleSelectAll}
                   />
@@ -185,18 +184,16 @@ export function BulletinTable({
           <TableBody>
             {isLoading ? (
               <TableSkeleton rows={10} columns={10} />
-            ) : filteredBulletins.length === 0 ? (
+            ) : bulletins.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} className="text-center py-8">
                   <div className="text-sm whitespace-nowrap text-[var(--muted-foreground)]">
-                    {hasActiveFilters
-                      ? "Filtrlar bo'yicha byulletenlar topilmadi."
-                      : "Byulletenlar topilmadi."}
+                    Byulletenlar topilmadi.
                   </div>
                 </TableCell>
               </TableRow>
             ) : (
-              filteredBulletins.map((bulletin, index) => (
+              bulletins.map((bulletin, index) => (
                 <TableRow
                   key={bulletin.id}
                   className={` transition-colors hover:bg-muted/50 `}
@@ -309,7 +306,7 @@ export function BulletinTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="p-3 text-[var(--muted-foreground)]">
-                    {format(bulletin.deadline?.current_deadline, "dd.MM.yyyy")}
+                    {format(bulletin.deadline?.current_deadline!, "dd.MM.yyyy")}
                   </TableCell>
 
                   <TableCell className="p-3">

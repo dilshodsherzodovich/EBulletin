@@ -21,9 +21,15 @@ import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
 import { getPageCount } from "@/lib/utils";
 import { canAccessSection } from "@/lib/permissions";
-import { redirect } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 
 export default function BulletinsPage() {
+  const searchParams = useSearchParams();
+
+  const { q, journal_type, organization, fill_type, page } = Object.fromEntries(
+    searchParams.entries()
+  );
+
   const user = JSON.parse(localStorage.getItem("user")!);
 
   if (!user || !canAccessSection(user, "bulletins")) {
@@ -202,18 +208,9 @@ export default function BulletinsPage() {
         onCreateNew={handleCreateNew}
         isLoading={isPending}
         isDeleting={isDeleting}
-        organizations={organizations}
-        isLoadingOrganizations={isLoadingOrganizations}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        organizationFilter={organizationFilter}
-        onOrganizationChange={setOrganizationFilter}
-        periodTypeFilter={periodTypeFilter}
-        onPeriodTypeChange={setPeriodTypeFilter}
-        onClearFilters={handleClearFilters}
         totalItems={bulletins?.count || 0}
       />
 
