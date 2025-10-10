@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { PermissionGuard } from "../permission-guard";
 import { Pagination } from "@/ui/pagination";
 import { getFileName, getPageCount } from "@/lib/utils";
+import PageFilters from "@/ui/filters";
 
 interface OrganizationTableProps {
   organizations: PaginatedData<Organization>;
@@ -77,10 +78,16 @@ export function OrganizationTable({
 
   return (
     <Card className="rounded-xl">
-      <OrganizationsFilters
+      <PageFilters
+        filters={[]}
+        hasSearch={true}
+        searchPlaceholder="Tashkilot nomi"
+        onAdd={onCreateNew}
+        addButtonText="Yangi tashkilot"
+        addButtonPermittion="create_organization"
         selectedCount={selectedIds.length}
         onBulkDelete={handleBulkDelete}
-        onAdd={onCreateNew}
+        bulkDeleteText="O'chirish"
       />
       <div className="overflow-hidden">
         <Table>

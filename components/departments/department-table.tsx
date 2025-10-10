@@ -82,8 +82,8 @@ export function DepartmentTable({
           hasSearch={true}
           searchPlaceholder="Quyi tashkilot nomi"
           onAdd={onCreateNew}
-          addButtonText="Yangi Quyi Tashkilot"
-          addButtonPermittion="create_user"
+          addButtonText="Yangi quyi tashkilot"
+          addButtonPermittion="create_department"
           selectedCount={selectedIds.length}
           onBulkDelete={handleBulkDelete}
           bulkDeleteText="O'chirish"

@@ -19,9 +19,12 @@ import { queryKeys } from "@/api/querykey";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { ErrorCard } from "@/ui/error-card";
 import { canAccessSection } from "@/lib/permissions";
-import { redirect } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 
 export default function OrganizationsPage() {
+  const searchParams = useSearchParams();
+  const { q } = Object.fromEntries(searchParams.entries());
+
   const user = JSON.parse(localStorage.getItem("user")!);
 
   if (!user || !canAccessSection(user, "organizations")) {
@@ -47,7 +50,7 @@ export default function OrganizationsPage() {
     isPending,
     isFetching,
     error,
-  } = useOrganizations({ page });
+  } = useOrganizations({ page, name: q });
 
   const { mutate: createOrganization, isPending: isCreatingOrg } =
     useCreateOrganization();
