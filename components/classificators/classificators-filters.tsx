@@ -29,13 +29,13 @@ export function ClassificatorsFilters({
   onAdd,
 }: ClassificatorsFiltersProps) {
   return (
-    <div className="flex gap-2 mb-4 items-center justify-between">
-      <Input
+    <div className="flex gap-2 mb-4 items-center justify-end">
+      {/* <Input
         placeholder="Klassifikator nomi..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
         className="max-w-[280px] h-10 mb-0"
-      />
+      /> */}
       {selectedCount > 0 && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-[#6b7280]">
@@ -53,7 +53,7 @@ export function ClassificatorsFilters({
         </div>
       )}
       <div className="flex gap-2 items-center">
-        <Select value={statusFilter} onValueChange={onStatusChange}>
+        {/* <Select value={statusFilter} onValueChange={onStatusChange}>
           <SelectTrigger className="max-w-[140px] h-10 mb-0">
             <SelectValue placeholder="Barcha holatlar" />
           </SelectTrigger>
@@ -62,7 +62,7 @@ export function ClassificatorsFilters({
             <SelectItem value="active">Faol</SelectItem>
             <SelectItem value="inactive">Nofaol</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
         <Button
           onClick={onAdd}
           className="h-10 bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white whitespace-nowrap"
