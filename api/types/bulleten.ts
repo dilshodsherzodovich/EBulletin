@@ -86,6 +86,7 @@ export interface BulletinFileStatus {
   created: string;
   description: string;
   upload_file: string;
+  upload_file_name: string;
 }
 
 export interface BulletinFile {
@@ -95,6 +96,7 @@ export interface BulletinFile {
   deadline: string;
   editable: boolean;
   uploaded_files: BulletinFileStatus[];
+
   user_info: {
     id: string;
     username: string;

@@ -13,7 +13,6 @@ import {
   ChevronDown,
   ChevronRight,
   Plus,
-  Delete,
   Trash2,
 } from "lucide-react";
 import { Badge } from "@/ui/badge";
@@ -30,7 +29,6 @@ import { Card } from "@/ui/card";
 import { BulletinFile } from "@/api/types/bulleten";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { PermissionGuard } from "../permission-guard";
-import { getFileName } from "@/lib/utils";
 import {
   useCreateBulletinFileStatusHistory,
   useUpdateBulletinFile,
@@ -42,9 +40,6 @@ import { LoadingButton } from "@/ui/loading-button";
 import { BulletinFileUploadModal } from "./bulletin-file-upload-modal";
 import { useParams } from "next/navigation";
 import React from "react";
-import { FileUpload } from "@/ui/file-upload";
-import { Input } from "@/ui/input";
-import { Modal } from "@/ui/modal";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
 import { ConfirmationDialog } from "@/ui/confirmation-dialog";
@@ -176,15 +171,18 @@ export function BulletinFileHistory({
   };
 
   const confirmDeleteBulletinFile = () => {
-    deleteBulletinFile(deleteConfirmation.fileId!, {
-      onSuccess: () => {
-        showSuccess("Fayl muvaffaqiyatli o'chirildi");
-        setDeleteConfirmation({ isOpen: false });
-      },
-      onError: () => {
-        showError("Fayl o'chirishda xatolik yuz berdi");
-      },
-    });
+    deleteBulletinFile(
+      { fileId: deleteConfirmation.fileId!, journalId: journalId as string },
+      {
+        onSuccess: () => {
+          showSuccess("Fayl muvaffaqiyatli o'chirildi");
+          setDeleteConfirmation({ isOpen: false });
+        },
+        onError: () => {
+          showError("Fayl o'chirishda xatolik yuz berdi");
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -369,7 +367,7 @@ export function BulletinFileHistory({
                   const hasHistory =
                     hasUploadFiles(file) &&
                     file.uploaded_files &&
-                    file.uploaded_files.length > 1;
+                    file.uploaded_files.length;
 
                   return (
                     <React.Fragment key={file.id}>
@@ -396,9 +394,7 @@ export function BulletinFileHistory({
                             {getFileIcon(actualFile?.upload_file || "unknown")}
                             <div>
                               <div className="font-medium text-[var(--foreground)]">
-                                {actualFile
-                                  ? getFileName(actualFile.upload_file)
-                                  : "-"}
+                                {actualFile ? actualFile.upload_file_name : "-"}
                               </div>
                             </div>
                           </div>
@@ -542,7 +538,7 @@ export function BulletinFileHistory({
                                             Yuklangan sana
                                           </TableHead>
                                           <TableHead className="p-2 text-xs text-center">
-                                            Yuklab olish
+                                            Amallar
                                           </TableHead>
                                         </TableRow>
                                       </TableHeader>
@@ -559,9 +555,9 @@ export function BulletinFileHistory({
                                                     uploadFile.upload_file
                                                   )}
                                                   <span className="text-xs font-medium text-[var(--foreground)]">
-                                                    {getFileName(
-                                                      uploadFile.upload_file
-                                                    )}
+                                                    {
+                                                      uploadFile.upload_file_name
+                                                    }
                                                   </span>
                                                 </div>
                                               </TableCell>
@@ -598,7 +594,7 @@ export function BulletinFileHistory({
                                                 {formatDate(uploadFile.created)}
                                               </TableCell>
                                               <TableCell className="p-2 text-center">
-                                                <div className="p-2 flex">
+                                                <div className="p-2 flex gap-2">
                                                   <a
                                                     href={
                                                       uploadFile.upload_file ||
@@ -618,10 +614,17 @@ export function BulletinFileHistory({
                                                     <Button
                                                       variant="outline"
                                                       size="icon"
-                                                      className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                                                      className="h-6 w-6 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
                                                       aria-label="O'chirish"
+                                                      onClick={() =>
+                                                        setDeleteConfirmation({
+                                                          isOpen: true,
+                                                          fileId:
+                                                            uploadFile?.id,
+                                                        })
+                                                      }
                                                     >
-                                                      <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                                                      <Trash2 className="h-3 w-3 text-[var(--destructive)]" />
                                                     </Button>
                                                   </PermissionGuard>
                                                 </div>
@@ -667,7 +670,7 @@ export function BulletinFileHistory({
         onConfirm={confirmDeleteBulletinFile}
         title={"Byulleten faylini o'chirish"}
         message={
-          "Haqiqatan ham bu klassifikatorni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
+          "Haqiqatan ham bu faylni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
         }
       />
     </>

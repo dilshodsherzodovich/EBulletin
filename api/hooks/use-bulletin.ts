@@ -143,10 +143,11 @@ export const useDeleteBulletinFile = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: [queryKeys.bulletins.deleteFile],
-    mutationFn: (id: string) => bulletinService.deleteBulletinFile(id),
-    onSuccess: (_, id) => {
+    mutationFn: ({ fileId }: { fileId: string; journalId: string }) =>
+      bulletinService.deleteBulletinFile(fileId),
+    onSuccess: (_, { journalId }) => {
       queryClient.invalidateQueries({
-        queryKey: [queryKeys.bulletins.detail(id)],
+        queryKey: [queryKeys.bulletins.detail(journalId)],
       });
     },
   });
