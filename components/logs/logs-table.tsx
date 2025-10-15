@@ -49,6 +49,10 @@ export default function LogsTable({
       label: "Foydalanuvchi",
     },
     {
+      value: "Profile",
+      label: "Profile",
+    },
+    {
       value: "Classificator",
       label: "Classificator",
     },

@@ -22,7 +22,8 @@ export type ContentType =
   | "Column"
   | "RowValue"
   | "UploadedFile"
-  | "JournalUploadHistory";
+  | "JournalUploadHistory"
+  | "Profile";
 
 export type ContentTypeVerbose =
   | "Foydalanuvchi"
@@ -34,7 +35,8 @@ export type ContentTypeVerbose =
   | "Ustun"
   | "Qator qiymati"
   | "Fayl"
-  | "Bulleten tarihi";
+  | "Bulleten tarihi"
+  | "Profile";
 
 export interface LogItem {
   id?: string;
