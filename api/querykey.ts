@@ -43,6 +43,7 @@ export const queryKeys = {
     createRow: "create-bulletin-row",
     updateRow: "update-bulletin-row",
     deleteRow: "delete-bulletin-row",
+    deleteFile: "delete-bulletin-file",
   },
   logs: {
     list: "logs-list",

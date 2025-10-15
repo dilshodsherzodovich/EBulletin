@@ -133,6 +133,15 @@ export const bulletinService = {
     }
   },
 
+  deleteBulletinFile: async (id: string): Promise<void> => {
+    try {
+      await api.delete(`/uploaded-files/delete/${id}/`);
+    } catch (error) {
+      console.error("Error deleting bulletin file:", error);
+      throw error;
+    }
+  },
+
   createBulletinFileStatusHistory: async ({
     j_upload_history_id,
     upload_file,

@@ -13,6 +13,8 @@ import {
   ChevronDown,
   ChevronRight,
   Plus,
+  Delete,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/ui/badge";
 import {
@@ -575,20 +577,33 @@ export function BulletinFileHistory({
                                                 {formatDate(uploadFile.created)}
                                               </TableCell>
                                               <TableCell className="p-2 text-center">
-                                                <a
-                                                  href={
-                                                    uploadFile.upload_file || ""
-                                                  }
-                                                >
-                                                  <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    className="h-6 w-6 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
-                                                    aria-label="Yuklab olish"
+                                                <div className="p-2 flex">
+                                                  <a
+                                                    href={
+                                                      uploadFile.upload_file ||
+                                                      ""
+                                                    }
                                                   >
-                                                    <Download className="h-3 w-3 text-[var(--primary)]" />
-                                                  </Button>
-                                                </a>
+                                                    <Button
+                                                      variant="outline"
+                                                      size="icon"
+                                                      className="h-6 w-6 p-0 border border-[var(--border)] hover:bg-[var(--primary)]/10"
+                                                      aria-label="Yuklab olish"
+                                                    >
+                                                      <Download className="h-3 w-3 text-[var(--primary)]" />
+                                                    </Button>
+                                                  </a>
+                                                  <PermissionGuard permission="delete_bulletin_file">
+                                                    <Button
+                                                      variant="outline"
+                                                      size="icon"
+                                                      className="h-8 w-8 p-0 border border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                                                      aria-label="O'chirish"
+                                                    >
+                                                      <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                                                    </Button>
+                                                  </PermissionGuard>
+                                                </div>
                                               </TableCell>
                                             </TableRow>
                                           )

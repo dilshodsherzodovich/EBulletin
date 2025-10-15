@@ -139,6 +139,19 @@ export const useUpdateBulletinFile = () => {
   });
 };
 
+export const useDeleteBulletinFile = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [queryKeys.bulletins.deleteFile],
+    mutationFn: (id: string) => bulletinService.deleteBulletinFile(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKeys.bulletins.detail(id)],
+      });
+    },
+  });
+};
+
 export const useCreateBulletinFileStatusHistory = () => {
   const queryClient = useQueryClient();
   return useMutation({
