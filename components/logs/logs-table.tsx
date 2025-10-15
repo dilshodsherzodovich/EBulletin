@@ -17,6 +17,9 @@ import { ContentType, ContentTypeVerbose, LogItem } from "@/api/types/logs";
 import { useFilterParams } from "@/lib/hooks/useFilterParams";
 import { TableSkeleton } from "@/ui/table-skeleton";
 import { useUsers } from "@/api/hooks/use-user";
+import { format, formatDate } from "date-fns";
+import { uz } from "date-fns/locale";
+import { getPageCount } from "@/lib/utils";
 
 interface LogsTableProps {
   logs?: PaginatedData<LogItem>;
@@ -31,7 +34,7 @@ export default function LogsTable({
   page,
   onPageChange,
 }: LogsTableProps) {
-  const { updateQuery, getQueryValue } = useFilterParams();
+  const { updateQuery } = useFilterParams();
 
   const { data: users, isPending: isGettingUsers } = useUsers({
     no_page: true,
@@ -162,6 +165,7 @@ export default function LogsTable({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>#</TableHead>
                 <TableHead className="max-w-[100px]">Tavsif</TableHead>
                 <TableHead>Foydalanuvchi</TableHead>
                 <TableHead>Amal</TableHead>
@@ -184,6 +188,7 @@ export default function LogsTable({
                 <>
                   {logs?.results?.map((log, idx) => (
                     <TableRow key={(log as any).id ?? idx}>
+                      <TableCell>{(page - 1) * 10 + idx + 1}</TableCell>
                       <TableCell
                         className="max-w-[420px] truncate"
                         title={log.description || ""}
@@ -191,14 +196,16 @@ export default function LogsTable({
                         {log.description}
                       </TableCell>
                       <TableCell>
-                        {log.user_info?.full_name ?? log.user}
+                        {log.user_info?.full_name ?? log.user_info?.username}
                       </TableCell>
                       <TableCell>{log.action}</TableCell>
                       <TableCell>
                         {log.content_type_verbose ?? log.content_type}
                       </TableCell>
                       <TableCell>
-                        {new Date(log.created).toLocaleString()}
+                        {log.created
+                          ? format(log?.created, "dd.MM.yy HH:mm")
+                          : ""}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -206,6 +213,12 @@ export default function LogsTable({
               )}
             </TableBody>
           </Table>
+
+          <Pagination
+            onPageChange={onPageChange}
+            currentPage={+page}
+            totalPages={getPageCount(logs?.count || 0, 10) || 1}
+          />
         </div>
       </Card>
     </div>
