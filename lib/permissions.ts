@@ -39,7 +39,8 @@ export type Permission =
   | "view_classificators"
   | "create_classificator"
   | "edit_classificator"
-  | "delete_classificator";
+  | "delete_classificator"
+  | "view_logs";
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ADMIN: [
@@ -78,6 +79,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "view_bulletin_main_info",
     "give_access_to_edit_bulletin_file",
     "view_bulletin_file_history",
+    "view_logs",
   ],
   MODERATOR: [
     "view_dashboard",
@@ -90,6 +92,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "view_bulletin_file_dropbox",
     "view_bulletin_main_info",
     "view_bulletin_file_history",
+    "view_logs",
   ],
   OBSERVER: ["view_journals", "view_journal_detail", "view_bulletin_files"],
 };
@@ -144,6 +147,9 @@ export function canAccessSection(
     }
     case "bulletin_structure": {
       return hasPermission(user, "view_journal_structure");
+    }
+    case "logs": {
+      return hasPermission(user, "view_logs");
     }
     default:
       return false;

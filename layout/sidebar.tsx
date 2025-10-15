@@ -12,6 +12,8 @@ import {
   Monitor,
   BookOpen,
   Menu,
+  Paperclip,
+  NotepadText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canAccessSection } from "@/lib/permissions";
@@ -54,6 +56,12 @@ const navigationItems = [
     href: "/classificators",
     icon: BookOpen,
     section: "classificator",
+  },
+  {
+    name: "Loglar",
+    href: "/logs",
+    icon: NotepadText,
+    section: "logs",
   },
 ];
 

@@ -44,4 +44,7 @@ export const queryKeys = {
     updateRow: "update-bulletin-row",
     deleteRow: "delete-bulletin-row",
   },
+  logs: {
+    list: "logs-list",
+  },
 } as const;
