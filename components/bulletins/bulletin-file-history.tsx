@@ -35,6 +35,7 @@ import {
   useCreateBulletinFileStatusHistory,
   useUpdateBulletinFile,
   useCreateBulletinFile,
+  useDeleteBulletinFile,
 } from "@/api/hooks/use-bulletin";
 import { useSnackbar } from "@/providers/snackbar-provider";
 import { LoadingButton } from "@/ui/loading-button";
@@ -46,6 +47,7 @@ import { Input } from "@/ui/input";
 import { Modal } from "@/ui/modal";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/querykey";
+import { ConfirmationDialog } from "@/ui/confirmation-dialog";
 
 interface BulletinFileHistoryProps {
   files: BulletinFile[];
@@ -141,12 +143,19 @@ export function BulletinFileHistory({
   } = useCreateBulletinFileStatusHistory();
   const { mutate: createBulletinFile, isPending: isCreatingFile } =
     useCreateBulletinFile();
+  const { mutate: deleteBulletinFile, isPending: isDeletingFile } =
+    useDeleteBulletinFile();
+
   const { showSuccess, showError } = useSnackbar();
   const { id: journalId } = useParams();
   const queryClient = useQueryClient();
 
   // Modal state - simplified to use one modal for both cases
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    fileId?: string;
+  }>({ isOpen: false });
   const [selectedFileForEdit, setSelectedFileForEdit] =
     useState<BulletinFile | null>(null);
   const [isNewFileMode, setIsNewFileMode] = useState(false);
@@ -163,6 +172,18 @@ export function BulletinFileHistory({
         newSet.add(fileId);
       }
       return newSet;
+    });
+  };
+
+  const confirmDeleteBulletinFile = () => {
+    deleteBulletinFile(deleteConfirmation.fileId!, {
+      onSuccess: () => {
+        showSuccess("Fayl muvaffaqiyatli o'chirildi");
+        setDeleteConfirmation({ isOpen: false });
+      },
+      onError: () => {
+        showError("Fayl o'chirishda xatolik yuz berdi");
+      },
     });
   };
 
@@ -637,6 +658,17 @@ export function BulletinFileHistory({
             : isPending || isCreatingBulletinFileStatusHistory
         }
         isNewFile={isNewFileMode}
+      />
+
+      <ConfirmationDialog
+        isOpen={deleteConfirmation.isOpen}
+        isDoingAction={isDeletingFile}
+        onClose={() => setDeleteConfirmation({ isOpen: false })}
+        onConfirm={confirmDeleteBulletinFile}
+        title={"Byulleten faylini o'chirish"}
+        message={
+          "Haqiqatan ham bu klassifikatorni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
+        }
       />
     </>
   );
