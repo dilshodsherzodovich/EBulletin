@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Edit, Trash2, Eye, UserCheck, BarChart3 } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  Eye,
+  UserCheck,
+  BarChart3,
+  Building2,
+} from "lucide-react";
 import { Badge } from "@/ui/badge";
 import { Checkbox } from "@/ui/checkbox";
 import {
@@ -15,6 +22,7 @@ import {
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
 import { Pagination } from "@/ui/pagination";
+import { Popover, PopoverContent, PopoverTrigger } from "@/ui/popover";
 import Link from "next/link";
 import { Bulletin } from "@/api/types/bulleten";
 import { TableSkeleton } from "@/ui/table-skeleton";
@@ -52,6 +60,75 @@ const deadlineLabels: { [key: string]: string } = {
 const getDeadlineLabel = (periodType: string | undefined): string => {
   if (!periodType) return "N/A";
   return deadlineLabels[periodType] || periodType;
+};
+
+// Component for displaying organizations in a popover
+const OrganizationsDisplay = ({ organizations }: { organizations: any[] }) => {
+  if (!organizations || organizations.length === 0) {
+    return (
+      <div className="text-sm text-[var(--muted-foreground)] italic">
+        Tashkilotlar tanlanmagan
+      </div>
+    );
+  }
+
+  const totalOrgs = organizations.length;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <div className="flex items-center gap-1 cursor-pointer hover:bg-muted/50 rounded p-1 -m-1 transition-colors">
+          <Building2 className="w-4 h-4 text-[var(--primary)]" />
+          <span className="text-sm font-medium text-[var(--foreground)]">
+            {totalOrgs} tashkilot
+          </span>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[500px] max-h-96 overflow-y-auto"
+        align="start"
+      >
+        <div className="space-y-3">
+          <h4 className="font-semibold text-sm text-[var(--foreground)] mb-2">
+            Tashkilotlar ({totalOrgs})
+          </h4>
+          {organizations.map((mainOrg, index) => (
+            <div
+              key={mainOrg.id}
+              className="border border-[var(--border)] rounded-lg p-3 bg-[var(--muted)]/10"
+            >
+              <div className="text-sm font-medium text-[var(--foreground)] mb-2">
+                <div className="break-words leading-tight">{mainOrg.name}</div>
+              </div>
+              {mainOrg.secondary_organizations &&
+              mainOrg.secondary_organizations.length > 0 ? (
+                <div className="space-y-1">
+                  <div className="text-xs text-[var(--muted-foreground)] font-medium">
+                    Quyi tashkilotlar:
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {mainOrg.secondary_organizations.map((secOrg: any) => (
+                      <Badge
+                        key={secOrg.id}
+                        variant="secondary"
+                        className="text-xs px-2 py-1 border-[var(--border)] break-words whitespace-normal"
+                      >
+                        {secOrg.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-[var(--muted-foreground)] italic">
+                  Quyi tashkilotlar yo'q
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 };
 
 export function BulletinTable({
@@ -223,54 +300,10 @@ export function BulletinTable({
                     </div>
                   </TableCell>
                   <PermissionGuard permission="view_bulletin_main_info">
-                    <TableCell className="p-3 min-w-[350px]">
-                      <div className="space-y-2">
-                        {(bulletin.main_organizations_list || []).map(
-                          (mainOrg) => (
-                            <div
-                              key={mainOrg.id}
-                              className="border border-[var(--border)] rounded-lg p-2 bg-[var(--muted)]/10"
-                            >
-                              <div className="text-xs font-medium text-[var(--foreground)] mb-1">
-                                <div className="break-words leading-tight">
-                                  <span className="break-words whitespace-break-spaces">
-                                    {mainOrg.name}
-                                  </span>
-                                  :
-                                </div>
-                                {mainOrg.secondary_organizations &&
-                                mainOrg.secondary_organizations.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {mainOrg.secondary_organizations.map(
-                                      (secOrg) => (
-                                        <Badge
-                                          key={secOrg.id}
-                                          variant="secondary"
-                                          className="text-xs px-2 py-1 border-[var(--border)] break-words whitespace-normal"
-                                        >
-                                          <span className="break-words">
-                                            {secOrg.name}
-                                          </span>
-                                        </Badge>
-                                      )
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="text-xs text-[var(--muted-foreground)] italic mt-1">
-                                    Ikkinchi darajali tashkilotlar yo'q
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        )}
-                        {(!bulletin.main_organizations_list ||
-                          bulletin.main_organizations_list.length === 0) && (
-                          <div className="text-sm text-[var(--muted-foreground)] italic">
-                            Tashkilotlar tanlanmagan
-                          </div>
-                        )}
-                      </div>
+                    <TableCell className="p-3">
+                      <OrganizationsDisplay
+                        organizations={bulletin.main_organizations_list || []}
+                      />
                     </TableCell>
                   </PermissionGuard>
                   <TableCell className="p-3 max-w-xs">
